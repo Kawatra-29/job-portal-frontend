@@ -1,13 +1,13 @@
 function JobCard({ job }) {
   return (
-    <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 hover:shadow-lg transition-all duration-300">
-      <div className="flex justify-between items-start mb-4">
+    <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 hover:shadow-lg transition-all duration-300 ">
+      <div className="flex justify-betweem items-start mb-4">
         <div>
           <h3 className="font-semibold text-xl text-gray-900">{job.title}</h3>
           <p className="text-blue-600 font-medium mt-1">{job.company}</p>
         </div>
         <span className="px-3 py-1 bg-green-100 text-green-700 text-xs font-medium rounded-full">
-          {job.type}
+          {job.jobType}
         </span>
       </div>
 
@@ -16,10 +16,10 @@ function JobCard({ job }) {
           📍 {job.location}
         </p>
         <p className="flex items-center gap-2">
-          💰 {job.salary}
+          💰 {job.salaryMin} - {job.salaryMax}
         </p>
         <p className="flex items-center gap-2">
-          ⏰ {job.experience}
+          ⏰ {job.experienceLevel}
         </p>
       </div>
 

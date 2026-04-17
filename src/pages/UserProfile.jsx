@@ -1,28 +1,8 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
 export default function UserProfile() {
   const [userData, setUserData] = useState({
-    name: "",
-    email: "",
-    phone: "",
-    role: "",
-    headline: "",
-    summary: "",
-    location: "",
-    yearsOfExperience: 0,
-    expectedSalary: 0,
-    availability: "",
-    skills: [
-      {
-        skillName: "",
-        proficiencyLevel: "",
-      },
-    ],
-  });
-
-  useEffect(() => {
-    setUserData({
-      name: "SAURABH KAWATRA",
+     name: "SAURABH KAWATRA",
       email: "Saurabhkawatra2001@gmail.com",
       phone: "9876543210",
       role: "JOBSEEKER",
@@ -43,8 +23,7 @@ export default function UserProfile() {
           proficiencyLevel: "BEGINNER",
         },
       ],
-    });
-  }, []);
+  });
 
   const profileFields = [
     { label: "Full name", value: userData.name },
