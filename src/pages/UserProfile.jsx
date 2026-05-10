@@ -1,10 +1,10 @@
 import { useState } from "react";
 
 const skillColors = {
-  BEGINNER: { bg: "#fef9c3", text: "#b45309" },
-  INTERMEDIATE: { bg: "#dbeafe", text: "#1d4ed8" },
-  ADVANCED: { bg: "#dcfce7", text: "#16a34a" },
-  EXPERT: { bg: "#ede9fe", text: "#7c3aed" },
+  BEGINNER: { bg: "bg-yellow-50", text: "text-amber-700" },
+  INTERMEDIATE: { bg: "bg-blue-50", text: "text-blue-700" },
+  ADVANCED: { bg: "bg-green-50", text: "text-green-600" },
+  EXPERT: { bg: "bg-violet-50", text: "text-violet-600" },
 };
 
 export default function UserProfile() {
@@ -37,96 +37,58 @@ export default function UserProfile() {
   ];
 
   return (
-    <div style={{ background: "#f8fafc", minHeight: "100vh", fontFamily: "'DM Sans', sans-serif" }}>
+    <div className="min-h-screen bg-slate-50 font-['DM_Sans']">
       <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=Syne:wght@700;800&display=swap" rel="stylesheet" />
 
       {/* Hero Banner */}
-      <div style={{
-        background: "linear-gradient(135deg, #0f172a, #1e3a5f, #1e40af)",
-        padding: "48px 24px 80px",
-        position: "relative",
-      }}>
-        <div style={{ maxWidth: "860px", margin: "0 auto" }}>
-          <div style={{ display: "flex", alignItems: "center", gap: "24px", flexWrap: "wrap" }}>
+      <div className="bg-linear-to-br from-slate-900 via-slate-800 to-blue-800 px-6 pt-12 pb-20 relative">
+        <div className="max-w-5xl mx-auto">
+          <div className="flex items-center gap-6 flex-wrap">
             {/* Avatar */}
-            <div style={{
-              width: "80px", height: "80px",
-              borderRadius: "50%",
-              background: "linear-gradient(135deg, #2563eb, #7c3aed)",
-              display: "flex", alignItems: "center", justifyContent: "center",
-              fontFamily: "'Syne', sans-serif",
-              fontSize: "32px",
-              fontWeight: "800",
-              color: "white",
-              flexShrink: 0,
-              boxShadow: "0 8px 24px rgba(0,0,0,0.3)",
-              border: "3px solid rgba(255,255,255,0.15)",
-            }}>
-              {userData.name.split(" ").map(w => w[0]).join("")}
+            <div className="w-20 h-20 rounded-full bg-linear-to-br from-blue-600 to-violet-600 flex items-center justify-center shrink-0 shadow-xl border-[3px] border-white/15">
+              <span className="font-['Syne'] text-3xl font-extrabold text-white">
+                {userData.name.split(" ").map(w => w[0]).join("")}
+              </span>
             </div>
             <div>
-              <p style={{ color: "#93c5fd", fontSize: "12px", fontWeight: "600", letterSpacing: "0.2em", textTransform: "uppercase", margin: "0 0 6px" }}>
+              <p className="text-blue-300 text-xs font-semibold uppercase tracking-widest mb-1">
                 {userData.role}
               </p>
-              <h1 style={{
-                fontFamily: "'Syne', sans-serif",
-                fontSize: "28px",
-                fontWeight: "800",
-                color: "white",
-                margin: "0 0 6px",
-                letterSpacing: "-0.5px",
-              }}>{userData.name}</h1>
-              <p style={{ color: "#94a3b8", fontSize: "14px", margin: 0 }}>{userData.headline}</p>
+              <h1 className="font-['Syne'] text-3xl font-extrabold text-white mb-1 tracking-tight">
+                {userData.name}
+              </h1>
+              <p className="text-slate-400 text-sm">{userData.headline}</p>
             </div>
           </div>
         </div>
       </div>
 
       {/* Card body */}
-      <div style={{ maxWidth: "860px", margin: "-40px auto 0", padding: "0 24px 60px", position: "relative" }}>
+      <div className="max-w-5xl mx-auto -mt-10 px-6 pb-16 relative">
         
         {/* Summary */}
-        <div style={{
-          background: "white",
-          borderRadius: "16px",
-          border: "1px solid #e5e7eb",
-          padding: "24px",
-          marginBottom: "20px",
-        }}>
-          <h2 style={{
-            fontFamily: "'Syne', sans-serif", fontSize: "15px", fontWeight: "700",
-            color: "#0f172a", margin: "0 0 10px", textTransform: "uppercase", letterSpacing: "0.05em",
-          }}>Summary</h2>
-          <p style={{ color: "#475569", lineHeight: "1.7", margin: 0, fontSize: "15px" }}>{userData.summary}</p>
+        <div className="bg-white rounded-2xl border border-slate-200 p-6 mb-5">
+          <h2 className="font-['Syne'] text-sm font-bold text-slate-900 uppercase tracking-wider mb-3">
+            Summary
+          </h2>
+          <p className="text-slate-600 leading-relaxed text-[15px]">
+            {userData.summary}
+          </p>
         </div>
 
         {/* Info Grid */}
-        <div style={{
-          display: "grid",
-          gridTemplateColumns: "repeat(auto-fill, minmax(220px, 1fr))",
-          gap: "16px",
-          marginBottom: "20px",
-        }}>
+        <div className="grid grid-cols-[repeat(auto-fill,minmax(220px,1fr))] gap-4 mb-5">
           {infoCards.map((card) => (
-            <div key={card.label} style={{
-              background: "white",
-              border: "1px solid #e5e7eb",
-              borderRadius: "14px",
-              padding: "20px",
-            }}>
-              <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "8px" }}>
-                <span style={{
-                  fontSize: "20px",
-                  width: "38px", height: "38px",
-                  background: "#eff6ff",
-                  borderRadius: "10px",
-                  display: "flex", alignItems: "center", justifyContent: "center",
-                }}>{card.icon}</span>
-                <p style={{ fontSize: "11px", fontWeight: "600", color: "#94a3b8", textTransform: "uppercase", letterSpacing: "0.08em", margin: 0 }}>
+            <div key={card.label} className="bg-white border border-slate-200 rounded-xl p-5">
+              <div className="flex items-center gap-2.5 mb-2">
+                <span className="text-xl w-10 h-10 bg-blue-50 rounded-lg flex items-center justify-center">
+                  {card.icon}
+                </span>
+                <p className="text-xs font-semibold text-slate-400 uppercase tracking-widest">
                   {card.label}
                 </p>
               </div>
-              <p style={{ color: "#0f172a", fontWeight: "600", fontSize: "14px", margin: 0 }}>
+              <p className="text-slate-900 font-semibold text-sm">
                 {card.value || "Not provided"}
               </p>
             </div>
@@ -134,35 +96,24 @@ export default function UserProfile() {
         </div>
 
         {/* Skills */}
-        <div style={{
-          background: "white",
-          border: "1px solid #e5e7eb",
-          borderRadius: "16px",
-          padding: "24px",
-        }}>
-          <h2 style={{
-            fontFamily: "'Syne', sans-serif", fontSize: "15px", fontWeight: "700",
-            color: "#0f172a", margin: "0 0 16px", textTransform: "uppercase", letterSpacing: "0.05em",
-          }}>Skills</h2>
-          <div style={{ display: "flex", flexWrap: "wrap", gap: "10px" }}>
+        <div className="bg-white border border-slate-200 rounded-2xl p-6">
+          <h2 className="font-['Syne'] text-sm font-bold text-slate-900 uppercase tracking-wider mb-4">
+            Skills
+          </h2>
+          <div className="flex flex-wrap gap-2.5">
             {userData.skills.map((skill) => {
               const color = skillColors[skill.proficiencyLevel] || skillColors.BEGINNER;
               return (
-                <div key={skill.skillName} style={{
-                  display: "flex", alignItems: "center", gap: "8px",
-                  background: color.bg,
-                  border: `1px solid ${color.text}30`,
-                  borderRadius: "8px",
-                  padding: "8px 14px",
-                }}>
-                  <span style={{ fontWeight: "600", fontSize: "14px", color: "#0f172a" }}>{skill.skillName}</span>
-                  <span style={{
-                    fontSize: "11px",
-                    fontWeight: "600",
-                    color: color.text,
-                    textTransform: "uppercase",
-                    letterSpacing: "0.05em",
-                  }}>{skill.proficiencyLevel}</span>
+                <div
+                  key={skill.skillName}
+                  className={`flex items-center gap-2 ${color.bg} border rounded-lg px-3.5 py-2`}
+                >
+                  <span className="font-semibold text-sm text-slate-900">
+                    {skill.skillName}
+                  </span>
+                  <span className={`text-[11px] font-semibold uppercase tracking-wide ${color.text}`}>
+                    {skill.proficiencyLevel}
+                  </span>
                 </div>
               );
             })}

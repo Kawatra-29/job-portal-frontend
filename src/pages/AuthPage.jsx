@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useActionState } from "react";
 import { useNavigate } from "react-router-dom";
 import useApi from "../hooks/useApi";
 
@@ -6,39 +6,32 @@ export default function AuthPage() {
   const { post } = useApi();
   const navigate = useNavigate();
   const [isLogin, setIsLogin] = useState(true);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [apiError, setApiError] = useState("");
 
-  const [form, setForm] = useState({
-    fname: "", email: "", password: "", role: "JOBSEEKER", phone: "",
-  });
-
-  const handleChange = (e) => setForm({ ...form, [e.target.name]: e.target.value });
-
-  const handleToggle = (loginMode) => {
-    setIsLogin(loginMode);
-    setApiError("");
-  };
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setApiError("");
-    setIsSubmitting(true);
+  async function authAction(prevState, formData) {
     try {
-      const url = isLogin
+      const loginMode = formData.get("isLogin") === "true";
+      const url = loginMode
         ? "http://localhost:8080/api/v1/auth/login"
         : "http://localhost:8080/api/v1/auth/register";
 
-      const payload = isLogin
-        ? { email: form.email, password: form.password }
-        : { fname: form.fname, email: form.email, password: form.password, role: form.role, phone: form.phone };
+      const payload = loginMode
+        ? {
+            email: formData.get("email"),
+            password: formData.get("password"),
+          }
+        : {
+            fname: formData.get("fname"),
+            email: formData.get("email"),
+            password: formData.get("password"),
+            role: formData.get("role") || "JOBSEEKER",
+            phone: formData.get("phone"),
+          };
 
       const response = await post(url, payload);
 
       if (response?.token) {
         localStorage.setItem("token", response.token);
-        // role response se lo, nahi toh form se (register case)
-        const role = response.role || form.role;
+        const role = response.role || formData.get("role") || "JOBSEEKER";
         localStorage.setItem("role", role);
 
         if (role === "EMPLOYER") {
@@ -46,14 +39,30 @@ export default function AuthPage() {
         } else {
           navigate("/dashboard/jobseeker");
         }
+        return { ...prevState, error: null, success: true };
       } else {
-        setApiError(response?.message || "Something went wrong. Please try again.");
+        return {
+          ...prevState,
+          error: response?.message || "Something went wrong. Please try again.",
+          success: false,
+        };
       }
-    } catch (err) {
-      setApiError("Network error. Please check your connection.");
-    } finally {
-      setIsSubmitting(false);
+    } catch (error) {
+      return {
+        ...prevState,
+        error: "Network error. Please check your connection.",
+        success: false,
+      };
     }
+  }
+
+  const [state, formAction, isPending] = useActionState(authAction, {
+    error: null,
+    success: false,
+  });
+
+  const handleToggle = (loginMode) => {
+    setIsLogin(loginMode);
   };
 
   const inputStyle = {
@@ -125,60 +134,57 @@ export default function AuthPage() {
         </div>
 
         {/* Form */}
-        <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: "14px" }}>
+        <form action={formAction} style={{ display: "flex", flexDirection: "column", gap: "14px" }}>
+          <input type="hidden" name="isLogin" value={isLogin ? "true" : "false"} />
           {!isLogin && (
             <>
-              <input type="text" name="fname" placeholder="Full Name" value={form.fname}
-                onChange={handleChange} style={inputStyle} required
+              <input type="text" name="fname" placeholder="Full Name" style={inputStyle}
                 onFocus={e => e.target.style.borderColor = "#2563eb"}
                 onBlur={e => e.target.style.borderColor = "#e5e7eb"}
               />
-              <input type="text" name="phone" placeholder="Phone Number" value={form.phone}
-                onChange={handleChange} style={inputStyle} required
+              <input type="text" name="phone" placeholder="Phone Number" style={inputStyle}
                 onFocus={e => e.target.style.borderColor = "#2563eb"}
                 onBlur={e => e.target.style.borderColor = "#e5e7eb"}
               />
             </>
           )}
 
-          <input type="email" name="email" placeholder="Email address" value={form.email}
-            onChange={handleChange} style={inputStyle} required
+          <input type="email" name="email" placeholder="Email address" style={inputStyle}
             onFocus={e => e.target.style.borderColor = "#2563eb"}
             onBlur={e => e.target.style.borderColor = "#e5e7eb"}
           />
-          <input type="password" name="password" placeholder="Password" value={form.password}
-            onChange={handleChange} style={inputStyle} required
+          <input type="password" name="password" placeholder="Password" style={inputStyle}
             onFocus={e => e.target.style.borderColor = "#2563eb"}
             onBlur={e => e.target.style.borderColor = "#e5e7eb"}
           />
 
           {!isLogin && (
-            <select name="role" value={form.role} onChange={handleChange} style={inputStyle}>
+            <select name="role" style={inputStyle}>
               <option value="JOBSEEKER">🧑‍💻 Job Seeker</option>
               <option value="EMPLOYER">🏢 EMPLOYER</option>
             </select>
           )}
 
-          {apiError && (
+          {state.error && (
             <div style={{
               background: "#fef2f2", border: "1px solid #fecaca",
               borderRadius: "8px", padding: "10px 14px",
               fontSize: "13px", color: "#dc2626", fontWeight: "500",
             }}>
-              ⚠️ {apiError}
+              ⚠️ {state.error}
             </div>
           )}
 
-          <button type="submit" disabled={isSubmitting} style={{
+          <button type="submit" disabled={isPending} style={{
             width: "100%", padding: "13px", borderRadius: "10px", border: "none",
             fontSize: "15px", fontWeight: "700",
-            cursor: isSubmitting ? "not-allowed" : "pointer",
+            cursor: isPending ? "not-allowed" : "pointer",
             fontFamily: "'DM Sans', sans-serif",
-            background: isSubmitting ? "#93c5fd" : "linear-gradient(135deg, #2563eb, #1d4ed8)",
+            background: isPending ? "#93c5fd" : "linear-gradient(135deg, #2563eb, #1d4ed8)",
             color: "white", boxShadow: "0 4px 12px rgba(37,99,235,0.35)",
             marginTop: "4px", transition: "all 0.2s",
           }}>
-            {isSubmitting ? "Please wait..." : isLogin ? "Sign In →" : "Create Account →"}
+            {isPending ? "Please wait..." : isLogin ? "Sign In →" : "Create Account →"}
           </button>
         </form>
 

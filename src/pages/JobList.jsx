@@ -1,8 +1,10 @@
-import useFetch from "../Hooks/useFetch";
+import useApi from "../hooks/useApi";
 import JobCard from "../components/JobCard";
 
 export default function JobList() {
-  const { data: jobs, loading, error } = useFetch("http://localhost:8080/api/v1/jobs?page=0&size=10");
+  const { data, loading, error } = useApi("http://localhost:8080/api/v1/jobs?page=0&size=10");
+  const jobs = data?.content || [];
+  const totalJobs = data?.totalElements || 0;
 
   return (
     <div style={{ background: "#f8fafc", minHeight: "100vh", fontFamily: "'DM Sans', sans-serif" }}>
@@ -24,7 +26,7 @@ export default function JobList() {
             letterSpacing: "-0.5px",
           }}>Latest Jobs</h1>
           <p style={{ color: "#64748b", fontSize: "15px", margin: 0 }}>
-            {loading ? "Loading opportunities..." : jobs ? `${jobs.length} jobs available` : "Explore all open positions"}
+            {loading ? "Loading opportunities..." : jobs.length > 0 ? `${totalJobs} jobs available` : "Explore all open positions"}
           </p>
         </div>
       </div>
@@ -59,13 +61,13 @@ export default function JobList() {
             <p style={{ fontWeight: "600", margin: "0 0 4px" }}>Failed to load jobs</p>
             <p style={{ fontSize: "13px", color: "#ef4444", margin: 0 }}>{error}</p>
           </div>
-        ) : jobs?.length === 0 ? (
+        ) : jobs.length === 0 ? (
           <div style={{ textAlign: "center", padding: "60px 24px", color: "#94a3b8" }}>
             <div style={{ fontSize: "48px", marginBottom: "16px" }}>🔍</div>
             <p style={{ fontSize: "18px", fontWeight: "600", color: "#64748b" }}>No jobs found</p>
           </div>
         ) : (
-          jobs?.map((job) => <JobCard key={job.id} job={job} />)
+          jobs.map((job) => <JobCard key={job.id} job={job} />)
         )}
       </div>
     </div>

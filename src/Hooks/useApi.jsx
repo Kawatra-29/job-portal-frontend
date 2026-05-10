@@ -12,7 +12,6 @@ export default function useApi(initialUrl = "", initialMethod = "GET") {
     const token = localStorage.getItem("token");
 
     try {
-      console.log("Sending apply request to:", url);
       const res = await fetch(url, {
         method,
         credentials: "include",
@@ -28,12 +27,13 @@ export default function useApi(initialUrl = "", initialMethod = "GET") {
         throw new Error(`Error: ${res.status}`);
       }
 
-      const json = await res.json();
+      const json = res.headers.get("content-length") !== "0" ? await res.json() : null;
       setData(json);
 
-      return json; // useful for chaining
+      return json;
     } catch (err) {
       setError(err.message);
+      return null;
     } finally {
       setLoading(false);
     }
