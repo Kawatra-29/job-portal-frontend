@@ -1,81 +1,22 @@
-import { useState } from "react";
 
 const Search = () => {
-  const [focused, setFocused] = useState(null);
-
   return (
-    <div style={{
-      display: "flex",
-      justifyContent: "center",
-    }}>
-      <div style={{
-        background: "white",
-        borderRadius: "16px",
-        padding: "8px 8px 8px 20px",
-        display: "flex",
-        alignItems: "center",
-        gap: "8px",
-        boxShadow: "0 20px 60px rgba(0,0,0,0.25)",
-        width: "100%",
-        maxWidth: "640px",
-        flexWrap: "wrap",
-      }}>
-        <span style={{ fontSize: "18px" }}>🔍</span>
+    <div className="flex justify-center">
+      <div className="bg-white rounded-2xl p-2 pl-5 flex items-center gap-2 shadow-2xl w-full max-w-xl flex-wrap">
+        <span className="text-xl">🔍</span>
         <input
           type="text"
           placeholder="Job title, skills, or company"
-          onFocus={() => setFocused("title")}
-          onBlur={() => setFocused(null)}
-          style={{
-            border: "none",
-            outline: "none",
-            fontSize: "15px",
-            color: "#0f172a",
-            fontFamily: "'DM Sans', sans-serif",
-            flex: "1",
-            minWidth: "140px",
-            padding: "10px 0",
-            background: "transparent",
-          }}
+          className="border-none outline-none text-base text-slate-900 font-['DM_Sans'] flex-1 min-w-36 py-2.5 bg-transparent"
         />
-        <div style={{ width: "1px", height: "28px", background: "#e5e7eb" }} />
-        <span style={{ fontSize: "16px" }}>📍</span>
+        <div className="w-px h-7 bg-slate-200" />
+        <span className="text-lg">📍</span>
         <input
           type="text"
           placeholder="City or remote"
-          onFocus={() => setFocused("location")}
-          onBlur={() => setFocused(null)}
-          style={{
-            border: "none",
-            outline: "none",
-            fontSize: "15px",
-            color: "#0f172a",
-            fontFamily: "'DM Sans', sans-serif",
-            flex: "1",
-            minWidth: "120px",
-            padding: "10px 0",
-            background: "transparent",
-          }}
+          className="border-none outline-none text-base text-slate-900 font-['DM_Sans'] flex-1 min-w-28 py-2.5 bg-transparent"
         />
-        <button
-          type="submit"
-          style={{
-            background: "linear-gradient(135deg, #2563eb, #1d4ed8)",
-            color: "white",
-            border: "none",
-            borderRadius: "10px",
-            padding: "12px 28px",
-            fontSize: "14px",
-            fontWeight: "600",
-            cursor: "pointer",
-            fontFamily: "'DM Sans', sans-serif",
-            whiteSpace: "nowrap",
-            boxShadow: "0 4px 12px rgba(37,99,235,0.4)",
-            transition: "all 0.2s",
-          }}
-          onMouseEnter={e => { e.currentTarget.style.transform = "scale(1.02)"; }}
-          onMouseLeave={e => { e.currentTarget.style.transform = "scale(1)"; }}
-        >
+        <button type="submit" className="bg-linear-to-br from-blue-600 to-blue-800 text-white border-none rounded-xl px-7 py-3 text-sm font-semibold cursor-pointer shadow-lg shadow-blue-500/40 transition-all hover:-translate-y-0.5">
           Search Jobs
         </button>
       </div>

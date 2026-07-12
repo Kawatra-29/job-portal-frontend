@@ -1,73 +1,136 @@
-import useApi from "../hooks/useApi";
+import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import axios from "axios";
 import JobCard from "../components/JobCard";
 
+const fetchJobs = async ({ page, size }) => {
+  const res = await axios.get(`http://localhost:8080/api/v1/jobs?page=${page}&size=${size}`);
+  return res.data;
+};
+
 export default function JobList() {
-  const { data, loading, error } = useApi("http://localhost:8080/api/v1/jobs?page=0&size=10");
+  const [page, setPage] = useState(0);
+  const size = 10;
+
+  const { data, isLoading, error, isFetching } = useQuery({
+    queryKey: ["jobs", "list", page],
+    queryFn: () => fetchJobs({ page, size }),
+    staleTime: 1000 * 60 * 2,
+    placeholderData: (prevData) => prevData,
+  });
+
   const jobs = data?.content || [];
   const totalJobs = data?.totalElements || 0;
+  const totalPages = data?.totalPages || 0;
 
   return (
-    <div style={{ background: "#f8fafc", minHeight: "100vh", fontFamily: "'DM Sans', sans-serif" }}>
-      <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=Syne:wght@700;800&display=swap" rel="stylesheet" />
+    <div className="min-h-screen bg-slate-50 font-['DM_Sans']">
+      <link
+        href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=Syne:wght@700;800&display=swap"
+        rel="stylesheet"
+      />
 
       {/* Header */}
-      <div style={{
-        background: "white",
-        borderBottom: "1px solid #e5e7eb",
-        padding: "32px 24px",
-      }}>
-        <div style={{ maxWidth: "720px", margin: "0 auto" }}>
-          <h1 style={{
-            fontFamily: "'Syne', sans-serif",
-            fontSize: "32px",
-            fontWeight: "800",
-            color: "#0f172a",
-            margin: "0 0 8px",
-            letterSpacing: "-0.5px",
-          }}>Latest Jobs</h1>
-          <p style={{ color: "#64748b", fontSize: "15px", margin: 0 }}>
-            {loading ? "Loading opportunities..." : jobs.length > 0 ? `${totalJobs} jobs available` : "Explore all open positions"}
+      <div className="bg-white border-b border-slate-200 px-6 py-8">
+        <div className="max-w-3xl mx-auto">
+          <h1 className="font-['Syne'] text-3xl font-extrabold text-slate-900 tracking-tight mb-2">
+            Latest Jobs
+          </h1>
+          <p className="text-slate-500 text-sm">
+            {isLoading ? "Loading opportunities..." : jobs.length > 0 ? `${totalJobs} jobs available` : "Explore all open positions"}
           </p>
         </div>
       </div>
 
       {/* Content */}
-      <div style={{ maxWidth: "720px", margin: "0 auto", padding: "32px 24px" }}>
-        {loading ? (
-          <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
-            {[1, 2, 3].map(i => (
-              <div key={i} style={{
-                background: "white",
-                borderRadius: "16px",
-                padding: "24px",
-                border: "1px solid #e5e7eb",
-              }}>
-                <div style={{ height: "20px", background: "#f1f5f9", borderRadius: "6px", marginBottom: "12px", width: "60%" }} />
-                <div style={{ height: "14px", background: "#f1f5f9", borderRadius: "6px", marginBottom: "20px", width: "35%" }} />
-                <div style={{ height: "40px", background: "#f1f5f9", borderRadius: "10px" }} />
+      <div className="max-w-3xl mx-auto px-6 py-8">
+        {isLoading ? (
+          <div className="flex flex-col gap-4">
+            {[1, 2, 3].map((i) => (
+              <div key={i} className="bg-white rounded-2xl p-6 border border-slate-200 animate-pulse">
+                <div className="h-5 bg-slate-100 rounded-md mb-3 w-3/5" />
+                <div className="h-3.5 bg-slate-100 rounded-md mb-5 w-1/3" />
+                <div className="h-10 bg-slate-100 rounded-xl" />
               </div>
             ))}
           </div>
         ) : error ? (
-          <div style={{
-            background: "#fef2f2",
-            border: "1px solid #fecaca",
-            borderRadius: "12px",
-            padding: "24px",
-            textAlign: "center",
-            color: "#dc2626",
-          }}>
-            <div style={{ fontSize: "32px", marginBottom: "8px" }}>⚠️</div>
-            <p style={{ fontWeight: "600", margin: "0 0 4px" }}>Failed to load jobs</p>
-            <p style={{ fontSize: "13px", color: "#ef4444", margin: 0 }}>{error}</p>
+          <div className="bg-red-50 border border-red-200 rounded-xl p-6 text-center">
+            <p className="font-semibold text-red-600 mb-1">
+              Failed to load jobs
+            </p>
+            <p className="text-sm text-red-500">{error.message}</p>
+            <button onClick={() => setPage(0)} className="mt-3 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition">
+              Retry
+            </button>
           </div>
         ) : jobs.length === 0 ? (
-          <div style={{ textAlign: "center", padding: "60px 24px", color: "#94a3b8" }}>
-            <div style={{ fontSize: "48px", marginBottom: "16px" }}>🔍</div>
-            <p style={{ fontSize: "18px", fontWeight: "600", color: "#64748b" }}>No jobs found</p>
+          <div className="text-center py-16 text-slate-400">
+            <p className="text-5xl mb-4">🔍</p>
+            <p className="text-xl font-semibold text-slate-500">
+              No jobs found
+            </p>
           </div>
         ) : (
-          jobs.map((job) => <JobCard key={job.id} job={job} />)
+          <>
+            <div className="flex flex-col gap-4">
+              {jobs.map((job) => <JobCard key={job.id} job={job} />)}
+            </div>
+
+            {/* Pagination */}
+            {totalPages > 1 && (
+              <div className="flex items-center justify-center gap-2 mt-8">
+                <button
+                  onClick={() => setPage((p) => Math.max(0, p - 1))}
+                  disabled={page === 0 || isFetching}
+                  className="px-4 py-2 bg-white border border-slate-200 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-slate-50 transition"
+                >
+                  ← Prev
+                </button>
+
+                <div className="flex items-center gap-1">
+                  {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                    let pageNum;
+                    if (totalPages <= 5) {
+                      pageNum = i;
+                    } else if (page < 3) {
+                      pageNum = i;
+                    } else if (page > totalPages - 3) {
+                      pageNum = totalPages - 5 + i;
+                    } else {
+                      pageNum = page - 2 + i;
+                    }
+                    return (
+                      <button
+                        key={pageNum}
+                        onClick={() => setPage(pageNum)}
+                        disabled={isFetching}
+                        className={`w-10 h-10 rounded-lg transition ${
+                          page === pageNum
+                            ? "bg-blue-600 text-white"
+                            : "bg-white border border-slate-200 hover:bg-slate-50"
+                        }`}
+                      >
+                        {pageNum + 1}
+                      </button>
+                    );
+                  })}
+                </div>
+
+                <button
+                  onClick={() => setPage((p) => Math.min(totalPages - 1, p + 1))}
+                  disabled={page >= totalPages - 1 || isFetching}
+                  className="px-4 py-2 bg-white border border-slate-200 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-slate-50 transition"
+                >
+                  Next →
+                </button>
+              </div>
+            )}
+
+            <p className="text-center text-sm text-slate-400 mt-4">
+              Page {page + 1} of {totalPages}
+            </p>
+          </>
         )}
       </div>
     </div>

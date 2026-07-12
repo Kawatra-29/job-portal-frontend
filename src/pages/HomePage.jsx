@@ -104,7 +104,7 @@ const HomePage = () => {
       </section>
 
       {/* CTA Banner */}
-      <section className="bg-linear-to-br from-blue-800 to-indigo-600 mx-6 mb-20 rounded-3xl px-10 py-14 text-center max-w-6xl">
+      <section className="bg-linear-to-br from-blue-800 to-indigo-600 mx-auto mb-20 rounded-3xl px-10 py-14 text-center max-w-6xl">
         <h2 className="font-['Syne'] text-3xl font-extrabold text-white tracking-tight mb-3">
           Ready to get hired?
         </h2>

@@ -1,4 +1,7 @@
-export default function ProfileCard(userData) {
+import { memo } from "react";
+
+// Memoized to prevent re-render when parent re-renders with same props
+function ProfileCard({ userData }) {
   const profileFields = [
     { label: "Full name", value: userData.name },
     { label: "Email", value: userData.email },
@@ -11,21 +14,21 @@ export default function ProfileCard(userData) {
     { label: "Expected Salary", value: userData.expectedSalary },
     { label: "Availability", value: userData.availability },
   ];
+
   return (
     <div className="grid gap-4 px-8 py-8 sm:grid-cols-2">
-            {profileFields.map((field) => (
-              <div
-                key={field.label}
-                className="rounded-2xl border border-slate-200 bg-slate-50 p-5"
-              >
-                <p className="text-sm font-medium uppercase tracking-wide text-slate-500">
-                  {field.label}
-                </p>
-                <p className="mt-2 text-lg font-semibold text-slate-900">
-                  {field.value || "Not provided"}
-                </p>
-              </div>
-            ))}
-          </div>
+      {profileFields.map((field) => (
+        <div key={field.label} className="rounded-2xl border border-slate-200 bg-slate-50 p-5">
+          <p className="text-sm font-medium uppercase tracking-wide text-slate-500">
+            {field.label}
+          </p>
+          <p className="mt-2 text-lg font-semibold text-slate-900">
+            {field.value || "Not provided"}
+          </p>
+        </div>
+      ))}
+    </div>
   );
 }
+
+export default memo(ProfileCard);

@@ -1,17 +1,21 @@
 import { useNavigate, Link } from "react-router-dom";
+import { useState } from "react";
+import useApi from "../Hooks/useApi";
+import UserProfile from "../pages/UserProfile";
+import JobList from "../pages/JobList";
 
 const stats = [
-  { icon: "📋", label: "Applications Sent", value: "12", color: "#2563eb" },
-  { icon: "👁️", label: "Profile Views", value: "84", color: "#7c3aed" },
-  { icon: "💼", label: "Saved Jobs", value: "7", color: "#d97706" },
-  { icon: "✅", label: "Interviews Scheduled", value: "3", color: "#16a34a" },
+  { icon: "📋", label: "Applications Sent", value: "12", color: "blue" },
+  { icon: "👁️", label: "Profile Views", value: "84", color: "violet" },
+  { icon: "💼", label: "Saved Jobs", value: "7", color: "amber" },
+  { icon: "✅", label: "Interviews Scheduled", value: "3", color: "green" },
 ];
 
 const recentApplications = [
-  { company: "Amazon", role: "Backend Developer", status: "Under Review", statusColor: "#d97706", statusBg: "#fef9c3" },
-  { company: "Flipkart", role: "Java Engineer", status: "Shortlisted", statusColor: "#16a34a", statusBg: "#dcfce7" },
-  { company: "TCS", role: "Software Trainee", status: "Applied", statusColor: "#2563eb", statusBg: "#dbeafe" },
-  { company: "Infosys", role: "System Engineer", status: "Rejected", statusColor: "#dc2626", statusBg: "#fee2e2" },
+  { company: "Amazon", role: "Backend Developer", status: "Under Review", statusColor: "text-amber-600", statusBg: "bg-amber-50" },
+  { company: "Flipkart", role: "Java Engineer", status: "Shortlisted", statusColor: "text-green-600", statusBg: "bg-green-50" },
+  { company: "TCS", role: "Software Trainee", status: "Applied", statusColor: "text-blue-600", statusBg: "bg-blue-50" },
+  { company: "Infosys", role: "System Engineer", status: "Rejected", statusColor: "text-red-600", statusBg: "bg-red-50" },
 ];
 
 const recommendedJobs = [
@@ -22,8 +26,12 @@ const recommendedJobs = [
 
 export default function JobSeekerDashboard() {
   const navigate = useNavigate();
-  const name = localStorage.getItem("name") || "Job Seeker";
-  const initials = name.split(" ").map(w => w[0]).join("").slice(0, 2).toUpperCase();
+  const [showProfile, setShowProfile] = useState(false);
+  const [showJobs, setShowJobs] = useState(false);
+  const { data: profile, loading, error } = useApi("http://localhost:8080/api/v1/jobseekers/me");
+
+  const user = profile?.user;
+  const name = user?.fname || localStorage.getItem("name") || "Job Seeker";
 
   const handleLogout = () => {
     localStorage.clear();
@@ -31,62 +39,56 @@ export default function JobSeekerDashboard() {
   };
 
   return (
-    <div style={{ display: "flex", minHeight: "100vh", fontFamily: "'DM Sans', sans-serif", background: "#f8fafc" }}>
+    <div className="flex min-h-screen bg-slate-50 font-['DM_Sans']">
       <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=Syne:wght@700;800&display=swap" rel="stylesheet" />
 
       {/* Sidebar */}
-      <aside style={{
-        width: "240px", background: "#0f172a", color: "white",
-        display: "flex", flexDirection: "column",
-        padding: "24px 0", flexShrink: 0, position: "sticky", top: 0, height: "100vh",
-      }}>
+      <aside className="w-60 bg-slate-900 text-white flex flex-col py-6 shrink-0 sticky top-0 h-screen">
         {/* Logo */}
-        <div style={{ padding: "0 24px 28px", borderBottom: "1px solid rgba(255,255,255,0.08)" }}>
-          <Link to="/home" style={{ textDecoration: "none", display: "flex", alignItems: "center", gap: "10px" }}>
-            <div style={{
-              width: "36px", height: "36px", background: "linear-gradient(135deg, #2563eb, #1d4ed8)",
-              borderRadius: "10px", display: "flex", alignItems: "center", justifyContent: "center",
-              boxShadow: "0 4px 12px rgba(37,99,235,0.4)",
-            }}>
-              <span style={{ color: "white", fontSize: "18px", fontWeight: "800", fontFamily: "'Syne', sans-serif" }}>J</span>
+        <div className="px-6 pb-7 border-b border-white/10">
+          <Link to="/home" className="flex items-center gap-2.5 no-underline">
+            <div className="w-9 h-9 bg-linear-to-br from-blue-500 to-blue-700 rounded-xl flex items-center justify-center shadow-lg shadow-blue-500/40">
+              <span className="text-white text-lg font-bold font-['Syne']">J</span>
             </div>
-            <span style={{ fontFamily: "'Syne', sans-serif", fontWeight: "800", fontSize: "17px", color: "white" }}>JobPortal</span>
+            <span className="font-['Syne'] font-extrabold text-lg text-white">JobPortal</span>
           </Link>
         </div>
 
         {/* User info */}
-        <div style={{ padding: "20px 24px", borderBottom: "1px solid rgba(255,255,255,0.08)" }}>
-          <div style={{
-            width: "44px", height: "44px", borderRadius: "50%",
-            background: "linear-gradient(135deg, #2563eb, #7c3aed)",
-            display: "flex", alignItems: "center", justifyContent: "center",
-            fontWeight: "800", fontSize: "16px", marginBottom: "10px",
-          }}>{initials}</div>
-          <p style={{ margin: 0, fontSize: "14px", fontWeight: "600", color: "white" }}>{name}</p>
-          <p style={{ margin: "2px 0 0", fontSize: "12px", color: "#64748b" }}>Job Seeker</p>
+        <div className="px-6 py-5 border-b border-white/10">
+          {user ? (
+            <>
+              <div className="w-11 h-11 rounded-full bg-linear-to-br from-blue-500 to-violet-500 flex items-center justify-center font-extrabold text-base mb-2.5">
+                {user.fname.charAt(0).toUpperCase()}
+              </div>
+              <p className="text-sm font-semibold text-white m-0">{user.fname}</p>
+              <p className="text-xs text-slate-400 mt-0.5 m-0">{user.email}</p>
+            </>
+          ) : (
+            <div className="animate-pulse">
+              <div className="w-11 h-11 rounded-full bg-slate-700 mb-2.5" />
+              <div className="h-4 bg-slate-700 rounded w-24 mb-2" />
+              <div className="h-3 bg-slate-700 rounded w-32" />
+            </div>
+          )}
         </div>
 
         {/* Nav Links */}
-        <nav style={{ padding: "16px 12px", flex: 1 }}>
+        <nav className="p-4 flex-1">
           {[
-            { icon: "🏠", label: "Dashboard", active: true },
-            { icon: "💼", label: "Browse Jobs", to: "/jobs" },
+            { icon: "🏠", label: "Dashboard", active: !showProfile && !showJobs, onClick: () => { setShowProfile(false); setShowJobs(false); } },
+            { icon: "💼", label: "Browse Jobs", onClick: () => { setShowProfile(false); setShowJobs(true); } },
             { icon: "📋", label: "My Applications" },
             { icon: "🔖", label: "Saved Jobs" },
-            { icon: "👤", label: "My Profile", to: "/me" },
+            { icon: "👤", label: "My Profile", onClick: () => { setShowProfile(true); setShowJobs(false); } },
           ].map((item) => (
             <div key={item.label}
-              onClick={() => item.to && navigate(item.to)}
-              style={{
-                display: "flex", alignItems: "center", gap: "12px",
-                padding: "10px 12px", borderRadius: "10px", marginBottom: "4px",
-                cursor: "pointer", transition: "all 0.2s",
-                background: item.active ? "rgba(37,99,235,0.2)" : "transparent",
-                color: item.active ? "#60a5fa" : "#94a3b8",
-                fontSize: "14px", fontWeight: item.active ? "600" : "400",
-              }}
-              onMouseEnter={e => { if (!item.active) { e.currentTarget.style.background = "rgba(255,255,255,0.05)"; e.currentTarget.style.color = "white"; } }}
-              onMouseLeave={e => { if (!item.active) { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = "#94a3b8"; } }}
+              onClick={() => item.to ? navigate(item.to) : item.onClick?.()}
+              className={`flex items-center gap-3 px-3 py-2.5 rounded-lg mb-1 cursor-pointer text-sm transition-all ${
+                item.active
+                  ? "bg-blue-500/20 text-blue-400 font-semibold"
+                  : "text-slate-400 hover:bg-white/5 hover:text-white"
+              }`}
             >
               <span>{item.icon}</span> {item.label}
             </div>
@@ -94,116 +96,152 @@ export default function JobSeekerDashboard() {
         </nav>
 
         {/* Logout */}
-        <div style={{ padding: "16px 12px", borderTop: "1px solid rgba(255,255,255,0.08)" }}>
-          <div onClick={handleLogout} style={{
-            display: "flex", alignItems: "center", gap: "12px",
-            padding: "10px 12px", borderRadius: "10px", cursor: "pointer",
-            color: "#f87171", fontSize: "14px", transition: "all 0.2s",
-          }}
-          onMouseEnter={e => e.currentTarget.style.background = "rgba(248,113,113,0.1)"}
-          onMouseLeave={e => e.currentTarget.style.background = "transparent"}
-          >
+        <div className="p-4 border-t border-white/10">
+          <div onClick={handleLogout} className="flex items-center gap-3 px-3 py-2.5 rounded-lg cursor-pointer text-sm text-red-400 hover:bg-red-500/10 transition-all">
             🚪 Logout
           </div>
         </div>
       </aside>
 
       {/* Main Content */}
-      <main style={{ flex: 1, padding: "32px", overflowY: "auto" }}>
-        {/* Header */}
-        <div style={{ marginBottom: "32px" }}>
-          <p style={{ color: "#64748b", fontSize: "14px", margin: "0 0 4px" }}>Good morning 👋</p>
-          <h1 style={{
-            fontFamily: "'Syne', sans-serif", fontSize: "28px", fontWeight: "800",
-            color: "#0f172a", margin: 0, letterSpacing: "-0.5px",
-          }}>Welcome back, {name.split(" ")[0]}!</h1>
-        </div>
+      <main className="flex-1 p-8 overflow-y-auto">
+        {showProfile ? (
+          <UserProfile />
+        ) : showJobs ? (
+          <JobList />
+        ) : (
+          <>
+            {/* Header */}
+            <div className="mb-8">
+              <p className="text-slate-500 text-sm m-0 mb-1">Good morning 👋</p>
+              <h1 className="font-['Syne'] text-3xl font-extrabold text-slate-900 m-0 tracking-tight">
+                Welcome back, {name.split(" ")[0]}!
+              </h1>
+            </div>
+
+        {loading && (
+          <div className="space-y-4 animate-pulse mb-6">
+            <div className="h-40 bg-slate-200 rounded-2xl" />
+          </div>
+        )}
+
+        {error && (
+          <div className="bg-red-50 border border-red-200 text-red-600 p-4 rounded-xl mb-6">
+            Failed to load profile: {error}
+          </div>
+        )}
+
+        {/* Profile Section */}
+        {profile && (
+          <div className="bg-white border border-slate-200 rounded-2xl p-6 mb-6">
+            <div className="flex items-start gap-5">
+              <div className="w-20 h-20 rounded-2xl bg-linear-to-br from-blue-500 to-violet-500 flex items-center justify-center font-extrabold text-3xl text-white shrink-0">
+                {user?.fname?.charAt(0).toUpperCase()}
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="flex justify-between items-start flex-wrap gap-3">
+                  <div>
+                    <h2 className="font-['Syne'] text-xl font-extrabold text-slate-900 m-0">{user?.fname}</h2>
+                    <p className="text-slate-500 text-sm mt-1">
+                      {profile.headline || "Add headline"}
+                      {profile.location && ` • 📍 ${profile.location}`}
+                    </p>
+                  </div>
+                  <div className="text-right">
+                    {profile.expectedSalary && (
+                      <p className="text-lg font-bold text-slate-900">₹{profile.expectedSalary}L</p>
+                    )}
+                    <p className="text-xs text-slate-500">Expected Salary</p>
+                  </div>
+                </div>
+
+                <div className="flex gap-4 mt-3 text-sm text-slate-600">
+                  <span>📧 {user?.email}</span>
+                  {user?.phone && <span>📱 {user.phone}</span>}
+                  {profile.yearsOfExperience && <span>💼 {profile.yearsOfExperience} yrs exp</span>}
+                  {profile.availability && <span>⏰ {profile.availability}</span>}
+                </div>
+
+                {profile.skills?.length > 0 && (
+                  <div className="mt-4">
+                    <p className="text-xs font-semibold text-slate-500 mb-2">SKILLS</p>
+                    <div className="flex flex-wrap gap-2">
+                      {profile.skills.map((skill, idx) => (
+                        <span key={idx} className="px-3 py-1 bg-blue-50 text-blue-700 text-xs font-semibold rounded-full">
+                          {skill.skillName}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {profile.summary && (
+                  <div className="mt-4">
+                    <p className="text-xs font-semibold text-slate-500 mb-1">SUMMARY</p>
+                    <p className="text-sm text-slate-600 leading-relaxed">{profile.summary}</p>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Stats */}
-        <div style={{
-          display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(180px, 1fr))",
-          gap: "16px", marginBottom: "32px",
-        }}>
+        <div className="grid grid-cols-2 xl:grid-cols-4 gap-4 mb-8">
           {stats.map((s) => (
-            <div key={s.label} style={{
-              background: "white", border: "1px solid #e5e7eb",
-              borderRadius: "16px", padding: "20px", transition: "all 0.2s",
-            }}
-            onMouseEnter={e => { e.currentTarget.style.boxShadow = "0 4px 20px rgba(0,0,0,0.08)"; e.currentTarget.style.transform = "translateY(-2px)"; }}
-            onMouseLeave={e => { e.currentTarget.style.boxShadow = "none"; e.currentTarget.style.transform = "translateY(0)"; }}
-            >
-              <div style={{
-                width: "42px", height: "42px", borderRadius: "12px",
-                background: `${s.color}15`, display: "flex", alignItems: "center",
-                justifyContent: "center", fontSize: "20px", marginBottom: "12px",
-              }}>{s.icon}</div>
-              <div style={{ fontFamily: "'Syne', sans-serif", fontSize: "26px", fontWeight: "800", color: s.color }}>{s.value}</div>
-              <div style={{ fontSize: "12px", color: "#64748b", fontWeight: "500", marginTop: "2px" }}>{s.label}</div>
+            <div key={s.label} className="bg-white border border-slate-200 rounded-2xl p-5 transition-all hover:shadow-lg hover:-translate-y-0.5">
+              <div className={`w-10 h-10 rounded-xl bg-${s.color}-50 flex items-center justify-center text-xl mb-3`}>{s.icon}</div>
+              <div className="font-['Syne'] text-3xl font-extrabold text-slate-900">{s.value}</div>
+              <div className="text-xs text-slate-500 font-medium mt-0.5">{s.label}</div>
             </div>
           ))}
         </div>
 
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "20px" }}>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
           {/* Recent Applications */}
-          <div style={{ background: "white", border: "1px solid #e5e7eb", borderRadius: "16px", padding: "24px" }}>
-            <h2 style={{
-              fontFamily: "'Syne', sans-serif", fontSize: "16px", fontWeight: "700",
-              color: "#0f172a", margin: "0 0 20px",
-            }}>Recent Applications</h2>
-            <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+          <div className="bg-white border border-slate-200 rounded-2xl p-6">
+            <h2 className="font-['Syne'] text-base font-bold text-slate-900 m-0 mb-5">Recent Applications</h2>
+            <div className="flex flex-col gap-3">
               {recentApplications.map((app) => (
-                <div key={app.company} style={{
-                  display: "flex", justifyContent: "space-between", alignItems: "center",
-                  padding: "12px", background: "#f8fafc", borderRadius: "10px",
-                }}>
+                <div key={app.company} className="flex justify-between items-center px-3 py-3 bg-slate-50 rounded-xl">
                   <div>
-                    <p style={{ margin: 0, fontWeight: "600", fontSize: "14px", color: "#0f172a" }}>{app.role}</p>
-                    <p style={{ margin: "2px 0 0", fontSize: "12px", color: "#64748b" }}>{app.company}</p>
+                    <p className="font-semibold text-sm text-slate-900 m-0">{app.role}</p>
+                    <p className="text-xs text-slate-500 mt-0.5 m-0">{app.company}</p>
                   </div>
-                  <span style={{
-                    fontSize: "11px", fontWeight: "600", padding: "4px 10px", borderRadius: "100px",
-                    background: app.statusBg, color: app.statusColor,
-                  }}>{app.status}</span>
+                  <span className={`${app.statusBg} ${app.statusColor} text-xs font-semibold px-2.5 py-1 rounded-full`}>
+                    {app.status}
+                  </span>
                 </div>
               ))}
             </div>
           </div>
 
           {/* Recommended Jobs */}
-          <div style={{ background: "white", border: "1px solid #e5e7eb", borderRadius: "16px", padding: "24px" }}>
-            <h2 style={{
-              fontFamily: "'Syne', sans-serif", fontSize: "16px", fontWeight: "700",
-              color: "#0f172a", margin: "0 0 20px",
-            }}>Recommended Jobs</h2>
-            <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+          <div className="bg-white border border-slate-200 rounded-2xl p-6">
+            <h2 className="font-['Syne'] text-base font-bold text-slate-900 m-0 mb-5">Recommended Jobs</h2>
+            <div className="flex flex-col gap-3">
               {recommendedJobs.map((job) => (
-                <div key={job.title} style={{
-                  padding: "14px", border: "1px solid #e5e7eb", borderRadius: "12px",
-                  transition: "all 0.2s", cursor: "pointer",
-                }}
-                onMouseEnter={e => { e.currentTarget.style.borderColor = "#bfdbfe"; e.currentTarget.style.boxShadow = "0 2px 12px rgba(37,99,235,0.08)"; }}
-                onMouseLeave={e => { e.currentTarget.style.borderColor = "#e5e7eb"; e.currentTarget.style.boxShadow = "none"; }}
-                >
-                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+                <div key={job.title} className="p-4 border border-slate-200 rounded-xl transition-all cursor-pointer hover:border-blue-300 hover:shadow-md">
+                  <div className="flex justify-between items-start">
                     <div>
-                      <p style={{ margin: 0, fontWeight: "600", fontSize: "14px", color: "#0f172a" }}>{job.title}</p>
-                      <p style={{ margin: "2px 0 4px", fontSize: "12px", color: "#2563eb", fontWeight: "500" }}>{job.company}</p>
-                      <p style={{ margin: 0, fontSize: "12px", color: "#64748b" }}>📍 {job.location} · 💰 {job.salary}</p>
+                      <p className="font-semibold text-sm text-slate-900 m-0">{job.title}</p>
+                      <p className="text-sm text-blue-600 font-medium mt-0.5 m-0">{job.company}</p>
+                      <p className="text-xs text-slate-500 mt-1 m-0">📍 {job.location} · 💰 {job.salary}</p>
                     </div>
-                    <span style={{
-                      fontSize: "11px", fontWeight: "600", padding: "3px 8px", borderRadius: "100px",
-                      background: "#dbeafe", color: "#1d4ed8",
-                    }}>{job.type}</span>
+                    <span className="bg-blue-50 text-blue-600 text-xs font-semibold px-2 py-0.5 rounded-full">
+                      {job.type}
+                    </span>
                   </div>
                 </div>
               ))}
             </div>
-            <Link to="/jobs" style={{
-              display: "block", textAlign: "center", marginTop: "16px",
-              color: "#2563eb", fontSize: "13px", fontWeight: "600", textDecoration: "none",
-            }}>View all jobs →</Link>
+            <Link to="/jobs" className="block text-center mt-4 text-blue-600 text-sm font-semibold no-underline hover:underline">
+              View all jobs →
+            </Link>
           </div>
         </div>
+          </>
+        )}
       </main>
     </div>
   );

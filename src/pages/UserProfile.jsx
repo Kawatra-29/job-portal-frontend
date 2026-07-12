@@ -1,4 +1,6 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import useApi from "../Hooks/useApi";
 
 const skillColors = {
   BEGINNER: { bg: "bg-yellow-50", text: "text-amber-700" },
@@ -8,32 +10,61 @@ const skillColors = {
 };
 
 export default function UserProfile() {
-  const [userData] = useState({
-    name: "Saurabh Kawatra",
-    email: "saurabhkawatra2001@gmail.com",
-    phone: "9876543210",
-    role: "JOBSEEKER",
-    headline: "Java Backend Developer · Fresher",
-    summary: "Passionate backend developer with strong knowledge of Java, Spring Boot, and REST APIs.",
-    location: "Delhi, India",
-    yearsOfExperience: 2,
-    expectedSalary: 400000,
-    availability: "Immediate",
-    skills: [
-      { skillName: "Java", proficiencyLevel: "INTERMEDIATE" },
-      { skillName: "Spring Boot", proficiencyLevel: "BEGINNER" },
-      { skillName: "REST APIs", proficiencyLevel: "INTERMEDIATE" },
-      { skillName: "MySQL", proficiencyLevel: "BEGINNER" },
-    ],
-  });
+  const navigate = useNavigate();
+  const { get, loading, error } = useApi();
+  const [userData, setUserData] = useState(null);
+
+  useEffect(() => {
+    const fetchUserData = async () => {
+      const token = localStorage.getItem("token");
+      if (!token) {
+        navigate("/auth");
+        return;
+      }
+      const result = await get("http://localhost:8080/api/v1/jobseekers/me");
+      if (result) {
+        setUserData(result);
+      }
+    };
+    fetchUserData();
+  }, [get, navigate]);
+
+  const handleLogout = () => {
+    localStorage.clear();
+    navigate("/auth");
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-slate-50 font-['DM_Sans'] flex items-center justify-center">
+        <div className="text-slate-500">Loading profile...</div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-slate-50 font-['DM_Sans'] flex items-center justify-center">
+        <div className="text-red-500">Error: {error}</div>
+      </div>
+    );
+  }
+
+  if (!userData) {
+    return (
+      <div className="min-h-screen bg-slate-50 font-['DM_Sans'] flex items-center justify-center">
+        <div className="text-slate-500">No data found</div>
+      </div>
+    );
+  }
 
   const infoCards = [
     { label: "Email", value: userData.email, icon: "✉️" },
-    { label: "Phone", value: userData.phone, icon: "📱" },
-    { label: "Location", value: userData.location, icon: "📍" },
-    { label: "Experience", value: `${userData.yearsOfExperience} Years`, icon: "💼" },
-    { label: "Expected Salary", value: `₹${userData.expectedSalary?.toLocaleString()} / yr`, icon: "💰" },
-    { label: "Availability", value: userData.availability, icon: "⚡" },
+    { label: "Phone", value: userData.phone || "Not provided", icon: "📱" },
+    { label: "Location", value: userData.location || "Not provided", icon: "📍" },
+    { label: "Experience", value: `${userData.yearsOfExperience || 0} Years`, icon: "💼" },
+    { label: "Expected Salary", value: userData.expectedSalary ? `₹${userData.expectedSalary.toLocaleString()} / yr` : "Not provided", icon: "💰" },
+    { label: "Availability", value: userData.availability || "Not provided", icon: "⚡" },
   ];
 
   return (
@@ -47,17 +78,32 @@ export default function UserProfile() {
             {/* Avatar */}
             <div className="w-20 h-20 rounded-full bg-linear-to-br from-blue-600 to-violet-600 flex items-center justify-center shrink-0 shadow-xl border-[3px] border-white/15">
               <span className="font-['Syne'] text-3xl font-extrabold text-white">
-                {userData.name.split(" ").map(w => w[0]).join("")}
+                {userData.name?.split(" ").map(w => w[0]).join("") || "U"}
               </span>
             </div>
             <div>
               <p className="text-blue-300 text-xs font-semibold uppercase tracking-widest mb-1">
-                {userData.role}
+                {userData.role || "JOBSEEKER"}
               </p>
               <h1 className="font-['Syne'] text-3xl font-extrabold text-white mb-1 tracking-tight">
-                {userData.name}
+                {userData.name || "User"}
               </h1>
-              <p className="text-slate-400 text-sm">{userData.headline}</p>
+              <p className="text-slate-400 text-sm">{userData.headline || "Add your headline"}</p>
+            </div>
+            {/* Action Buttons */}
+            <div className="ml-auto flex gap-3">
+              <button
+                onClick={() => navigate("/me/edit")}
+                className="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2 rounded-lg text-sm font-semibold transition-all flex items-center gap-2"
+              >
+                Edit Profile
+              </button>
+              <button
+                onClick={handleLogout}
+                className="bg-white/10 hover:bg-white/20 text-white px-4 py-2 rounded-lg text-sm font-medium transition-all"
+              >
+                Logout
+              </button>
             </div>
           </div>
         </div>
@@ -65,14 +111,14 @@ export default function UserProfile() {
 
       {/* Card body */}
       <div className="max-w-5xl mx-auto -mt-10 px-6 pb-16 relative">
-        
+
         {/* Summary */}
         <div className="bg-white rounded-2xl border border-slate-200 p-6 mb-5">
           <h2 className="font-['Syne'] text-sm font-bold text-slate-900 uppercase tracking-wider mb-3">
             Summary
           </h2>
           <p className="text-slate-600 leading-relaxed text-[15px]">
-            {userData.summary}
+            {userData.summary || "Add your summary to tell employers about yourself"}
           </p>
         </div>
 
@@ -100,24 +146,28 @@ export default function UserProfile() {
           <h2 className="font-['Syne'] text-sm font-bold text-slate-900 uppercase tracking-wider mb-4">
             Skills
           </h2>
-          <div className="flex flex-wrap gap-2.5">
-            {userData.skills.map((skill) => {
-              const color = skillColors[skill.proficiencyLevel] || skillColors.BEGINNER;
-              return (
-                <div
-                  key={skill.skillName}
-                  className={`flex items-center gap-2 ${color.bg} border rounded-lg px-3.5 py-2`}
-                >
-                  <span className="font-semibold text-sm text-slate-900">
-                    {skill.skillName}
-                  </span>
-                  <span className={`text-[11px] font-semibold uppercase tracking-wide ${color.text}`}>
-                    {skill.proficiencyLevel}
-                  </span>
-                </div>
-              );
-            })}
-          </div>
+          {userData.skills && userData.skills.length > 0 ? (
+            <div className="flex flex-wrap gap-2.5">
+              {userData.skills.map((skill, index) => {
+                const color = skillColors[skill.proficiencyLevel] || skillColors.BEGINNER;
+                return (
+                  <div
+                    key={index}
+                    className={`flex items-center gap-2 ${color.bg} border rounded-lg px-3.5 py-2`}
+                  >
+                    <span className="font-semibold text-sm text-slate-900">
+                      {skill.skillName || skill.skill || skill.name}
+                    </span>
+                    <span className={`text-[11px] font-semibold uppercase tracking-wide ${color.text}`}>
+                      {skill.proficiencyLevel || skill.level || "INTERMEDIATE"}
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
+          ) : (
+            <p className="text-slate-500 text-sm">No skills added yet</p>
+          )}
         </div>
       </div>
     </div>
