@@ -25,11 +25,13 @@ JobPortal is a production-ready frontend application that connects job seekers w
 - **My Profile** — view personal info, skills with proficiency levels
 - **Recent Applications** — track application statuses in real time
 
-### 🏢 Recruiter
-- **Recruiter Dashboard** — active job posts, total applicants, shortlisted candidates
-- **Applicant Management** — view recent applicants with status badges
-- **Active Job Posts** — manage live listings with applicant counts
-- **Post New Job** button (UI ready for backend integration)
+### 🏢 Recruiter / Employer
+- **Recruiter Dashboard** — stats overview (active job posts, total applicants, shortlisted candidates, pending reviews)
+- **Applicant Management** — list of applicants with sorting, filtering, and status action triggers (e.g., Shortlist, Schedule Interview, Reject, Hire)
+- **Active Job Posts** — list and manage live job postings with dynamic applicant count and status controls
+- **Post New Job** — complete form integrated with the backend to publish new listings
+- **Company Profile** — update company details (size, description)
+- **Employer Profile** — manage recruiter user details
 
 ### 🌐 Public Pages
 - **Home Page** — hero section, stats bar, feature highlights, CTA banner
@@ -64,11 +66,20 @@ job-portal-frontend/
 │   │   ├── HomePage.jsx          # Landing page with hero, stats, features
 │   │   ├── AuthPage.jsx          # Login / Register with JWT handling
 │   │   ├── JobList.jsx           # Live job listings from API
-│   │   └── UserProfile.jsx       # Job seeker profile view
+│   │   ├── UserProfile.jsx       # Job seeker profile view
+│   │   ├── EditProfile.jsx       # Edit details for job seeker or employer
+│   │   ├── EmployerProfile.jsx   # Employer profile details
+│   │   ├── CompanyProfile.jsx    # Company info management
+│   │   ├── MyJobs.jsx            # Recruiter's posted jobs listing
+│   │   ├── AllApplicants.jsx     # View all job applicants
+│   │   ├── Interviews.jsx        # View interview details and listings
+│   │   └── MyApplications.jsx    # Jobseeker's active applications
 │   │
 │   ├── components/
 │   │   ├── Navbar.jsx            # Sticky top navigation bar
+│   │   ├── SidebarLayout.jsx     # Sticky dashboard sidebar for navigation
 │   │   ├── JobCard.jsx           # Job listing card with apply button
+│   │   ├── JobDetailModal.jsx    # Pop-up modal containing job description and details
 │   │   ├── CompanyCard.jsx       # Company display card
 │   │   ├── Companies.jsx         # Companies grid page
 │   │   ├── Search.jsx            # Search bar component
@@ -80,8 +91,15 @@ job-portal-frontend/
 │   ├── hooks/
 │   │   └── useApi.jsx            # Custom hook for API calls (GET/POST/PUT/DELETE)
 │   │
+│   ├── queries/
+│   │   ├── jobQueries.jsx        # Job-related TanStack queries/mutations
+│   │   └── employerQueries.jsx   # Employer/recruiter actions and data queries
+│   │
+│   ├── context/
+│   │   └── AuthContext.jsx       # Login/Register context and user state mapping
+│   │
 │   ├── App.jsx                   # Route definitions
-│   ├── main.jsx                  # App entry point with BrowserRouter
+│   ├── main.jsx                  # App entry point with QueryClientProvider
 │   └── index.css                 # Global styles + Tailwind import
 │
 ├── index.html
@@ -178,8 +196,15 @@ Role === "JOBSEEKER"  →  /dashboard/jobseeker
 | `/Jobs` | JobList | Public |
 | `/companies` | Companies | Public |
 | `/me` | UserProfile | Authenticated |
+| `/profile/edit` | EditProfile | Authenticated |
 | `/dashboard/jobseeker` | JobSeekerDashboard | Job Seeker |
-| `/dashboard/recruiter` | RecruiterDashboard | Recruiter |
+| `/dashboard/recruiter` | EmployerDashboard | Employer |
+| `/company-profile` | CompanyProfile | Employer |
+| `/employer/profile` | EmployerProfile | Employer |
+| `/all-applicants` | AllApplicants | Employer |
+| `/interviews` | Interviews | Employer |
+| `/my-jobs` | MyJobs | Employer |
+| `/my-applications` | MyApplications | Job Seeker |
 | `/*` | PageNotFound | Public |
 
 ---
