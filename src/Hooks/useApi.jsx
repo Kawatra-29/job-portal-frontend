@@ -1,10 +1,14 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useContext } from "react";
 import axios from "axios";
+import { useNavigate } from "react-router-dom";
+import { AuthContext } from "../context/AuthContext";
 
 export default function useApi(initialUrl = "", initialMethod = "GET") {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(initialMethod === "GET" && !!initialUrl);
   const [error, setError] = useState(null);
+  const navigate = useNavigate();
+  const { logout } = useContext(AuthContext);
 
   const request = useCallback(async (url, method = "GET", body = null, headers = {}) => {
     setLoading(true);
@@ -26,6 +30,10 @@ export default function useApi(initialUrl = "", initialMethod = "GET") {
       setData(res.data);
       return res.data;
     } catch (err) {
+      if (err.response?.status === 401) {
+        logout();
+        navigate("/auth");
+      }
       if (err.response?.data) {
         setError(err.response.data.message || err.message);
       } else {
@@ -35,12 +43,20 @@ export default function useApi(initialUrl = "", initialMethod = "GET") {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [logout, navigate]);
 
   useEffect(() => {
+    let active = true;
     if (initialMethod === "GET" && initialUrl) {
-      request(initialUrl, "GET");
+      Promise.resolve().then(() => {
+        if (active) {
+          request(initialUrl, "GET");
+        }
+      });
     }
+    return () => {
+      active = false;
+    };
   }, [initialUrl, initialMethod, request]);
 
   const get = useCallback((url) => request(url, "GET"), [request]);

@@ -1,0 +1,325 @@
+import { useState } from "react";
+import {
+  useAllApplicants,
+  useUpdateApplicationStatus,
+} from "../queries/employerQueries";
+import { SidebarLayout } from "../components/SidebarLayout";
+
+const navItems = [
+  { icon: "🏠", label: "Dashboard", path: "/dashboard/employer" },
+  { icon: "📢", label: "Post a Job", path: "/post-job" },
+  { icon: "📋", label: "My Job Posts", path: "/my-jobs" },
+  { icon: "👥", label: "All Applicants", path: "/all-applicants", active: true },
+  { icon: "📅", label: "Interviews", path: "/interviews" },
+  { icon: "👤", label: "My Profile", path: "/employer/profile" },
+];
+
+const statusBadge = {
+  APPLIED: "bg-blue-50 text-blue-600 border-blue-200",
+  SHORTLISTED: "bg-green-50 text-green-600 border-green-200",
+  INTERVIEW: "bg-violet-50 text-violet-600 border-violet-200",
+  REJECTED: "bg-red-50 text-red-600 border-red-200",
+  HIRED: "bg-emerald-50 text-emerald-700 border-emerald-200",
+  default: "bg-slate-50 text-slate-600 border-slate-200",
+};
+
+export default function AllApplicants() {
+  const [page, setPage] = useState(0);
+  const [statusFilter, setStatusFilter] = useState("");
+  const [expandedAppIds, setExpandedAppIds] = useState(new Set());
+  const size = 10;
+
+  const toggleExpand = (appId) => {
+    setExpandedAppIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(appId)) {
+        next.delete(appId);
+      } else {
+        next.add(appId);
+      }
+      return next;
+    });
+  };
+
+  const filters = statusFilter ? { status: statusFilter } : {};
+  const { data, isLoading, isError, refetch } = useAllApplicants(page, size, filters);
+  const { mutate: updateStatus, isPending: updating } = useUpdateApplicationStatus();
+
+  const applicants = data?.content || [];
+  const totalElements = data?.totalElements || 0;
+  const totalPages = data?.totalPages || 0;
+
+  const handleStatusChange = (appId, newStatus) => {
+    updateStatus(
+      { id: appId, status: newStatus },
+      {
+        onSuccess: () => {
+          refetch();
+        },
+      }
+    );
+  };
+
+  return (
+    <SidebarLayout navItems={navItems} title="All Applicants" subtitle="Employer Panel 👥">
+      <div className="max-w-5xl mx-auto space-y-6">
+
+        {/* Filters Panel */}
+        <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div>
+            <h2 className="font-['Syne'] text-base font-bold text-slate-900 m-0">Filter Applicants</h2>
+            <p className="text-slate-400 text-xs mt-1 m-0">Manage and filter applications across all your active jobs</p>
+          </div>
+          <div className="flex items-center gap-3">
+            <label className="text-sm font-semibold text-slate-600 whitespace-nowrap">Status:</label>
+            <select
+              value={statusFilter}
+              onChange={(e) => {
+                setStatusFilter(e.target.value);
+                setPage(0);
+              }}
+              className="px-4 py-2 border border-slate-200 rounded-xl text-sm outline-none focus:ring-2 focus:ring-violet-500 focus:border-transparent transition-all bg-white font-medium text-slate-700"
+            >
+              <option value="">All Statuses</option>
+              <option value="APPLIED">Applied</option>
+              <option value="SHORTLISTED">Shortlisted</option>
+              <option value="INTERVIEW">Interview</option>
+              <option value="REJECTED">Rejected</option>
+              <option value="HIRED">Hired</option>
+            </select>
+          </div>
+        </div>
+
+        {/* Content list */}
+        {isLoading ? (
+          <div className="space-y-4">
+            {[1, 2, 3].map((i) => (
+              <div key={i} className="bg-white border border-slate-200 rounded-2xl p-6 animate-pulse flex items-center justify-between">
+                <div className="flex items-center gap-4">
+                  <div className="w-12 h-12 bg-slate-200 rounded-full" />
+                  <div className="space-y-2">
+                    <div className="h-4 bg-slate-200 rounded w-48" />
+                    <div className="h-3 bg-slate-200 rounded w-32" />
+                  </div>
+                </div>
+                <div className="h-8 bg-slate-200 rounded w-28" />
+              </div>
+            ))}
+          </div>
+        ) : isError ? (
+          <div className="bg-red-50 border border-red-200 text-red-600 p-8 rounded-2xl text-center">
+            <p className="text-2xl mb-2">⚠️</p>
+            <p className="font-semibold">Failed to load applicants. Please try again.</p>
+            <button onClick={() => refetch()} className="mt-4 px-5 py-2 bg-red-600 text-white rounded-lg text-sm font-medium hover:bg-red-700 transition-all">
+              Retry
+            </button>
+          </div>
+        ) : applicants.length === 0 ? (
+          <div className="bg-white border border-slate-200 rounded-2xl py-16 text-center text-slate-400">
+            <p className="text-5xl mb-4">👥</p>
+            <p className="text-lg font-semibold text-slate-600">No applicants found</p>
+            <p className="text-sm text-slate-400 mt-1">There are no candidates matching the status filters.</p>
+          </div>
+        ) : (
+          <>
+            <div className="bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-sm">
+              <div className="divide-y divide-slate-100">
+                {applicants.map((app) => {
+                  const jobTitle = app._jobTitle || app.jobTitle || "Job Opportunity";
+                  const badgeCls = statusBadge[app.status] || statusBadge.default;
+                  const formattedDate = app.appliedAt
+                    ? new Date(app.appliedAt).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })
+                    : "N/A";
+                  
+                  const jobSeeker = app.jobSeeker;
+                  const candidateName = jobSeeker?.user?.fname || "Anonymous Candidate";
+                  const initials = candidateName.split(" ").map(w => w[0]).join("").slice(0, 2).toUpperCase();
+                  const isExpanded = expandedAppIds.has(app.id);
+
+                  return (
+                    <div key={app.id} className="p-5 flex flex-col gap-4 border-b border-slate-100 hover:bg-slate-50/30 transition-all">
+                      
+                      {/* Header Row */}
+                      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                        <div className="flex items-start gap-4 min-w-0">
+                          {/* Initials Avatar */}
+                          <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-violet-600 via-indigo-500 to-blue-500 flex items-center justify-center font-extrabold text-white text-base shadow-sm shrink-0">
+                            {initials}
+                          </div>
+                          
+                          {/* Profile Header Details */}
+                          <div className="min-w-0">
+                            <h3 className="text-base font-bold text-slate-900 m-0 truncate">
+                              {candidateName}
+                            </h3>
+                            <p className="text-xs font-semibold text-blue-600 m-0 mt-0.5 truncate">
+                              {jobSeeker?.headline || "No Headline Provided"}
+                            </p>
+                            <div className="flex flex-wrap gap-x-3 gap-y-1 mt-1 text-xs text-slate-400 font-medium">
+                              <span>📍 {jobSeeker?.location || "N/A"}</span>
+                              <span>•</span>
+                              <span>💼 {jobSeeker?.yearsOfExperience || 0} yrs exp</span>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Mid Section: Applied Job Details */}
+                        <div className="md:text-center text-xs text-slate-500 font-medium border-l border-slate-100 md:pl-6 md:pr-6 py-1">
+                          <p className="font-semibold text-slate-800 m-0">Applied for: {jobTitle}</p>
+                          <p className="m-0 mt-1">📅 {formattedDate} · ID: #{app.id}</p>
+                        </div>
+
+                        {/* Right Section: Status Control */}
+                        <div className="flex items-center gap-3 self-end md:self-auto shrink-0">
+                          <span className={`text-xs font-bold border px-3 py-1.5 rounded-full ${badgeCls}`}>
+                            {app.status}
+                          </span>
+
+                          <select
+                            disabled={updating}
+                            value={app.status}
+                            onChange={(e) => handleStatusChange(app.id, e.target.value)}
+                            className="px-3 py-1.5 border border-slate-200 rounded-xl text-xs font-semibold text-slate-700 outline-none focus:ring-2 focus:ring-violet-500 focus:border-transparent transition-all bg-white cursor-pointer shadow-sm hover:border-slate-300"
+                          >
+                            <option value="APPLIED">Applied</option>
+                            <option value="SHORTLISTED">Shortlisted</option>
+                            <option value="INTERVIEW">Interview</option>
+                            <option value="REJECTED">Rejected</option>
+                            <option value="HIRED">Hired</option>
+                          </select>
+                        </div>
+                      </div>
+
+                      {/* Expand / Collapsible Profile Details Toggle */}
+                      <div className="flex items-center justify-between mt-1 pt-2 border-t border-dashed border-slate-100">
+                        <div>
+                          {jobSeeker?.skills?.length > 0 && (
+                            <div className="flex flex-wrap gap-1.5">
+                              {jobSeeker.skills.slice(0, 3).map((s, idx) => (
+                                <span key={idx} className="px-2 py-0.5 bg-slate-50 border border-slate-100 text-slate-500 text-[10px] font-semibold rounded-md capitalize">
+                                  {s.skillName}
+                                </span>
+                              ))}
+                              {jobSeeker.skills.length > 3 && (
+                                <span className="text-[10px] text-slate-400 font-bold self-center">
+                                  +{jobSeeker.skills.length - 3} more
+                                </span>
+                              )}
+                            </div>
+                          )}
+                        </div>
+                        <button
+                          onClick={() => toggleExpand(app.id)}
+                          className="text-xs font-bold text-violet-600 hover:text-violet-800 bg-transparent border-none cursor-pointer flex items-center gap-1 hover:underline select-none"
+                        >
+                          {isExpanded ? "Hide Candidate Profile ▴" : "View Candidate Profile ▾"}
+                        </button>
+                      </div>
+
+                      {/* Collapsible Panel */}
+                      {isExpanded && (
+                        <div className="mt-2 p-5 bg-slate-50/50 border border-slate-200/60 rounded-xl flex flex-col gap-4 animate-slide-down">
+                          
+                          {/* Summary section */}
+                          {jobSeeker?.summary && (
+                            <div>
+                              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider m-0 mb-1">CANDIDATE SUMMARY</p>
+                              <p className="text-sm text-slate-600 leading-relaxed italic m-0 bg-white border border-slate-100 rounded-lg p-3">
+                                "{jobSeeker.summary}"
+                              </p>
+                            </div>
+                          )}
+
+                          {/* Detail Grid */}
+                          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 py-2 text-xs font-semibold text-slate-500">
+                            <div>
+                              <p className="text-[9px] uppercase tracking-wider text-slate-400 m-0 mb-1">EXPECTED SALARY</p>
+                              <p className="text-slate-800 m-0 flex items-center gap-1">💰 {jobSeeker?.expectedSalary ? `₹${jobSeeker.expectedSalary.toLocaleString()}L` : "Not Specified"}</p>
+                            </div>
+                            <div>
+                              <p className="text-[9px] uppercase tracking-wider text-slate-400 m-0 mb-1">AVAILABILITY</p>
+                              <p className="text-slate-800 m-0 flex items-center gap-1 capitalize">⏰ {jobSeeker?.availability?.toLowerCase()?.replace("_", " ") || "N/A"}</p>
+                            </div>
+                            <div>
+                              <p className="text-[9px] uppercase tracking-wider text-slate-400 m-0 mb-1">CONTACT CHANNELS</p>
+                              <div className="flex gap-3 mt-0.5">
+                                {jobSeeker?.user?.email && (
+                                  <a href={`mailto:${jobSeeker.user.email}`} className="text-violet-600 hover:underline flex items-center gap-1">
+                                    📧 Email
+                                  </a>
+                                )}
+                                {jobSeeker?.user?.phone && (
+                                  <a href={`tel:${jobSeeker.user.phone}`} className="text-violet-600 hover:underline flex items-center gap-1">
+                                    📞 Call
+                                  </a>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Full Skills List */}
+                          {jobSeeker?.skills?.length > 0 && (
+                            <div>
+                              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider m-0 mb-2">FULL SKILL SET</p>
+                              <div className="flex flex-wrap gap-2">
+                                {jobSeeker.skills.map((s, idx) => (
+                                  <span key={idx} className="px-2.5 py-1 bg-white border border-slate-200 text-slate-700 text-xs font-semibold rounded-lg capitalize flex items-center gap-1">
+                                    <span>⚙️</span> {s.skillName} <span className="text-[10px] text-slate-400 font-medium">({s.proficiencyLevel?.toLowerCase()})</span>
+                                  </span>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+
+                        </div>
+                      )}
+
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Pagination */}
+            {totalPages > 1 && (
+              <div className="flex items-center justify-center gap-2 mt-6">
+                <button
+                  onClick={() => setPage((p) => Math.max(0, p - 1))}
+                  disabled={page === 0}
+                  className="px-4 py-2 bg-white border border-slate-200 rounded-xl text-sm font-medium text-slate-600 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-slate-50 transition"
+                >
+                  ← Prev
+                </button>
+                <div className="flex items-center gap-1">
+                  {Array.from({ length: totalPages }, (_, i) => (
+                    <button
+                      key={i}
+                      onClick={() => setPage(i)}
+                      className={`w-9 h-9 rounded-xl text-sm font-semibold transition ${page === i
+                          ? "bg-violet-600 text-white"
+                          : "bg-white border border-slate-200 hover:bg-slate-50 text-slate-700"
+                        }`}
+                    >
+                      {i + 1}
+                    </button>
+                  ))}
+                </div>
+                <button
+                  onClick={() => setPage((p) => Math.min(totalPages - 1, p + 1))}
+                  disabled={page >= totalPages - 1}
+                  className="px-4 py-2 bg-white border border-slate-200 rounded-xl text-sm font-medium text-slate-600 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-slate-50 transition"
+                >
+                  Next →
+                </button>
+              </div>
+            )}
+
+            <p className="text-center text-xs text-slate-400">
+              Showing page {page + 1} of {totalPages} ({totalElements} total applicants)
+            </p>
+          </>
+        )}
+      </div>
+    </SidebarLayout>
+  );
+}

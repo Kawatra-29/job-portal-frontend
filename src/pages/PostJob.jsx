@@ -40,7 +40,7 @@ export default function PostJob() {
     { icon: "📋", label: "My Job Posts", path: "/my-jobs" },
     { icon: "👥", label: "All Applicants", path: "/all-applicants" },
     { icon: "📅", label: "Interviews", path: "/interviews" },
-    { icon: "🏢", label: "Company Profile", path: "/company-profile" },
+    { icon: "👤", label: "My Profile", path: "/employer/profile" },
   ];
 
   return (

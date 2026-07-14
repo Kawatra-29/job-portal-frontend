@@ -1,37 +1,21 @@
-import { useState, memo, useCallback } from "react";
-import useApi from "../Hooks/useApi";
+import { memo } from "react";
 
 const jobTypeColors = {
-  FULL_TIME: { bg: "bg-green-50", text: "text-green-600" },
-  PART_TIME: { bg: "bg-amber-50", text: "text-amber-700" },
-  REMOTE: { bg: "bg-violet-50", text: "text-violet-600" },
-  INTERNSHIP: { bg: "bg-blue-50", text: "text-blue-600" },
-  CONTRACT: { bg: "bg-red-50", text: "text-red-600" },
+  FULL_TIME:  { bg: "bg-green-50",  text: "text-green-600" },
+  PART_TIME:  { bg: "bg-amber-50",  text: "text-amber-700" },
+  REMOTE:     { bg: "bg-violet-50", text: "text-violet-600" },
+  INTERNSHIP: { bg: "bg-blue-50",   text: "text-blue-600" },
+  CONTRACT:   { bg: "bg-red-50",    text: "text-red-600" },
 };
 
 // Memoized to prevent re-render when parent re-renders with same props
-const JobCard = memo(function JobCard({ job }) {
-  const [applied, setApplied] = useState(false);
-  const { post, loading } = useApi();
-
-  const apply = useCallback(async (e) => {
-    e.preventDefault();
-    if (!job?.id) return;
-    const url = `http://localhost:8080/api/v1/applications/${job.id}/apply`;
-    const res = await post(url);
-    if (res) setApplied(true);
-  }, [job?.id, post]);
-
-  const typeStyle = jobTypeColors[job.jobType] || { bg: "bg-slate-100", text: "text-slate-600" };
-
-  // Memoize computed values
-  const salaryDisplay = `₹${job.salaryMin?.toLocaleString()} – ₹${job.salaryMax?.toLocaleString()}`;
+const JobCard = memo(function JobCard({ job, isApplied, onViewDetails }) {
+  const typeStyle      = jobTypeColors[job.jobType] || { bg: "bg-slate-100", text: "text-slate-600" };
+  const salaryDisplay  = `₹${job.salaryMin?.toLocaleString()} – ₹${job.salaryMax?.toLocaleString()}`;
   const jobTypeDisplay = job.jobType?.replace("_", " ") || "Full Time";
 
   return (
-    <div
-      className="bg-white border border-slate-200 rounded-2xl p-6 mb-4 transition-all duration-300 hover:shadow-lg hover:border-blue-300 hover:-translate-y-0.5"
-    >
+    <div className="bg-white border border-slate-200 rounded-2xl p-6 mb-4 transition-all duration-300 hover:shadow-lg hover:border-blue-300 hover:-translate-y-0.5">
       {/* Top row */}
       <div className="flex justify-between items-start mb-3">
         <div className="flex-1">
@@ -58,18 +42,16 @@ const JobCard = memo(function JobCard({ job }) {
         ))}
       </div>
 
-      {/* Apply Button */}
+      {/* View Details Button */}
       <button
-        onClick={apply}
-        disabled={loading || applied}
-        className={`w-full py-3 rounded-xl text-sm font-semibold transition-all ${applied
-            ? "bg-green-500 text-white cursor-default shadow-sm shadow-green-300"
-            : loading
-              ? "bg-blue-300 text-white cursor-not-allowed"
-              : "bg-linear-to-r from-blue-600 to-blue-700 text-white hover:from-blue-700 hover:to-blue-800 shadow-sm shadow-blue-300 hover:shadow-blue-400 hover:-translate-y-0.5"
-          }`}
+        onClick={() => onViewDetails(job)}
+        className={`w-full py-3 rounded-xl text-sm font-semibold transition-all ${
+          isApplied
+            ? "bg-emerald-500 text-white cursor-pointer shadow-sm shadow-emerald-300 hover:bg-emerald-600"
+            : "bg-gradient-to-r from-blue-600 to-blue-700 text-white hover:from-blue-700 hover:to-blue-800 shadow-sm shadow-blue-300 hover:shadow-blue-400 hover:-translate-y-0.5"
+        }`}
       >
-        {applied ? "✓ Applied Successfully!" : loading ? "Applying..." : "View Details & Apply"}
+        {isApplied ? "✓ Applied — View Details" : "View Details & Apply"}
       </button>
     </div>
   );

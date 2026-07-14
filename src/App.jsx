@@ -12,6 +12,11 @@ const PageNotFound = lazy(() => import("./components/PageNotFound"));
 const AuthPage = lazy(() => import("./pages/AuthPage"));
 const JobSeekerDashboard = lazy(() => import("./components/Jobseekerdashboard"));
 const EmployerDashboard = lazy(() => import("./components/Employerdashboard"));
+const CompanyProfile = lazy(() => import("./pages/CompanyProfile"));
+const EmployerProfile = lazy(() => import("./pages/EmployerProfile"));
+const AllApplicants = lazy(() => import("./pages/AllApplicants"));
+const Interviews = lazy(() => import("./pages/Interviews"));
+const MyJobs = lazy(() => import("./pages/MyJobs"));
 
 // Loading fallback component
 function LoadingFallback() {
@@ -86,6 +91,46 @@ function App() {
           element={
             <RoleRoute allowedRole="EMPLOYER">
               <PostJob />
+            </RoleRoute>
+          }
+        />
+        <Route
+          path="/company-profile"
+          element={
+            <RoleRoute allowedRole="EMPLOYER">
+              <CompanyProfile />
+            </RoleRoute>
+          }
+        />
+        <Route
+          path="/employer/profile"
+          element={
+            <RoleRoute allowedRole="EMPLOYER">
+              <EmployerProfile />
+            </RoleRoute>
+          }
+        />
+        <Route
+          path="/all-applicants"
+          element={
+            <RoleRoute allowedRole="EMPLOYER">
+              <AllApplicants />
+            </RoleRoute>
+          }
+        />
+        <Route
+          path="/interviews"
+          element={
+            <RoleRoute allowedRole="EMPLOYER">
+              <Interviews />
+            </RoleRoute>
+          }
+        />
+        <Route
+          path="/my-jobs"
+          element={
+            <RoleRoute allowedRole="EMPLOYER">
+              <MyJobs />
             </RoleRoute>
           }
         />

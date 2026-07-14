@@ -9,10 +9,20 @@ const skillColors = {
   EXPERT: { bg: "bg-violet-50", text: "text-violet-600" },
 };
 
+const statusStyles = {
+  APPLIED: { color: "text-blue-600", bg: "bg-blue-50" },
+  SHORTLISTED: { color: "text-green-600", bg: "bg-green-50" },
+  INTERVIEW: { color: "text-violet-600", bg: "bg-violet-50" },
+  REJECTED: { color: "text-red-600", bg: "bg-red-50" },
+  HIRED: { color: "text-emerald-700", bg: "bg-emerald-50" },
+  default: { color: "text-slate-600", bg: "bg-slate-50" }
+};
+
 export default function UserProfile() {
   const navigate = useNavigate();
-  const { get, loading, error } = useApi();
+  const { get, del, loading, error } = useApi();
   const [userData, setUserData] = useState(null);
+  const [applications, setApplications] = useState([]);
 
   useEffect(() => {
     const fetchUserData = async () => {
@@ -25,9 +35,25 @@ export default function UserProfile() {
       if (result) {
         setUserData(result);
       }
+      const appsResult = await get("http://localhost:8080/api/v1/applications/my");
+      if (appsResult) {
+        setApplications(appsResult);
+      }
     };
     fetchUserData();
   }, [get, navigate]);
+
+  const handleWithdraw = async (appId) => {
+    if (window.confirm("Are you sure you want to withdraw this application?")) {
+      const res = await del(`http://localhost:8080/api/v1/applications/${appId}`);
+      if (res !== null) {
+        const appsResult = await get("http://localhost:8080/api/v1/applications/my");
+        if (appsResult) {
+          setApplications(appsResult);
+        }
+      }
+    }
+  };
 
   const handleLogout = () => {
     localStorage.clear();
@@ -58,9 +84,14 @@ export default function UserProfile() {
     );
   }
 
+  const userName = userData.user?.fname || "User";
+  const userEmail = userData.user?.email || "Not provided";
+  const userPhone = userData.user?.phone || "Not provided";
+  const userRole = userData.user?.role || "JOBSEEKER";
+
   const infoCards = [
-    { label: "Email", value: userData.email, icon: "✉️" },
-    { label: "Phone", value: userData.phone || "Not provided", icon: "📱" },
+    { label: "Email", value: userEmail, icon: "✉️" },
+    { label: "Phone", value: userPhone, icon: "📱" },
     { label: "Location", value: userData.location || "Not provided", icon: "📍" },
     { label: "Experience", value: `${userData.yearsOfExperience || 0} Years`, icon: "💼" },
     { label: "Expected Salary", value: userData.expectedSalary ? `₹${userData.expectedSalary.toLocaleString()} / yr` : "Not provided", icon: "💰" },
@@ -78,15 +109,15 @@ export default function UserProfile() {
             {/* Avatar */}
             <div className="w-20 h-20 rounded-full bg-linear-to-br from-blue-600 to-violet-600 flex items-center justify-center shrink-0 shadow-xl border-[3px] border-white/15">
               <span className="font-['Syne'] text-3xl font-extrabold text-white">
-                {userData.name?.split(" ").map(w => w[0]).join("") || "U"}
+                {userName.split(" ").map(w => w[0]).join("").toUpperCase() || "U"}
               </span>
             </div>
             <div>
               <p className="text-blue-300 text-xs font-semibold uppercase tracking-widest mb-1">
-                {userData.role || "JOBSEEKER"}
+                {userRole}
               </p>
               <h1 className="font-['Syne'] text-3xl font-extrabold text-white mb-1 tracking-tight">
-                {userData.name || "User"}
+                {userName}
               </h1>
               <p className="text-slate-400 text-sm">{userData.headline || "Add your headline"}</p>
             </div>
@@ -167,6 +198,47 @@ export default function UserProfile() {
             </div>
           ) : (
             <p className="text-slate-500 text-sm">No skills added yet</p>
+          )}
+        </div>
+
+        {/* Application History */}
+        <div className="bg-white border border-slate-200 rounded-2xl p-6 mt-5">
+          <h2 className="font-['Syne'] text-sm font-bold text-slate-900 uppercase tracking-wider mb-4">
+            Application History
+          </h2>
+          {Array.isArray(applications) && applications.length > 0 ? (
+            <div className="flex flex-col gap-3">
+              {applications.map((app) => {
+                const style = statusStyles[app.status] || statusStyles.default;
+                const companyName = app.job?.employer?.companyName || "Unknown Company";
+                const formattedDate = app.appliedAt
+                  ? new Date(app.appliedAt).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })
+                  : "N/A";
+                return (
+                  <div key={app.id} className="flex flex-col sm:flex-row sm:justify-between sm:items-center p-4 bg-slate-50 border border-slate-100 rounded-xl gap-3">
+                    <div>
+                      <p className="font-semibold text-sm text-slate-900 m-0">{app.job?.title || "Job Title"}</p>
+                      <p className="text-xs text-slate-500 mt-0.5 m-0">{companyName} · 📅 Applied on {formattedDate}</p>
+                    </div>
+                    <div className="flex items-center gap-3 self-end sm:self-auto">
+                      <span className={`${style.bg} ${style.color} text-xs font-semibold px-2.5 py-1 rounded-full`}>
+                        {app.status}
+                      </span>
+                      {app.status !== "HIRED" && app.status !== "REJECTED" && (
+                        <button
+                          onClick={() => handleWithdraw(app.id)}
+                          className="text-xs font-semibold text-red-500 hover:text-red-700 bg-transparent border-none cursor-pointer hover:underline"
+                        >
+                          Withdraw
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          ) : (
+            <p className="text-slate-500 text-sm">No applications submitted yet.</p>
           )}
         </div>
       </div>

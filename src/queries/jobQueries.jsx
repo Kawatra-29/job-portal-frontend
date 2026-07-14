@@ -51,7 +51,7 @@ export function useUserProfile() {
     return useQuery({
         queryKey: ["user", "profile"],
         queryFn: async () => {
-            const res = await axios.get(`${API}/me`, {
+            const res = await axios.get(`${API}/users/me`, {
                 headers: { Authorization: `Bearer ${getToken()}` }
             });
             return res.data;

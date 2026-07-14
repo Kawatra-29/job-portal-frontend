@@ -1,4 +1,5 @@
-import { createContext, useState, useEffect } from 'react';
+/* eslint-disable react-refresh/only-export-components */
+import { createContext, useState } from 'react';
 
 export const AuthContext = createContext();
 
@@ -6,21 +7,8 @@ export const AuthProvider = ({ children }) => {
     const [auth, setAuth] = useState({
         token: localStorage.getItem('token'),
         role: localStorage.getItem('role'),
-        isAuthenticated: false
+        isAuthenticated: !!localStorage.getItem('token')
     });
-
-    useEffect(() => {
-        const token = localStorage.getItem('token');
-        const role = localStorage.getItem('role');
-
-        if (token) {
-            setAuth({
-                token,
-                role,
-                isAuthenticated: true
-            });
-        }
-    }, []);
 
     const login = (token, role) => {
         localStorage.setItem('token', token);

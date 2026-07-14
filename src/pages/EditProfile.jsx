@@ -6,8 +6,11 @@ const skillLevels = ["BEGINNER", "INTERMEDIATE", "ADVANCED", "EXPERT"];
 
 export default function EditProfile() {
   const navigate = useNavigate();
-  const { get, put, loading, error } = useApi();
+  const { get, put: putSeeker, loading, error } = useApi();
+  const { put: putUser } = useApi();
   const [formData, setFormData] = useState({
+    fullName: "",
+    phone: "",
     headline: "",
     summary: "",
     location: "",
@@ -16,23 +19,48 @@ export default function EditProfile() {
     availability: "OPEN_TO_WORK",
     skills: [],
   });
-  const [newSkill, setNewSkill] = useState({ name: "", level: "INTERMEDIATE" });
+  const [availableSkills, setAvailableSkills] = useState([]); // Backend se aane wali skill list
+  const [newSkill, setNewSkill] = useState({ skillId: "", skillName: "", level: "INTERMEDIATE" });
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState(null);
   const [saveSuccess, setSaveSuccess] = useState(false);
 
   useEffect(() => {
     const fetchData = async () => {
-      const result = await get("http://localhost:8080/api/v1/jobseekers/me");
-      if (result) {
+      // Dono requests parallel mein chalao
+      const [skillsList, profileResult] = await Promise.all([
+        get("http://localhost:8080/api/v1/skills"),
+        get("http://localhost:8080/api/v1/jobseekers/me"),
+      ]);
+
+      // Available skills state mein save karo
+      const skills = skillsList || [];
+      setAvailableSkills(skills);
+
+      if (profileResult) {
+        // Profile ki existing skills ko skillId se match karo
+        const mappedSkills = (profileResult.skills || [])
+          .map((s) => {
+            const skillName = s.name || s.skillName || "";
+            const found = skills.find(
+              (av) => av.name.toLowerCase() === skillName.toLowerCase()
+            );
+            return found
+              ? { skillId: found.id, skillName: found.name, proficiencyLevel: s.proficiencyLevel || "INTERMEDIATE" }
+              : null;
+          })
+          .filter(Boolean); // null wale hata do (unmatched skills)
+
         setFormData({
-          headline: result.headline || "",
-          summary: result.summary || "",
-          location: result.location || "",
-          yearsOfExperience: result.yearsOfExperience || 0,
-          expectedSalary: result.expectedSalary || 0,
-          availability: result.availability || "OPEN_TO_WORK",
-          skills: result.skills || [],
+          fullName: profileResult.user?.fname || "",
+          phone: profileResult.user?.phone || "",
+          headline: profileResult.headline || "",
+          summary: profileResult.summary || "",
+          location: profileResult.location || "",
+          yearsOfExperience: profileResult.yearsOfExperience || 0,
+          expectedSalary: profileResult.expectedSalary || 0,
+          availability: profileResult.availability || "OPEN_TO_WORK",
+          skills: mappedSkills,
         });
       }
     };
@@ -48,13 +76,26 @@ export default function EditProfile() {
   };
 
   const handleAddSkill = () => {
-    if (newSkill.name.trim()) {
-      setFormData((prev) => ({
-        ...prev,
-        skills: [...prev.skills, { skillName: newSkill.name.trim(), proficiencyLevel: newSkill.level }],
-      }));
-      setNewSkill({ name: "", level: "INTERMEDIATE" });
-    }
+    if (!newSkill.skillId) return; // Koi skill select nahi ki
+
+    // Duplicate check — same skill dobara mat add hone do
+    const alreadyAdded = formData.skills.some(
+      (s) => s.skillId === parseInt(newSkill.skillId)
+    );
+    if (alreadyAdded) return;
+
+    setFormData((prev) => ({
+      ...prev,
+      skills: [
+        ...prev.skills,
+        {
+          skillId: parseInt(newSkill.skillId),
+          skillName: newSkill.skillName,
+          proficiencyLevel: newSkill.level,
+        },
+      ],
+    }));
+    setNewSkill({ skillId: "", skillName: "", level: "INTERMEDIATE" }); // Reset
   };
 
   const handleRemoveSkill = (index) => {
@@ -70,7 +111,12 @@ export default function EditProfile() {
     setSaveError(null);
     setSaveSuccess(false);
 
-    const payload = {
+    const userPayload = {
+      fullName: formData.fullName,
+      phone: formData.phone
+    };
+
+    const seekerPayload = {
       headline: formData.headline,
       summary: formData.summary,
       location: formData.location,
@@ -78,15 +124,16 @@ export default function EditProfile() {
       expectedSalary: formData.expectedSalary,
       availability: formData.availability,
       skills: formData.skills.map((skill) => ({
-        skillName: skill.skillName || skill.skill || skill.name,
-        proficiencyLevel: skill.proficiencyLevel || skill.level || "INTERMEDIATE",
+        skillId: skill.skillId,           // Backend ko ID chahiye
+        level: skill.proficiencyLevel,    // Backend field name: level
       })),
     };
 
-    const result = await put("http://localhost:8080/api/v1/jobseekers/me", payload);
+    const userResult = await putUser("http://localhost:8080/api/v1/users/me", userPayload);
+    const seekerResult = await putSeeker("http://localhost:8080/api/v1/jobseekers/me", seekerPayload);
     setSaving(false);
 
-    if (result) {
+    if (userResult && seekerResult) {
       setSaveSuccess(true);
       setTimeout(() => navigate("/dashboard/jobseeker"), 1500);
     } else {
@@ -145,6 +192,18 @@ export default function EditProfile() {
             </h2>
             <div className="grid gap-4">
               <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1.5">Full Name</label>
+                <input
+                  type="text"
+                  name="fullName"
+                  value={formData.fullName}
+                  onChange={handleChange}
+                  placeholder="Your full name"
+                  className="w-full px-4 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
+                  required
+                />
+              </div>
+              <div>
                 <label className="block text-sm font-medium text-slate-700 mb-1.5">Headline</label>
                 <input
                   type="text"
@@ -174,7 +233,18 @@ export default function EditProfile() {
             <h2 className="font-['Syne'] text-sm font-bold text-slate-900 uppercase tracking-wider mb-4">
               Contact & Location
             </h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1.5">Phone Number</label>
+                <input
+                  type="text"
+                  name="phone"
+                  value={formData.phone}
+                  onChange={handleChange}
+                  placeholder="e.g. +91 9876543210"
+                  className="w-full px-4 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
+                />
+              </div>
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-1.5">Location</label>
                 <input
@@ -270,14 +340,30 @@ export default function EditProfile() {
             )}
 
             <div className="flex gap-3 flex-wrap">
-              <input
-                type="text"
-                value={newSkill.name}
-                onChange={(e) => setNewSkill({ ...newSkill, name: e.target.value })}
-                placeholder="Add a skill..."
-                className="flex-1 min-w-40 px-4 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
-                onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), handleAddSkill())}
-              />
+              {/* Skill Dropdown — backend se aai list */}
+              <select
+                value={newSkill.skillId}
+                onChange={(e) => {
+                  const selected = availableSkills.find(
+                    (s) => s.id === parseInt(e.target.value)
+                  );
+                  setNewSkill({
+                    skillId: e.target.value,
+                    skillName: selected ? selected.name : "",
+                    level: newSkill.level,
+                  });
+                }}
+                className="flex-1 min-w-40 px-4 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all bg-white"
+              >
+                <option value="">-- Select a skill --</option>
+                {availableSkills.map((skill) => (
+                  <option key={skill.id} value={skill.id}>
+                    {skill.name}
+                  </option>
+                ))}
+              </select>
+
+              {/* Proficiency Level */}
               <select
                 value={newSkill.level}
                 onChange={(e) => setNewSkill({ ...newSkill, level: e.target.value })}
@@ -289,10 +375,12 @@ export default function EditProfile() {
                   </option>
                 ))}
               </select>
+
               <button
                 type="button"
                 onClick={handleAddSkill}
-                className="bg-slate-800 hover:bg-slate-900 text-white px-5 py-2.5 rounded-lg font-medium transition-all"
+                disabled={!newSkill.skillId}
+                className="bg-slate-800 hover:bg-slate-900 disabled:opacity-40 disabled:cursor-not-allowed text-white px-5 py-2.5 rounded-lg font-medium transition-all"
               >
                 Add
               </button>

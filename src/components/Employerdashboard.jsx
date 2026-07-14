@@ -1,172 +1,268 @@
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
+import {
+  useEmployerStats,
+  useRecentApplicants,
+  useActiveJobs,
+  useUpdateApplicationStatus,
+  useUpdateJobStatus,
+  useDeleteJob
+} from "../queries/employerQueries";
+import { SidebarLayout } from "./SidebarLayout";
 
-const stats = [
-  { icon: "📢", label: "Active Job Posts", value: "8", color: "blue" },
-  { icon: "👥", label: "Total Applicants", value: "143", color: "violet" },
-  { icon: "🎯", label: "Shortlisted", value: "26", color: "green" },
-  { icon: "📅", label: "Interviews Today", value: "5", color: "amber" },
+const navItems = [
+  { icon: "🏠", label: "Dashboard", path: "/dashboard/employer" },
+  { icon: "📢", label: "Post a Job", path: "/post-job" },
+  { icon: "📋", label: "My Job Posts", path: "/my-jobs" },
+  { icon: "👥", label: "All Applicants", path: "/all-applicants" },
+  { icon: "📅", label: "Interviews", path: "/interviews" },
+  { icon: "👤", label: "My Profile", path: "/employer/profile" },
 ];
 
-const recentApplicants = [
-  { name: "Saurabh Kawatra", role: "Backend Developer", exp: "2 yrs", status: "Shortlisted", statusColor: "text-green-600", statusBg: "bg-green-50" },
-  { name: "Priya Sharma", role: "Java Engineer", exp: "3 yrs", status: "Under Review", statusColor: "text-amber-600", statusBg: "bg-amber-50" },
-  { name: "Rahul Verma", role: "Spring Boot Dev", exp: "1 yr", status: "New", statusColor: "text-blue-600", statusBg: "bg-blue-50" },
-  { name: "Ankit Gupta", role: "Backend Developer", exp: "4 yrs", status: "Rejected", statusColor: "text-red-600", statusBg: "bg-red-50" },
-];
+const statusStyles = {
+  SHORTLISTED: { color: "text-green-600", bg: "bg-green-50" },
+  APPLIED: { color: "text-blue-600", bg: "bg-blue-50" },
+  INTERVIEW: { color: "text-violet-600", bg: "bg-violet-50" },
+  REJECTED: { color: "text-red-600", bg: "bg-red-50" },
+  HIRED: { color: "text-emerald-700", bg: "bg-emerald-50" },
+  default: { color: "text-slate-600", bg: "bg-slate-50" },
+};
 
-const activeJobs = [
-  { title: "Senior Java Developer", applicants: 34, posted: "2 days ago", urgent: true },
-  { title: "Spring Boot Engineer", applicants: 21, posted: "5 days ago", urgent: false },
-  { title: "Backend Architect", applicants: 12, posted: "1 week ago", urgent: false },
-];
 
-export default function EmployerDashboard() {
-  const navigate = useNavigate();
-  const name = localStorage.getItem("name") || "Employer";
+// ApplicationResponseDto: { id, jobId, jobTitle, companyName, status, appliedAt, _jobTitle }
+function ApplicantRow({ applicant }) {
+  const { mutate: updateStatus } = useUpdateApplicationStatus();
+  const style = statusStyles[applicant.status] || statusStyles.default;
+  const jobTitle = applicant._jobTitle || applicant.jobTitle || "Unknown Job";
+  const initials = jobTitle.split(" ").map((w) => w[0]).join("").slice(0, 2).toUpperCase();
+  const appliedDate = applicant.appliedAt
+    ? new Date(applicant.appliedAt).toLocaleDateString("en-IN", { day: "numeric", month: "short" })
+    : "";
 
-  const handleLogout = () => {
-    localStorage.clear();
-    navigate("/auth");
+  const handleStatusChange = (e) => {
+    const newStatus = e.target.value;
+    updateStatus({ id: applicant.id, status: newStatus });
   };
 
   return (
-    <div className="flex min-h-screen bg-slate-50 font-['DM_Sans']">
-      <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=Syne:wght@700;800&display=swap" rel="stylesheet" />
-
-      {/* Sidebar */}
-      <aside className="w-60 bg-slate-900 text-white flex flex-col py-6 shrink-0 sticky top-0 h-screen">
-        {/* Logo */}
-        <div className="px-6 pb-7 border-b border-white/10">
-          <div className="flex items-center gap-2.5">
-            <div className="w-9 h-9 bg-linear-to-br from-violet-600 to-violet-800 rounded-xl flex items-center justify-center shadow-lg shadow-violet-500/40">
-              <span className="text-white text-lg font-bold font-['Syne']">J</span>
-            </div>
-            <span className="font-['Syne'] font-extrabold text-lg text-white">JobPortal</span>
-          </div>
+    <div className="flex justify-between items-center px-3 py-3 bg-slate-50 rounded-xl">
+      <div className="flex items-center gap-2.5 min-w-0 flex-1">
+        <div className="w-9 h-9 rounded-full bg-linear-to-br from-violet-500 to-blue-500 flex items-center justify-center text-white text-xs font-bold shrink-0">
+          {initials}
         </div>
-
-        {/* User info */}
-        <div className="px-6 py-5 border-b border-white/10">
-          <div className="w-11 h-11 rounded-full bg-linear-to-br from-violet-600 to-pink-600 flex items-center justify-center font-extrabold text-base mb-2.5">
-            {name.split(" ").map(w => w[0]).join("").slice(0, 2).toUpperCase()}
-          </div>
-          <p className="text-sm font-semibold text-white m-0">{name}</p>
-          <p className="text-xs text-slate-400 mt-0.5 m-0">Employer</p>
+        <div className="min-w-0 flex-1">
+          <p className="font-semibold text-sm text-slate-900 m-0 truncate">Applied for: {jobTitle}</p>
+          <p className="text-xs text-slate-500 m-0">{appliedDate && `📅 ${appliedDate}`}</p>
         </div>
+      </div>
+      <select
+        value={applicant.status}
+        onChange={handleStatusChange}
+        className={`text-xs font-semibold px-2.5 py-1 rounded-full outline-none border border-slate-200 cursor-pointer ${style.bg} ${style.color}`}
+      >
+        <option value="APPLIED">Applied</option>
+        <option value="SHORTLISTED">Shortlisted</option>
+        <option value="INTERVIEW">Interview</option>
+        <option value="REJECTED">Rejected</option>
+        <option value="HIRED">Hired</option>
+      </select>
+    </div>
+  );
+}
 
-        {/* Nav */}
-        <nav className="p-4 flex-1">
-          {[
-            { icon: "🏠", label: "Dashboard", path: "/dashboard/employer", active: true },
-            { icon: "📢", label: "Post a Job", path: "/post-job" },
-            { icon: "📋", label: "My Job Posts", path: "/my-jobs" },
-            { icon: "👥", label: "All Applicants", path: "/all-applicants" },
-            { icon: "📅", label: "Interviews", path: "/interviews" },
-            { icon: "🏢", label: "Company Profile", path: "/company-profile" },
-          ].map((item) => (
-            <div
-              key={item.label}
-              onClick={() => item.path && navigate(item.path)}
-              className={`flex items-center gap-3 px-3 py-2.5 rounded-lg mb-1 cursor-pointer text-sm transition-all ${
-                item.active
-                  ? "bg-violet-500/20 text-violet-400 font-semibold"
-                  : "text-slate-400 hover:bg-white/5 hover:text-white"
-              }`}>
-              <span>{item.icon}</span> {item.label}
-            </div>
-          ))}
-        </nav>
+// JobResponseDto: { id, title, location, jobType, workMode, status, experienceLevel, salaryMin, salaryMax, currency, deadline }
+const statusBadge = {
+  OPEN: "bg-green-50 text-green-600",
+  CLOSED: "bg-slate-100 text-slate-500",
+  PAUSED: "bg-amber-50 text-amber-600",
+  FILLED: "bg-blue-50 text-blue-600",
+};
 
-        {/* Logout */}
-        <div className="p-4 border-t border-white/10">
-          <div onClick={handleLogout} className="flex items-center gap-3 px-3 py-2.5 rounded-lg cursor-pointer text-sm text-red-400 hover:bg-red-500/10 transition-all">
-            🚪 Logout
+function JobRow({ job }) {
+  const { mutate: updateJobStatus } = useUpdateJobStatus();
+  const { mutate: deleteJob } = useDeleteJob();
+
+  const deadlineStr = job.deadline
+    ? new Date(job.deadline).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })
+    : null;
+  const isUrgent = job.deadline && new Date(job.deadline) - new Date() < 7 * 24 * 60 * 60 * 1000;
+  const badgeCls = statusBadge[job.status] || "bg-slate-100 text-slate-500";
+
+  const handleStatusChange = (e) => {
+    e.stopPropagation();
+    const newStatus = e.target.value;
+    updateJobStatus({ id: job.id, status: newStatus });
+  };
+
+  const handleDelete = (e) => {
+    e.stopPropagation();
+    if (window.confirm(`Are you sure you want to delete the job post "${job.title}"?`)) {
+      deleteJob(job.id);
+    }
+  };
+
+  return (
+    <div className="p-4 border border-slate-200 rounded-xl transition-all hover:border-violet-300 hover:shadow-md">
+      <div className="flex justify-between items-start gap-4">
+        <div className="min-w-0 flex-1">
+          <div className="flex items-center gap-2 mb-1 flex-wrap">
+            <p className="font-semibold text-sm text-slate-900 m-0">{job.title}</p>
+            {isUrgent && (
+              <span className="bg-red-50 text-red-600 text-[10px] font-bold px-1.5 py-0.5 rounded">URGENT</span>
+            )}
+            <select
+              value={job.status}
+              onChange={handleStatusChange}
+              onClick={(e) => e.stopPropagation()}
+              className={`text-[10px] font-bold px-1.5 py-0.5 rounded outline-none border border-slate-200 cursor-pointer ${badgeCls}`}
+            >
+              <option value="OPEN">Open</option>
+              <option value="CLOSED">Closed</option>
+              <option value="PAUSED">Paused</option>
+              <option value="FILLED">Filled</option>
+            </select>
           </div>
+          <p className="text-xs text-slate-500 m-0">
+            📍 {job.location || "Remote"} &nbsp;·&nbsp; {job.jobType?.replace("_", " ")} &nbsp;·&nbsp; {job.workMode}
+          </p>
+          {deadlineStr && (
+            <p className="text-xs text-slate-400 mt-1 m-0">⏰ Deadline: {deadlineStr}</p>
+          )}
         </div>
-      </aside>
-
-      {/* Main */}
-      <main className="flex-1 p-8 overflow-y-auto">
-        {/* Header */}
-        <div className="flex justify-between items-start mb-8">
-          <div>
-            <p className="text-slate-500 text-sm m-0 mb-1">Employer Panel 🏢</p>
-            <h1 className="font-['Syne'] text-3xl font-extrabold text-slate-900 m-0 tracking-tight">
-              Welcome, {name.split(" ")[0]}!
-            </h1>
+        <div className="flex flex-col items-end justify-between min-h-12 shrink-0">
+          <div className="text-right">
+            {job.salaryMin && (
+              <p className="font-['Syne'] font-extrabold text-base text-violet-600 m-0">
+                ₹{(job.salaryMin / 100000).toFixed(0)}L
+              </p>
+            )}
+            {job.salaryMax && (
+              <p className="text-xs text-slate-400 m-0">– ₹{(job.salaryMax / 100000).toFixed(0)}L</p>
+            )}
           </div>
-          <button onClick={() => navigate("/post-job")} className="bg-linear-to-br from-violet-600 to-violet-800 text-white border-none rounded-xl px-5 py-3 text-sm font-bold cursor-pointer shadow-lg shadow-violet-500/35 font-['DM_Sans'] transition-all hover:-translate-y-0.5 hover:shadow-xl hover:shadow-violet-500/50">
-            + Post New Job
+          <button
+            onClick={handleDelete}
+            className="text-xs text-red-500 hover:text-red-700 bg-transparent border-none mt-2 cursor-pointer transition-colors"
+            title="Delete Job Post"
+          >
+            🗑️ Delete
           </button>
         </div>
-
-        {/* Stats */}
-        <div className="grid grid-cols-2 xl:grid-cols-4 gap-4 mb-8">
-          {stats.map((s) => (
-            <div key={s.label} className="bg-white border border-slate-200 rounded-2xl p-5 transition-all hover:shadow-lg hover:-translate-y-0.5">
-              <div className={`w-10 h-10 rounded-xl bg-${s.color}-50 flex items-center justify-center text-xl mb-3`}>{s.icon}</div>
-              <div className="font-['Syne'] text-3xl font-extrabold text-slate-900">{s.value}</div>
-              <div className="text-xs text-slate-500 font-medium mt-0.5">{s.label}</div>
-            </div>
-          ))}
-        </div>
-
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
-          {/* Recent Applicants */}
-          <div className="bg-white border border-slate-200 rounded-2xl p-6">
-            <h2 className="font-['Syne'] text-base font-bold text-slate-900 m-0 mb-5">Recent Applicants</h2>
-            <div className="flex flex-col gap-3">
-              {recentApplicants.map((a) => (
-                <div key={a.name} className="flex justify-between items-center px-3 py-3 bg-slate-50 rounded-xl">
-                  <div className="flex items-center gap-2.5">
-                    <div className="w-9 h-9 rounded-full bg-linear-to-br from-violet-500 to-blue-500 flex items-center justify-center text-white text-xs font-bold shrink-0">
-                      {a.name.split(" ").map(w => w[0]).join("")}
-                    </div>
-                    <div>
-                      <p className="font-semibold text-sm text-slate-900 m-0">{a.name}</p>
-                      <p className="text-xs text-slate-500 m-0">{a.role} · {a.exp}</p>
-                    </div>
-                  </div>
-                  <span className={`${a.statusBg} ${a.statusColor} text-xs font-semibold px-2.5 py-1 rounded-full`}>
-                    {a.status}
-                  </span>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Active Job Posts */}
-          <div className="bg-white border border-slate-200 rounded-2xl p-6">
-            <h2 className="font-['Syne'] text-base font-bold text-slate-900 m-0 mb-5">Active Job Posts</h2>
-            <div className="flex flex-col gap-3">
-              {activeJobs.map((job) => (
-                <div key={job.title} className="p-4 border border-slate-200 rounded-xl transition-all cursor-pointer hover:border-violet-300 hover:shadow-md">
-                  <div className="flex justify-between items-start">
-                    <div>
-                      <div className="flex items-center gap-2 mb-1">
-                        <p className="font-semibold text-sm text-slate-900 m-0">{job.title}</p>
-                        {job.urgent && (
-                          <span className="bg-red-50 text-red-600 text-[10px] font-bold px-1.5 py-0.5 rounded">
-                            URGENT
-                          </span>
-                        )}
-                      </div>
-                      <p className="text-xs text-slate-500 m-0">Posted {job.posted}</p>
-                    </div>
-                    <div className="text-right">
-                      <p className="font-['Syne'] font-extrabold text-2xl text-violet-600 m-0">{job.applicants}</p>
-                      <p className="text-xs text-slate-400 m-0">applicants</p>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-            <button onClick={() => navigate("/post-job")} className="block w-full mt-4 bg-violet-50 border border-violet-200 text-violet-600 rounded-xl px-4 py-2.5 text-sm font-semibold cursor-pointer font-['DM_Sans'] hover:bg-violet-100 transition-all">
-              + Post Another Job
-            </button>
-          </div>
-        </div>
-      </main>
+      </div>
     </div>
+  );
+}
+
+function StatCard({ stat, isLoading }) {
+  if (isLoading) {
+    return (
+      <div className="bg-white border border-slate-200 rounded-2xl p-5 animate-pulse">
+        <div className="w-10 h-10 rounded-xl bg-slate-200 mb-3" />
+        <div className="h-8 bg-slate-200 rounded w-24" />
+        <div className="h-3 bg-slate-200 rounded w-full mt-1" />
+      </div>
+    );
+  }
+  return (
+    <div className="bg-white border border-slate-200 rounded-2xl p-5 transition-all hover:shadow-lg hover:-translate-y-0.5">
+      <div className={`w-10 h-10 rounded-xl bg-${stat.color}-50 flex items-center justify-center text-xl mb-3`}>
+        {stat.icon}
+      </div>
+      <div className="font-['Syne'] text-3xl font-extrabold text-slate-900">{stat.value}</div>
+      <div className="text-xs text-slate-500 font-medium mt-0.5">{stat.label}</div>
+    </div>
+  );
+}
+
+export default function EmployerDashboard() {
+  const navigate = useNavigate();
+
+  const { data: stats, isLoading: statsLoading } = useEmployerStats();
+  const { data: recentApplicants, isLoading: applicantsLoading } = useRecentApplicants(5);
+  const { data: activeJobs, isLoading: jobsLoading } = useActiveJobs();
+
+  const statItems = stats ? [
+    { icon: "📢", label: "Active Job Posts", value: String(stats.activeJobPosts || 0), color: "blue" },
+    { icon: "👥", label: "Total Applicants", value: String(stats.totalApplicants || 0), color: "violet" },
+    { icon: "🎯", label: "Shortlisted", value: String(stats.shortlisted || 0), color: "green" },
+    { icon: "📅", label: "Interviews Today", value: String(stats.interviewsToday || 0), color: "amber" },
+  ] : [
+    { icon: "📢", label: "Active Job Posts", value: "0", color: "blue" },
+    { icon: "👥", label: "Total Applicants", value: "0", color: "violet" },
+    { icon: "🎯", label: "Shortlisted", value: "0", color: "green" },
+    { icon: "📅", label: "Interviews Today", value: "0", color: "amber" },
+  ];
+
+  return (
+    <SidebarLayout
+      user={null}
+      navItems={navItems}
+      title="Welcome back, Employer!"
+      subtitle="Employer Panel 🏢"
+      actions={
+        <button
+          onClick={() => navigate("/post-job")}
+          className="bg-linear-to-br from-violet-600 to-violet-800 text-white border-none rounded-xl px-5 py-3 text-sm font-bold cursor-pointer shadow-lg shadow-violet-500/35 font-['DM_Sans'] transition-all hover:-translate-y-0.5 hover:shadow-xl hover:shadow-violet-500/50"
+        >
+          + Post New Job
+        </button>
+      }
+    >
+      {/* Stats */}
+      <div className="grid grid-cols-2 xl:grid-cols-4 gap-4 mb-8">
+        {statItems.map((stat) => (
+          <StatCard key={stat.label} stat={stat} isLoading={statsLoading} />
+        ))}
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+        {/* Recent Applicants */}
+        <div className="bg-white border border-slate-200 rounded-2xl p-6">
+          <h2 className="font-['Syne'] text-base font-bold text-slate-900 m-0 mb-5">Recent Applicants</h2>
+          <div className="flex flex-col gap-3">
+            {applicantsLoading ? (
+              <div className="space-y-3">
+                {[1, 2, 3].map((i) => (
+                  <div key={i} className="h-14 bg-slate-100 rounded-xl animate-pulse" />
+                ))}
+              </div>
+            ) : recentApplicants?.length > 0 ? (
+              recentApplicants.map((applicant) => <ApplicantRow key={applicant.id || applicant.name} applicant={applicant} />)
+            ) : (
+              <div className="text-center py-8 text-slate-400">
+                <p className="text-4xl mb-2">👥</p>
+                <p className="font-medium">No applicants yet</p>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Active Job Posts */}
+        <div className="bg-white border border-slate-200 rounded-2xl p-6">
+          <h2 className="font-['Syne'] text-base font-bold text-slate-900 m-0 mb-5">Active Job Posts</h2>
+          <div className="flex flex-col gap-3">
+            {jobsLoading ? (
+              <div className="space-y-3">
+                {[1, 2, 3].map((i) => (
+                  <div key={i} className="h-28 bg-slate-100 rounded-xl animate-pulse" />
+                ))}
+              </div>
+            ) : activeJobs?.length > 0 ? (
+              activeJobs.map((job) => <JobRow key={job.id || job.title} job={job} />)
+            ) : (
+              <div className="text-center py-8 text-slate-400">
+                <p className="text-4xl mb-2">📋</p>
+                <p className="font-medium">No active job posts</p>
+              </div>
+            )}
+          </div>
+          <Link
+            to="/post-job"
+            className="block w-full mt-4 bg-violet-50 border border-violet-200 text-violet-600 rounded-xl px-4 py-2.5 text-sm font-semibold cursor-pointer font-['DM_Sans'] hover:bg-violet-100 transition-all text-center"
+          >
+            + Post Another Job
+          </Link>
+        </div>
+      </div>
+    </SidebarLayout>
   );
 }

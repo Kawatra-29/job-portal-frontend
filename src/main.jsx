@@ -16,10 +16,23 @@ const queryClient = new QueryClient({
 })
 
 
+// eslint-disable-next-line react-refresh/only-export-components
 function Layout() {
   const location = useLocation();
-  const hiddenNavRoutes = ["/dashboard/jobseeker", "/dashboard/employer", "/dashboard/EMPLOYER", "/post-job", "/auth", "/me/edit"];
-  const showNav = !hiddenNavRoutes.includes(location.pathname);
+  const hiddenNavPrefixes = [
+    "/dashboard/jobseeker",
+    "/dashboard/employer",
+    "/post-job",
+    "/auth",
+    "/me/edit",
+    "/me",
+    "/company-profile",
+    "/employer/profile",
+    "/my-jobs",
+    "/all-applicants",
+    "/interviews",
+  ];
+  const showNav = !hiddenNavPrefixes.some((prefix) => location.pathname.startsWith(prefix));
 
   return (
     <>
