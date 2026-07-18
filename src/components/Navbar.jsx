@@ -1,12 +1,13 @@
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useContext } from "react";
 import { ThemeContext } from "../context/ThemeContext.jsx";
+import { AuthContext } from "../context/AuthContext.jsx";
 
 const Navbar = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  const token = localStorage.getItem("token");
-  const role = localStorage.getItem("role");
+  const { auth, logout } = useContext(AuthContext);
+  const { token, role } = auth;
   const { isDark, toggleTheme } = useContext(ThemeContext);
   const isAuthPage = location.pathname === "/auth";
 
@@ -17,7 +18,7 @@ const Navbar = () => {
   ];
 
   const handleLogout = () => {
-    localStorage.clear();
+    logout();          // clears AuthContext state + localStorage
     navigate("/auth");
   };
 

@@ -17,11 +17,9 @@ export default function useApi(initialUrl = "", initialMethod = "GET") {
     setError(null);
     const token = localStorage.getItem("token");
     
-    const finalUrl = url.startsWith("http://localhost:8080/api/v1")
-      ? url.replace("http://localhost:8080/api/v1", BASE_URL)
-      : url.startsWith("http")
-        ? url
-        : `${BASE_URL}${url.startsWith("/") ? "" : "/"}${url}`;
+    const finalUrl = url.startsWith("http")
+      ? url
+      : `${BASE_URL}${url.startsWith("/") ? "" : "/"}${url}`;
 
     try {
       const res = await axios({

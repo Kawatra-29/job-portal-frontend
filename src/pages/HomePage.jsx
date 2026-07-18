@@ -1,5 +1,6 @@
 import Search from "../components/Search";
 import { Link } from "react-router-dom";
+import { Helmet } from "react-helmet-async";
 
 const stats = [
   { number: "5L+", label: "Active Jobs" },
@@ -34,6 +35,11 @@ const features = [
 const HomePage = () => {
   return (
     <div className="font-['DM_Sans'] bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 transition-colors duration-200">
+      <Helmet>
+        <title>Stride | Step Into Your Dream Career</title>
+        <meta name="description" content="Find over 5 lakh jobs, connect with top companies and grow your career on Stride." />
+        <meta name="keywords" content="jobs, hiring, dream job, career, employer, jobseeker" />
+      </Helmet>
 
       {/* Hero Section */}
       <section className="bg-linear-to-br from-slate-900 via-slate-800 to-blue-800 px-6 pt-20 pb-32 relative overflow-hidden">

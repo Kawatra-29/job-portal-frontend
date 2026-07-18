@@ -4,6 +4,7 @@ import { useForm } from "react-hook-form";
 import useApi from "../Hooks/useApi"
 import { AuthContext } from "../context/AuthContext";
 import { ThemeContext } from "../context/ThemeContext.jsx";
+import { Helmet } from "react-helmet-async";
 
 export default function AuthPage() {
   const { login } = useContext(AuthContext);
@@ -79,6 +80,10 @@ export default function AuthPage() {
 
   return (
     <div className="min-h-[calc(100vh-4rem)] bg-linear-to-br from-slate-50 via-slate-100 to-blue-100 dark:from-slate-950 dark:via-slate-900 dark:to-blue-950 flex items-center justify-center p-6 font-['DM_Sans'] relative transition-colors duration-200">
+      <Helmet>
+        <title>{isLogin ? "Sign In | Stride" : "Register Free Account | Stride"}</title>
+        <meta name="description" content="Sign in or create a new free candidate/employer account on Stride." />
+      </Helmet>
       <div className="bg-white dark:bg-slate-900 border border-transparent dark:border-slate-800 rounded-2xl p-8 w-full max-w-md shadow-2xl transition-all duration-200">
 
         {/* Logo */}

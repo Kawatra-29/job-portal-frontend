@@ -8,6 +8,7 @@ import JobList from "../pages/JobList";
 import MyApplications from "../pages/MyApplications";
 import JobDetailModal from "./JobDetailModal";
 import { ThemeContext } from "../context/ThemeContext.jsx";
+import { AuthContext } from "../context/AuthContext.jsx";
 
 const statusStyles = {
   APPLIED: { color: "text-blue-600", bg: "bg-blue-50" },
@@ -18,11 +19,6 @@ const statusStyles = {
   default: { color: "text-slate-600", bg: "bg-slate-50" }
 };
 
-const recommendedJobs = [
-  { title: "Spring Boot Developer", company: "HCL Technologies", location: "Noida", salary: "₹4L–6L", type: "Full Time" },
-  { title: "Java Backend Engineer", company: "Wipro", location: "Bangalore", salary: "₹5L–8L", type: "Full Time" },
-  { title: "REST API Developer", company: "Paytm", location: "Remote", salary: "₹6L–10L", type: "Remote" },
-];
 
 const BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:8080/api/v1";
 
@@ -35,6 +31,7 @@ export default function JobSeekerDashboard() {
   const [selectedJob, setSelectedJob] = useState(null);
   const token = localStorage.getItem("token");
   const { isDark, toggleTheme } = useContext(ThemeContext);
+  const { logout } = useContext(AuthContext);
 
   const { data: profile, loading, error } = useApi("/jobseekers/me");
 
@@ -73,10 +70,8 @@ export default function JobSeekerDashboard() {
   const interviewCount = Array.isArray(applications) ? applications.filter(a => a.status === "INTERVIEW").length : 0;
 
   const statItems = [
-    { icon: "📋", label: "Applications Sent", value: appsLoading ? "…" : String(appCount),       color: "blue" },
-    { icon: "👁️", label: "Profile Views",      value: "84",                                       color: "violet" },
-    { icon: "💼", label: "Saved Jobs",          value: "7",                                        color: "amber" },
-    { icon: "✅", label: "Interviews Scheduled", value: appsLoading ? "…" : String(interviewCount), color: "green" },
+    { icon: "📋", label: "Applications Sent",   value: appsLoading ? "…" : String(appCount),        color: "blue" },
+    { icon: "✅", label: "Interviews Scheduled", value: appsLoading ? "…" : String(interviewCount),  color: "green" },
   ];
 
   // Dynamic greeting
@@ -84,7 +79,7 @@ export default function JobSeekerDashboard() {
   const greeting = hour < 12 ? "Good morning 👋" : hour < 17 ? "Good afternoon ☀️" : "Good evening 🌙";
 
   const handleLogout = () => {
-    localStorage.clear();
+    logout();          // clears AuthContext state + localStorage
     navigate("/auth");
   };
 
@@ -311,29 +306,6 @@ export default function JobSeekerDashboard() {
             </div>
           </div>
 
-          {/* Recommended Jobs */}
-          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6">
-            <h2 className="font-['Syne'] text-base font-bold text-slate-900 dark:text-white m-0 mb-5">Recommended Jobs</h2>
-            <div className="flex flex-col gap-3">
-              {recommendedJobs.map((job) => (
-                <div key={job.title} className="p-4 border border-slate-200 dark:border-slate-800 rounded-xl transition-all cursor-pointer hover:border-blue-300 dark:hover:border-blue-500 hover:shadow-md">
-                  <div className="flex justify-between items-start">
-                    <div>
-                      <p className="font-semibold text-sm text-slate-900 dark:text-white m-0">{job.title}</p>
-                      <p className="text-sm text-blue-600 dark:text-blue-400 font-medium mt-0.5 m-0">{job.company}</p>
-                      <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 m-0">📍 {job.location} · 💰 {job.salary}</p>
-                    </div>
-                    <span className="bg-blue-50 dark:bg-blue-950/20 text-blue-600 dark:text-blue-400 text-xs font-semibold px-2 py-0.5 rounded-full">
-                      {job.type}
-                    </span>
-                  </div>
-                </div>
-              ))}
-            </div>
-            <Link to="/jobs" className="block text-center mt-4 text-blue-600 dark:text-blue-400 text-sm font-semibold no-underline hover:underline">
-              View all jobs →
-            </Link>
-          </div>
           </>
         )}
       </main>

@@ -3,6 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import axios from "axios";
 import JobCard from "../components/JobCard";
 import JobDetailModal from "../components/JobDetailModal";
+import { Helmet } from "react-helmet-async";
 
 const BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:8080/api/v1";
 
@@ -84,6 +85,10 @@ export default function JobList() {
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 font-['DM_Sans'] transition-colors duration-200">
+      <Helmet>
+        <title>Browse Latest Job Opportunities | Stride</title>
+        <meta name="description" content="Explore and apply to the latest job openings matching your profile on Stride." />
+      </Helmet>
 
       {/* Header */}
       <div className="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 px-6 py-8 transition-colors duration-200">

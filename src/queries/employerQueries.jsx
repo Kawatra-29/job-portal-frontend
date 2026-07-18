@@ -6,78 +6,74 @@ const authHeader = () => ({
   headers: { Authorization: `Bearer ${localStorage.getItem("token")}` }
 });
 
-// --- EMPLOYER STATS (derived from GET /employer/jobs + applications) ---
+// --- BASE QUERY: Single call to GET /employer/all-applications ---
+// Accepts optional TanStack Query overrides (e.g. { select }) for derived hooks.
+// TanStack Query deduplicates by queryKey: same key = ONE network request,
+// even if multiple components call this simultaneously.
+function useAllEmployerApplications(options = {}) {
+  return useQuery({
+    queryKey: ["employer", "all-applications"],
+    queryFn: async () => {
+      const res = await axios.get(`${API}/employer/all-applications`, authHeader());
+      return Array.isArray(res.data) ? res.data : [];
+    },
+    staleTime: 1000 * 60 * 1,
+    retry: 1,
+    ...options,   // allows callers to pass select, enabled, etc.
+  });
+}
+
+// --- EMPLOYER STATS (derived from single /employer/all-applications call) ---
 export function useEmployerStats() {
-  return useQuery({
-    queryKey: ["employer", "stats"],
+  // We still need job count from /employer/jobs for activeJobPosts
+  const jobsQuery = useQuery({
+    queryKey: ["employer", "jobs", "active"],
     queryFn: async () => {
-      // Fetch all employer jobs
-      const jobsRes = await axios.get(`${API}/employer/jobs`, authHeader());
-      const jobs = jobsRes.data || [];
-      const activeJobs = jobs.filter((j) => j.status === "OPEN");
+      const res = await axios.get(`${API}/employer/jobs`, authHeader());
+      return res.data || [];
+    },
+    staleTime: 1000 * 60 * 2,
+    retry: 1,
+  });
 
-      // Fetch applications for all jobs in parallel to get totals
-      const appResults = await Promise.all(
-        jobs.map((job) =>
-          axios
-            .get(`${API}/employer/jobs/${job.id}/applications`, authHeader())
-            .then((r) => r.data || [])
-            .catch(() => [])
-        )
-      );
-      const allApps = appResults.flat();
-      const shortlisted = allApps.filter(
+  const appsQuery = useAllEmployerApplications();
+
+  const apps = appsQuery.data || [];
+  const jobs = jobsQuery.data || [];
+
+  return {
+    isLoading: jobsQuery.isLoading || appsQuery.isLoading,
+    error: jobsQuery.error || appsQuery.error,
+    data: {
+      activeJobPosts: jobs.filter((j) => j.status === "OPEN").length,
+      totalApplicants: apps.length,
+      shortlisted: apps.filter(
         (a) => a.status === "SHORTLISTED" || a.status === "INTERVIEW" || a.status === "HIRED"
-      ).length;
-
-      return {
-        activeJobPosts: activeJobs.length,
-        totalApplicants: allApps.length,
-        shortlisted,
-        interviewsToday: allApps.filter((a) => a.status === "INTERVIEW").length,
-      };
+      ).length,
+      interviewsToday: apps.filter((a) => a.status === "INTERVIEW").length,
     },
-    staleTime: 1000 * 60 * 1,
-    retry: 1,
-  });
+  };
 }
 
-// --- RECENT APPLICANTS — fetches apps across all jobs (GET /employer/jobs/{id}/applications) ---
+// --- RECENT APPLICANTS — uses shared /employer/all-applications cache ---
+// `select` transforms the cached data without making a new API call.
 export function useRecentApplicants(limit = 5) {
-  return useQuery({
-    queryKey: ["employer", "applicants", "recent", limit],
-    queryFn: async () => {
-      const jobsRes = await axios.get(`${API}/employer/jobs`, authHeader());
-      const jobs = jobsRes.data || [];
-      if (!jobs.length) return [];
-
-      const appResults = await Promise.all(
-        jobs.map((job) =>
-          axios
-            .get(`${API}/employer/jobs/${job.id}/applications`, authHeader())
-            .then((r) => (r.data || []).map((app) => ({ ...app, _jobTitle: job.title })))
-            .catch(() => [])
-        )
-      );
-
-      return appResults
-        .flat()
+  return useAllEmployerApplications({
+    select: (apps) =>
+      [...apps]
         .sort((a, b) => new Date(b.appliedAt) - new Date(a.appliedAt))
-        .slice(0, limit);
-    },
-    staleTime: 1000 * 60 * 1,
-    retry: 1,
+        .slice(0, limit),
   });
 }
 
-// --- ACTIVE JOBS — uses real endpoint GET /employer/jobs ---
+// --- ACTIVE JOBS — GET /employer/jobs (unchanged) ---
 export function useActiveJobs() {
   return useQuery({
     queryKey: ["employer", "jobs", "active"],
     queryFn: async () => {
       const res = await axios.get(`${API}/employer/jobs`, authHeader());
-      // Show all jobs; OPEN ones first
       const jobs = res.data || [];
+      // OPEN jobs first
       return jobs.sort((a, b) => {
         if (a.status === "OPEN" && b.status !== "OPEN") return -1;
         if (b.status === "OPEN" && a.status !== "OPEN") return 1;
@@ -89,42 +85,26 @@ export function useActiveJobs() {
   });
 }
 
-// --- ALL APPLICANTS (dedicated page) ---
+// --- ALL APPLICANTS (dedicated page) — uses shared /employer/all-applications ---
 export function useAllApplicants(page = 0, size = 10, filters = {}) {
   return useQuery({
     queryKey: ["employer", "applicants", "all", page, size, filters],
     queryFn: async () => {
-      // Fetch all employer jobs
-      const jobsRes = await axios.get(`${API}/employer/jobs`, authHeader());
-      const jobs = jobsRes.data || [];
-      if (!jobs.length) return { content: [], totalElements: 0, totalPages: 0 };
+      const res = await axios.get(`${API}/employer/all-applications`, authHeader());
+      const allApps = Array.isArray(res.data) ? res.data : [];
 
-      // Fetch applications for all jobs in parallel
-      const appResults = await Promise.all(
-        jobs.map((job) =>
-          axios
-            .get(`${API}/employer/jobs/${job.id}/applications`, authHeader())
-            .then((r) => (r.data || []).map((app) => ({ ...app, _jobTitle: job.title })))
-            .catch(() => [])
-        )
-      );
-
-      const allApps = appResults.flat();
-      
-      // Apply filters if any
-      let filteredApps = allApps;
+      // Apply filters client-side
+      let filtered = allApps;
       if (filters.status) {
-        filteredApps = filteredApps.filter(a => a.status === filters.status);
+        filtered = filtered.filter((a) => a.status === filters.status);
       }
-      
-      // Paginate
+
+      // Client-side pagination
       const start = page * size;
-      const paginatedApps = filteredApps.slice(start, start + size);
-      
       return {
-        content: paginatedApps,
-        totalElements: filteredApps.length,
-        totalPages: Math.ceil(filteredApps.length / size)
+        content: filtered.slice(start, start + size),
+        totalElements: filtered.length,
+        totalPages: Math.ceil(filtered.length / size),
       };
     },
     staleTime: 1000 * 60 * 1,
@@ -238,37 +218,21 @@ export function useCompanyProfile() {
   return useEmployerProfile();
 }
 
-// --- INTERVIEWS ---
+// --- INTERVIEWS — uses shared /employer/all-applications ---
 export function useInterviews(page = 0, size = 10) {
   return useQuery({
     queryKey: ["employer", "interviews", page],
     queryFn: async () => {
-      // Fetch all employer jobs
-      const jobsRes = await axios.get(`${API}/employer/jobs`, authHeader());
-      const jobs = jobsRes.data || [];
-      if (!jobs.length) return { content: [], totalElements: 0, totalPages: 0 };
+      const res = await axios.get(`${API}/employer/all-applications`, authHeader());
+      const allApps = Array.isArray(res.data) ? res.data : [];
+      const interviewApps = allApps.filter((a) => a.status === "INTERVIEW");
 
-      // Fetch applications for all jobs in parallel
-      const appResults = await Promise.all(
-        jobs.map((job) =>
-          axios
-            .get(`${API}/employer/jobs/${job.id}/applications`, authHeader())
-            .then((r) => (r.data || []).map((app) => ({ ...app, _jobTitle: job.title })))
-            .catch(() => [])
-        )
-      );
-
-      const allApps = appResults.flat();
-      const interviewApps = allApps.filter(a => a.status === "INTERVIEW");
-
-      // Paginate
+      // Client-side pagination
       const start = page * size;
-      const paginatedApps = interviewApps.slice(start, start + size);
-
       return {
-        content: paginatedApps,
+        content: interviewApps.slice(start, start + size),
         totalElements: interviewApps.length,
-        totalPages: Math.ceil(interviewApps.length / size)
+        totalPages: Math.ceil(interviewApps.length / size),
       };
     },
     staleTime: 1000 * 60 * 1,

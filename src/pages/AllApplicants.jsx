@@ -4,6 +4,7 @@ import {
   useUpdateApplicationStatus,
 } from "../queries/employerQueries";
 import { SidebarLayout } from "../components/SidebarLayout";
+import { Helmet } from "react-helmet-async";
 
 const navItems = [
   { icon: "🏠", label: "Dashboard", path: "/dashboard/employer" },
@@ -62,6 +63,10 @@ export default function AllApplicants() {
 
   return (
     <SidebarLayout navItems={navItems} title="All Applicants" subtitle="Employer Panel 👥">
+      <Helmet>
+        <title>Manage Candidates & Applications | Stride Employer</title>
+        <meta name="description" content="View resumes, shortlist profiles, schedule interviews and hire candidates on Stride." />
+      </Helmet>
       <div className="max-w-5xl mx-auto space-y-6">
 
         {/* Filters Panel */}
@@ -78,14 +83,14 @@ export default function AllApplicants() {
                 setStatusFilter(e.target.value);
                 setPage(0);
               }}
-              className="px-4 py-2 bg-white dark:bg-slate-850 border border-slate-200 dark:border-slate-700 text-slate-755 text-slate-700 dark:text-white rounded-xl text-sm outline-none focus:ring-2 focus:ring-violet-500 focus:border-transparent transition-all font-medium cursor-pointer"
+              className="px-4 py-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-100 rounded-xl text-sm outline-none focus:ring-2 focus:ring-violet-500 focus:border-transparent transition-all font-medium cursor-pointer"
             >
-              <option value="" className="dark:bg-slate-900">All Statuses</option>
-              <option value="APPLIED" className="dark:bg-slate-900">Applied</option>
-              <option value="SHORTLISTED" className="dark:bg-slate-900">Shortlisted</option>
-              <option value="INTERVIEW" className="dark:bg-slate-900">Interview</option>
-              <option value="REJECTED" className="dark:bg-slate-900">Rejected</option>
-              <option value="HIRED" className="dark:bg-slate-900">Hired</option>
+              <option value="" className="bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-100">All Statuses</option>
+              <option value="APPLIED" className="bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-100">Applied</option>
+              <option value="SHORTLISTED" className="bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-100">Shortlisted</option>
+              <option value="INTERVIEW" className="bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-100">Interview</option>
+              <option value="REJECTED" className="bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-100">Rejected</option>
+              <option value="HIRED" className="bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-100">Hired</option>
             </select>
           </div>
         </div>
@@ -179,13 +184,13 @@ export default function AllApplicants() {
                             disabled={updating}
                             value={app.status}
                             onChange={(e) => handleStatusChange(app.id, e.target.value)}
-                            className="px-3 py-1.5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-white rounded-xl text-xs font-semibold outline-none focus:ring-2 focus:ring-violet-500 focus:border-transparent transition-all cursor-pointer shadow-sm hover:border-slate-300 dark:hover:border-slate-600"
+                            className="px-3 py-1.5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-100 rounded-xl text-xs font-semibold outline-none focus:ring-2 focus:ring-violet-500 focus:border-transparent transition-all cursor-pointer shadow-sm hover:border-slate-300 dark:hover:border-slate-600"
                           >
-                            <option value="APPLIED">Applied</option>
-                            <option value="SHORTLISTED">Shortlisted</option>
-                            <option value="INTERVIEW">Interview</option>
-                            <option value="REJECTED">Rejected</option>
-                            <option value="HIRED">Hired</option>
+                            <option value="APPLIED" className="bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-100">Applied</option>
+                            <option value="SHORTLISTED" className="bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-100">Shortlisted</option>
+                            <option value="INTERVIEW" className="bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-100">Interview</option>
+                            <option value="REJECTED" className="bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-100">Rejected</option>
+                            <option value="HIRED" className="bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-100">Hired</option>
                           </select>
                         </div>
                       </div>
