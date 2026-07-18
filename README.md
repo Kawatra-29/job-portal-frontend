@@ -1,260 +1,349 @@
-# 🚀 Stride Frontend
+# 🚀 Stride Job Portal - Production-Ready Frontend
 
-A modern, full-featured **Stride Web Application** built with React 19, Vite, and Tailwind CSS — fully integrated with a Spring Boot backend.
-
----
-
-## 📸 Overview
-
-Stride is a production-ready frontend application that connects job seekers with top employers. It features role-based dashboards, real-time job listings, one-click apply, company discovery, and a seamless authentication flow.
+Stride is an enterprise-grade, high-performance **Job Portal Web Application** built with **React 19 (Fiber)**, **Vite 8**, and **Tailwind CSS v4**. It features role-based access control, real-time job listings, interactive candidate pipelines, and persistent JWT-based session management, communicating with a deployed Spring Boot REST API.
 
 ---
 
-## ✨ Features
-
-### 👤 Authentication
-- Login & Register in a single unified page with tab toggle
-- Role-based routing — **Job Seekers** and **Recruiters** land on separate dashboards
-- JWT token stored in `localStorage` for persistent sessions
-- Secure API calls with `Authorization: Bearer <token>` headers
-
-### 🧑‍💻 Job Seeker
-- **Dashboard** — stats overview (applications sent, profile views, saved jobs, interviews)
-- **Browse Jobs** — fetches live listings from Spring Boot API with skeleton loading states
-- **One-Click Apply** — apply directly from job cards with instant feedback
-- **My Profile** — view personal info, skills with proficiency levels
-- **Recent Applications** — track application statuses in real time
-
-### 🏢 Recruiter / Employer
-- **Recruiter Dashboard** — stats overview (active job posts, total applicants, shortlisted candidates, pending reviews)
-- **Applicant Management** — list of applicants with sorting, filtering, and status action triggers (e.g., Shortlist, Schedule Interview, Reject, Hire)
-- **Active Job Posts** — list and manage live job postings with dynamic applicant count and status controls
-- **Post New Job** — complete form integrated with the backend to publish new listings
-- **Company Profile** — update company details (size, description)
-- **Employer Profile** — manage recruiter user details
-
-### 🌐 Public Pages
-- **Home Page** — hero section, stats bar, feature highlights, CTA banner
-- **Job Listings** — paginated job cards with type/salary/location details
-- **Companies** — grid of company cards with location and "View Jobs" CTA
-- **Search Bar** — job title + location search component
-- **404 Page** — clean not-found page with back-to-home navigation
+## 🧭 Table of Contents
+- [📸 Overview & Application Screenshots](#-overview--application-screenshots)
+- [✨ Core Features & Role Capabilities](#-core-features--role-capabilities)
+- [🛠️ Tech Stack & Dependencies](#-tech-stack--dependencies)
+- [📐 System Architecture & Data Flow](#-system-architecture--data-flow)
+- [📁 Directory Structure](#-directory-structure)
+- [🗺️ Routing & Access Control Matrix](#-routing--access-control-matrix)
+- [🔌 REST API Integration & useApi Custom Hook](#-rest-api-integration--useapi-custom-hook)
+- [⚙️ Environment Variables & Deployment Config](#-environment-variables--deployment-config)
+- [🚀 Local Setup & Installation Guide](#-local-setup--installation-guide)
+- [🎨 Design System, Styling, & Theme Engine](#-design-system-styling--theme-engine)
+- [🤝 Contribution Guidelines](#-contribution-guidelines)
+- [📄 License](#-license)
+- [👨‍💻 Author](#-author)
 
 ---
 
-## 🛠️ Tech Stack
+## 📸 Overview & Application Screenshots
 
-| Technology | Version | Purpose |
+Stride is designed to simplify the recruitment process for both job seekers and hiring teams. It uses a modern dashboard UI to showcase stats, track progress, and manage candidate workflows.
+
+- **Dual-Dashboard Ecosystem**: Dynamic portals for both Job Seekers and Employers.
+- **Real-Time Job Feeds**: Live listing fetches with skeletal loading placeholders to minimize Cumulative Layout Shift (CLS).
+- **Interactive Hiring Pipeline**: Drag-and-drop-style status transitions (Shortlist, Schedule, Reject, Hire) for recruiters.
+- **Comprehensive Theme Support**: Fluid light-to-dark transition using modern CSS custom properties and tailwind selectors.
+
+---
+
+## ✨ Core Features & Role Capabilities
+
+### 👤 Authentication & Security
+- **Unified Auth Gateway**: A clean, single-page portal with tabs for switching between Login and Registration.
+- **JWT Persistence & Auto-Injection**: JWTs are automatically saved to `localStorage` and injected as a `Bearer` token in subsequent API headers.
+- **Protected Routing & Verification**: Custom wrapper components (`ProtectedRoute` & `RoleRoute`) prevent unauthorized views.
+- **Auto-Logout Session Lifespan**: Detects `401 Unauthorized` responses from the backend API, automatically clearing credentials and redirecting users to `/auth`.
+
+### 🧑‍💻 Job Seeker Flow
+- **Analytics Dashboard**: Tracks applications sent, profile views, scheduled interviews, and saved jobs.
+- **Job Finder & Details Grid**: Paginated grid of jobs with options to filter, search, and view detailed job profiles in an overlay modal.
+- **One-Click Apply**: Immediate application request dispatch with visual state updates.
+- **Interactive Profile Builder**: Showcases contact details, bio, and a skill matrix categorized by proficiency level.
+- **Application History**: Lists previous job applications with chronological statuses (Pending, Shortlisted, Interviewing, Hired, Rejected).
+
+### 🏢 Recruiter & Employer Flow
+- **Recruiter Analytics Dashboard**: Visual summary of active job posts, candidate pools, interview counts, and pending offers.
+- **Applicant Pipeline Manager**: Grid of applicant profiles, resumes, and dynamic buttons to move candidates through stages (e.g., Shortlisted, Scheduled Interview, Rejected, Hired).
+- **Job Postings Wizard**: Multi-field form validated with `react-hook-form` to publish jobs immediately.
+- **Company Profile Hub**: Custom workspace to update logos, descriptions, location, scale, and web links.
+- **Employer Profile Edit**: Update personal recruiter details and account preferences.
+
+---
+
+## 🛠️ Tech Stack & Dependencies
+
+| Tool | Version | Ecosystem Purpose |
 |---|---|---|
-| React | 19.x | UI Library |
-| Vite | 8.x | Build Tool & Dev Server |
-| Tailwind CSS | 4.x | Utility-first Styling |
-| React Router DOM | 7.x | Client-side Routing |
-| Axios | 1.x | HTTP Client |
-| React Hook Form | 7.x | Form Handling |
-| Font Awesome | 7.x | Icons |
+| **React** | `19.2.4` | Component framework |
+| **Vite** | `8.0.4` | Lightning-fast build tool and development server |
+| **Tailwind CSS** | `4.2.2` | Modern CSS utility framework |
+| **React Router DOM** | `7.14.1` | Declarative routing with path parameters |
+| **TanStack React Query** | `5.100.9` | Client-side cache management, queries, and mutation states |
+| **Axios** | `1.15.0` | Promise-based HTTP client for browser requests |
+| **React Hook Form** | `7.75.0` | High-performance, low-re-render form controller |
+| **React Helmet Async** | `3.0.0` | Declarative SEO header manipulation |
+| **Font Awesome** | `7.2.0` | Solid, Regular, and Brand icon components |
 
 ---
 
-## 📁 Project Structure
+## 📐 System Architecture & Data Flow
+
+```mermaid
+graph TD
+    A[Browser / Client] -->|React Router v7| B[Page Components]
+    B -->|State Hook / Forms| C[React State / Context]
+    B -->|Hooks / Cache| D[TanStack React Query]
+    D -->|useApi Axios Instance| E[REST API Layer]
+    E -->|JWT Bearer Token Auth| F[Railway Deployed Backend / Local Spring Boot]
+    F -->|Spring Security & JPA| G[PostgreSQL Database]
+    
+    subgraph Client Application
+    B
+    C
+    D
+    E
+    end
+```
+
+### Key Architectural Patterns
+1. **Code Splitting (Lazy Loading)**: Routes are dynamically imported via `lazy()` and wrapped in `<Suspense>` with a centralized spinner, reducing initial bundle size and improving load times.
+2. **Context-Driven Global State**: `AuthContext` controls authentication token lifetimes and role mappings, while `ThemeContext` governs dark-theme toggles.
+3. **Query Caching Layer**: React Query automatically cache lists of jobs and applicants with a configured default `staleTime` of 2 minutes to reduce server load.
+
+---
+
+## 📁 Directory Structure
 
 ```
 stride-frontend/
-├── public/
+├── public/                     # Static assets (images, favicon, manifest)
 ├── src/
-│   ├── pages/
-│   │   ├── HomePage.jsx          # Landing page with hero, stats, features
-│   │   ├── AuthPage.jsx          # Login / Register with JWT handling
-│   │   ├── JobList.jsx           # Live job listings from API
-│   │   ├── UserProfile.jsx       # Job seeker profile view
-│   │   ├── EditProfile.jsx       # Edit details for job seeker or employer
-│   │   ├── EmployerProfile.jsx   # Employer profile details
-│   │   ├── CompanyProfile.jsx    # Company info management
-│   │   ├── MyJobs.jsx            # Recruiter's posted jobs listing
-│   │   ├── AllApplicants.jsx     # View all job applicants
-│   │   ├── Interviews.jsx        # View interview details and listings
-│   │   └── MyApplications.jsx    # Jobseeker's active applications
-│   │
 │   ├── components/
-│   │   ├── Navbar.jsx            # Sticky top navigation bar
-│   │   ├── SidebarLayout.jsx     # Sticky dashboard sidebar for navigation
-│   │   ├── JobCard.jsx           # Job listing card with apply button
-│   │   ├── JobDetailModal.jsx    # Pop-up modal containing job description and details
-│   │   ├── CompanyCard.jsx       # Company display card
-│   │   ├── Companies.jsx         # Companies grid page
-│   │   ├── Search.jsx            # Search bar component
-│   │   ├── ProfileCard.jsx       # Reusable profile field card
-│   │   ├── Jobseekerdashboard.jsx # Job seeker dashboard
-│   │   ├── Employerdashboard.jsx  # Recruiter dashboard
-│   │   └── PageNotFound.jsx      # 404 page
+│   │   ├── Companies.jsx       # Grid list showing all registered companies
+│   │   ├── CompanyCard.jsx     # Card component for company preview
+│   │   ├── Employerdashboard.jsx # Recruitment statistics and panels
+│   │   ├── ErrorBoundary.jsx   # Error boundary fallbacks for uncaught exceptions
+│   │   ├── JobCard.jsx         # Modular job preview card (Salary, Location, Action)
+│   │   ├── JobDetailModal.jsx  # Interactive overlay displaying job details
+│   │   ├── Jobseekerdashboard.jsx # Job seeker metrics, analytics, and applications
+│   │   ├── Navbar.jsx          # Sticky header with responsive collapse and theme toggle
+│   │   ├── PageNotFound.jsx    # Custom 404 handler
+│   │   ├── ProfileCard.jsx     # Reusable form field layout
+│   │   ├── Search.jsx          # Advanced search component (Title, Location)
+│   │   └── SidebarLayout.jsx   # Standardized dashboard sidebar layout
 │   │
-│   ├── hooks/
-│   │   └── useApi.jsx            # Custom hook for API calls (GET/POST/PUT/DELETE)
+│   ├── pages/
+│   │   ├── AllApplicants.jsx   # Recruiter view: applicant details and status change actions
+│   │   ├── AuthPage.jsx        # Login/Registration tabbed switcher
+│   │   ├── CompanyProfile.jsx  # Company details editor
+│   │   ├── EditProfile.jsx     # Core profile info form (Seeker/Employer)
+│   │   ├── EmployerProfile.jsx # Recruiter personal profile details
+│   │   ├── HomePage.jsx        # Landing page with hero, stats, and call-to-actions
+│   │   ├── Interviews.jsx      # Interview scheduler and logs panel
+│   │   ├── JobList.jsx         # Main job listing search engine
+│   │   ├── MyApplications.jsx  # Seeker view: applications status timeline
+│   │   ├── MyJobs.jsx          # Recruiter view: jobs posted by logged-in user
+│   │   ├── PostJob.jsx         # Employer new job creator form
+│   │   └── UserProfile.jsx     # Job seeker resume view
+│   │
+│   ├── Hooks/
+│   │   └── useApi.jsx          # Core HTTP API client wrapper hook
 │   │
 │   ├── queries/
-│   │   ├── jobQueries.jsx        # Job-related TanStack queries/mutations
-│   │   └── employerQueries.jsx   # Employer/recruiter actions and data queries
+│   │   ├── employerQueries.jsx # React Query integrations for employer requests
+│   │   └── jobQueries.jsx      # React Query integrations for job-related actions
 │   │
 │   ├── context/
-│   │   └── AuthContext.jsx       # Login/Register context and user state mapping
+│   │   ├── AuthContext.jsx     # Authentication wrapper state
+│   │   └── ThemeContext.jsx    # Light / Dark mode layout toggler
 │   │
-│   ├── App.jsx                   # Route definitions
-│   ├── main.jsx                  # App entry point with QueryClientProvider
-│   └── index.css                 # Global styles + Tailwind import
+│   ├── App.css                 # Route layouts and custom classes
+│   ├── App.jsx                 # Route configurations and protected guards
+│   ├── index.css               # Tailwind CSS imports and custom styling rules
+│   └── main.jsx                # Application root mounting with global providers
 │
-├── index.html
-├── vite.config.js
-├── package.json
-└── README.md
+├── .env                        # Local developer environment setup
+├── .env.production             # Production environment setup
+├── eslint.config.js            # Linter rules configuration
+├── index.html                  # HTML entry template
+├── package.json                # Project configurations & dependency index
+├── vite.config.js              # Vite compiler optimizations and plugins
+└── README.md                   # Detailed documentation
 ```
 
 ---
 
-## 🔌 API Integration
+## 🗺️ Routing & Access Control Matrix
 
-The app communicates with a **Spring Boot backend** running on `http://localhost:8080`.
+The routing table below shows the URLs, components, role requirements, and description of all routes in Stride:
 
-| Endpoint | Method | Description |
-|---|---|---|
-| `/api/v1/auth/login` | POST | User login, returns JWT |
-| `/api/v1/auth/register` | POST | New user registration |
-| `/api/v1/jobs?page=0&size=10` | GET | Paginated job listings |
-| `/api/v1/applications/{jobId}/apply` | POST | Apply to a job |
-
-### Custom `useApi` Hook
-
-A reusable hook handles all API communication:
-
-```js
-const { data, loading, error, post, get, put, del } = useApi();
-
-// Example usage
-const response = await post("http://localhost:8080/api/v1/auth/login", payload);
-```
-
-- Auto-attaches JWT token from `localStorage`
-- Handles loading and error states
-- Supports GET, POST, PUT, DELETE
+| URL Path | Mounted Page / Component | Access Level | Role Constraint | Details |
+| :--- | :--- | :--- | :--- | :--- |
+| `/` | `HomePage` | Public | None | Hero landing page, feature showcase, site statistics |
+| `/auth` | `AuthPage` | Public | None | Dynamic Login and Register panel with JWT retrieval |
+| `/jobs` | `JobList` | Public | None | Paginated search, filter, and detail modal preview |
+| `/companies` | `Companies` | Public | None | Grid of registered organizations |
+| `/me` | `UserProfile` | Authenticated | Seeker / Recruiter | Displays user details, resumes, and credentials |
+| `/me/edit` | `EditProfile` | Authenticated | Seeker / Recruiter | Form to modify personal info, contact, and skills |
+| `/dashboard/jobseeker` | `JobSeekerDashboard` | Protected | `JOBSEEKER` | Seeker metrics, saved jobs, application pipelines |
+| `/dashboard/employer` | `EmployerDashboard` | Protected | `EMPLOYER` | Recruiter statistics, candidate status tracking, quick actions |
+| `/post-job` | `PostJob` | Protected | `EMPLOYER` | Job listing publisher form (title, tags, salary, location) |
+| `/company-profile` | `CompanyProfile` | Protected | `EMPLOYER` | Update company description, employees count, website URL |
+| `/employer/profile` | `EmployerProfile` | Protected | `EMPLOYER` | Recruiter-specific personal details and account details |
+| `/all-applicants` | `AllApplicants` | Protected | `EMPLOYER` | View all applicants, resumes, and change application status |
+| `/interviews` | `Interviews` | Protected | `EMPLOYER` | Setup and track interviews schedule with candidates |
+| `/my-jobs` | `MyJobs` | Protected | `EMPLOYER` | Detailed grid of active and draft jobs posted by the employer |
 
 ---
 
-## ⚙️ Getting Started
+## 🔌 REST API Integration & useApi Custom Hook
 
-### Prerequisites
-- Node.js >= 20.x
-- Spring Boot backend running on port `8080`
+Stride communicates with the REST backend using a custom Axios wrapper, `useApi.jsx`. This hook automatically injects the active JWT token, tracks loading states, and simplifies error management.
 
-### Installation
+### Key Features of `useApi` Hook:
+- **Authorization Injection**: Attaches `Authorization: Bearer <JWT>` header if token exists in `localStorage`.
+- **Base URL Resolver**: Dynamically uses `VITE_API_BASE_URL` or defaults to `http://localhost:8080/api/v1`.
+- **401 Unauthorized Interceptor**: Triggers automatic logout and redirects to `/auth` on session timeout.
+- **Convenient Short-hand Methods**: Provides `get`, `post`, `put`, and `del` callbacks.
 
+### 📝 Wrapper Usage Example:
+```jsx
+import useApi from "../Hooks/useApi";
+
+function MyComponent() {
+  const { get, post, loading, error } = useApi();
+
+  const handleApply = async (jobId) => {
+    try {
+      const response = await post(`/applications/${jobId}/apply`, {});
+      alert("Application sent successfully!");
+    } catch (err) {
+      console.error("Failed to apply:", error);
+    }
+  };
+}
+```
+
+### 📡 Main REST API Endpoint Map:
+
+| Category | Route | Method | Payload / Response |
+| :--- | :--- | :--- | :--- |
+| **Auth** | `/auth/register` | `POST` | User registration body -> `{ message, success }` |
+| **Auth** | `/auth/login` | `POST` | `{ email, password }` -> `{ token, role, email }` |
+| **Jobs** | `/jobs` | `GET` | Params: `page`, `size`, `search` -> Paginated Jobs list |
+| **Jobs** | `/jobs` | `POST` | Job payload -> Created Job data (Employer only) |
+| **Jobs** | `/jobs/{id}` | `DELETE`| Path variable `{id}` -> Status response |
+| **Applications**| `/applications/{jobId}/apply` | `POST` | Job Seeker applying -> Saved application |
+| **Applications**| `/applications/status/{appId}`| `PUT` | Recruiter changing status -> Updated application |
+| **Profiles** | `/users/profile` | `GET`/`PUT` | Profile details payload -> Updated profiles |
+
+---
+
+## ⚙️ Environment Variables & Deployment Config
+
+Stride reads configuration variables at build time using Vite's `import.meta.env` loader.
+
+Create the following files in the project root:
+
+### `.env` (Local Development Environment)
+```env
+VITE_API_BASE_URL=http://localhost:8080/api/v1
+```
+
+### `.env.production` (Production Environment)
+```env
+VITE_API_BASE_URL=https://job-portal-backend-production-c267.up.railway.app/api/v1
+```
+
+---
+
+## 🚀 Local Setup & Installation Guide
+
+Follow these steps to run the application locally on your computer:
+
+### 1. Prerequisites
+- **Node.js**: Version `20.x` or higher (LTS recommended).
+- **npm**: Version `10.x` or higher.
+- **Backend API**: The backend server should be running, either locally on port `8080` or deployed on Railway.
+
+### 2. Installation
 ```bash
 # Clone the repository
-git clone https://github.com/your-username/stride-frontend.git
-cd stride-frontend
+git clone https://github.com/Kawatra-29/job-portal-frontend.git
 
-# Install dependencies
+# Move into the project directory
+cd job-portal-frontend
+
+# Clean install packages
 npm install
-
-# Start development server
-npm run dev
 ```
 
-App will be available at **http://localhost:5173**
+### 3. Running Development Server
+To start the hot-reloading development server locally:
+```bash
+npm run dev
+```
+Open **[http://localhost:5173](http://localhost:5173)** in your browser to view the application.
 
-### Build for Production
+### 4. Code Quality & Formatting
+Run ESLint to check for code issues:
+```bash
+npm run lint
+```
 
+### 5. Compiling for Production
+Build static files optimized for deployment:
 ```bash
 npm run build
+```
+To run and test the compiled production version locally:
+```bash
 npm run preview
 ```
 
 ---
 
-## 🔐 Authentication Flow
+## 🎨 Design System, Styling, & Theme Engine
 
-```
-User submits Login/Register form
-        ↓
-POST /api/v1/auth/login or /register
-        ↓
-Backend returns { token, role }
-        ↓
-Token & role saved to localStorage
-        ↓
-Role === "RECRUITER"  →  /dashboard/recruiter
-Role === "JOBSEEKER"  →  /dashboard/jobseeker
-```
+The user interface follows a modern design language based on Tailwind CSS v4 custom settings.
 
----
+### Color & Styling Palettes:
+- **Primary Color**: Blue Accent (`#2563eb`) - used for primary CTA buttons, badges, links, and seeker flows.
+- **Accent Color**: Violet Accent (`#7c3aed`) - used for recruiter elements, admin panels, and special dashboard features.
+- **Neutral Colors**: Slate hues (`#0f172a` for Dark background, `#f8fafc` for Light background).
+- **Borders & Shapes**: Soft-pill layouts with border radii from `10px` to `24px` to create a modern feel.
 
-## 🗺️ Routes
-
-| Path | Component | Access |
-|---|---|---|
-| `/` | HomePage | Public |
-| `/home` | HomePage | Public |
-| `/auth` | AuthPage | Public |
-| `/Jobs` | JobList | Public |
-| `/companies` | Companies | Public |
-| `/me` | UserProfile | Authenticated |
-| `/profile/edit` | EditProfile | Authenticated |
-| `/dashboard/jobseeker` | JobSeekerDashboard | Job Seeker |
-| `/dashboard/recruiter` | EmployerDashboard | Employer |
-| `/company-profile` | CompanyProfile | Employer |
-| `/employer/profile` | EmployerProfile | Employer |
-| `/all-applicants` | AllApplicants | Employer |
-| `/interviews` | Interviews | Employer |
-| `/my-jobs` | MyJobs | Employer |
-| `/my-applications` | MyApplications | Job Seeker |
-| `/*` | PageNotFound | Public |
+### Theme Switcher Setup (Dark & Light Mode):
+- The `ThemeProvider` injects or removes the `dark` class from the `document.documentElement` element.
+- Tailwind v4 classes use modifiers like `dark:bg-slate-900` and `dark:text-white` to automatically adapt colors when the class is added.
+- The chosen setting is saved in `localStorage` as `theme` (`light` or `dark`) to keep the user's preference across page reloads.
 
 ---
 
-## 🎨 Design System
+## 🤝 Contribution Guidelines
 
-The UI follows a consistent design language throughout:
+We welcome pull requests and contributions from the community. Please follow these guidelines:
 
-- **Primary Color:** `#2563eb` (Blue 600)
-- **Dark Background:** `#0f172a` (Slate 900)
-- **Accent:** `#7c3aed` (Violet 700) — used for recruiter flows
-- **Font:** `DM Sans` (body) + `Syne` (headings)
-- **Border Radius:** `10px–24px` for a modern card-based layout
-- **Hover Effects:** `translateY(-2px)` lift + shadow on interactive elements
-
----
-
-## 📦 Available Scripts
-
-| Command | Description |
-|---|---|
-| `npm run dev` | Start Vite dev server |
-| `npm run build` | Production build |
-| `npm run preview` | Preview production build |
-| `npm run lint` | Run ESLint checks |
-
----
-
-## 🤝 Contributing
-
-1. Fork the repository
-2. Create your feature branch: `git checkout -b feature/your-feature`
-3. Commit your changes: `git commit -m 'Add some feature'`
-4. Push to the branch: `git push origin feature/your-feature`
-5. Open a Pull Request
+1. **Fork** the repository and create your custom feature branch:
+   ```bash
+   git checkout -b feature/amazing-feature
+   ```
+2. Make sure your changes follow the style rules and pass lint checks:
+   ```bash
+   npm run lint
+   ```
+3. Commit your changes with descriptive commit messages:
+   ```bash
+   git commit -m "feat: add amazing recruiter dashboard panel"
+   ```
+4. Push your branch to GitHub:
+   ```bash
+   git push origin feature/amazing-feature
+   ```
+5. Open a **Pull Request** targeting the `main` branch.
 
 ---
 
 ## 📄 License
 
-This project is licensed under the **MIT License**.
+This software is licensed under the **MIT License**. For details, view the [LICENSE](LICENSE) file in the repository root.
 
 ---
 
 ## 👨‍💻 Author
 
 **Saurabh Kawatra**  
-Java Backend Developer | React Enthusiast  
-📧 saurabhkawatra2001@gmail.com
+*Java Backend Developer | React & Frontend Enthusiast*
+
+- 📧 Email: [saurabhkawatra2001@gmail.com](mailto:saurabhkawatra2001@gmail.com)
+- 🖥️ GitHub: [@Kawatra-29](https://github.com/Kawatra-29)
 
 ---
 
-> Built with ❤️ using React 19 + Vite + Spring Boot
+> Built with ❤️ using **React 19**, **Vite**, and **Tailwind CSS v4** connected to **Spring Boot**.
