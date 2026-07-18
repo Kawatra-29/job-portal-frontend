@@ -1,8 +1,11 @@
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useContext } from "react";
 import { AuthContext } from "../context/AuthContext";
+import { ThemeContext } from "../context/ThemeContext.jsx";
 import { useQuery } from "@tanstack/react-query";
 import axios from "axios";
+
+const BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:8080/api/v1";
 
 // Fetch logged-in user's basic info (cached by React Query — no extra calls)
 function useCurrentUser() {
@@ -10,7 +13,7 @@ function useCurrentUser() {
   return useQuery({
     queryKey: ["user", "me"],
     queryFn: async () => {
-      const res = await axios.get("http://localhost:8080/api/v1/users/me", {
+      const res = await axios.get(`${BASE_URL}/users/me`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       return res.data;
@@ -34,6 +37,7 @@ export function SidebarLayout({
   const location = useLocation();
   const navigate = useNavigate();
   const { logout, auth } = useContext(AuthContext);
+  const { isDark, toggleTheme } = useContext(ThemeContext);
 
   // Fetch real user data from API
   const { data: currentUser } = useCurrentUser();
@@ -57,25 +61,25 @@ export function SidebarLayout({
   };
 
   return (
-    <div className="flex min-h-screen bg-slate-50 font-['DM_Sans']">
-      <aside className="w-60 bg-slate-900 text-white flex flex-col py-6 shrink-0 sticky top-0 h-screen">
+    <div className="flex min-h-screen bg-slate-50 dark:bg-slate-950 font-['DM_Sans'] transition-colors duration-200">
+      <aside className="w-60 bg-white dark:bg-slate-900 text-slate-800 dark:text-white flex flex-col py-6 shrink-0 sticky top-0 h-screen border-r border-slate-200/80 dark:border-white/10 transition-colors duration-200">
         {/* Logo */}
-        <div className="px-6 pb-7 border-b border-white/10">
-          <Link to="/home" className="flex items-center gap-2.5 no-underline">
+        <div className="px-6 pb-7 border-b border-slate-100 dark:border-white/10">
+          <Link to="/" className="flex items-center gap-2.5 no-underline">
             <div className={`w-9 h-9 bg-linear-to-br ${logoColor} rounded-xl flex items-center justify-center shadow-lg shadow-violet-500/40`}>
-              <span className="text-white text-lg font-bold font-['Syne']">J</span>
+              <span className="text-white text-lg font-bold font-['Syne']">S</span>
             </div>
-            <span className="font-['Syne'] font-extrabold text-lg text-white">JobPortal</span>
+            <span className="font-['Syne'] font-extrabold text-lg text-slate-900 dark:text-white">Stride</span>
           </Link>
         </div>
 
         {/* User info */}
-        <div className="px-6 py-5 border-b border-white/10">
-          <div className={`w-11 h-11 rounded-full bg-linear-to-br ${avatarColor} flex items-center justify-center font-extrabold text-base mb-2.5`}>
+        <div className="px-6 py-5 border-b border-slate-100 dark:border-white/10">
+          <div className={`w-11 h-11 rounded-full bg-linear-to-br ${avatarColor} flex items-center justify-center font-extrabold text-base mb-2.5 text-white`}>
             {initials}
           </div>
-          <p className="text-sm font-semibold text-white m-0 truncate">{name}</p>
-          <p className="text-xs text-slate-400 mt-0.5 m-0">{role}</p>
+          <p className="text-sm font-semibold text-slate-900 dark:text-white m-0 truncate">{name}</p>
+          <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5 m-0">{role}</p>
         </div>
 
         {/* Nav */}
@@ -86,8 +90,8 @@ export function SidebarLayout({
               to={item.path}
               className={`flex items-center gap-3 px-3 py-2.5 rounded-lg mb-1 text-sm transition-all ${
                 location.pathname === item.path
-                  ? "bg-violet-500/20 text-violet-400 font-semibold"
-                  : "text-slate-400 hover:bg-white/5 hover:text-white"
+                  ? "bg-violet-50 text-violet-600 font-semibold dark:bg-violet-500/20 dark:text-violet-400"
+                  : "text-slate-600 hover:bg-slate-100 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-white/5 dark:hover:text-white"
               }`}
             >
               <span>{item.icon}</span> {item.label}
@@ -96,24 +100,41 @@ export function SidebarLayout({
         </nav>
 
         {/* Logout */}
-        <div className="p-4 border-t border-white/10">
+        <div className="p-4 border-t border-slate-100 dark:border-white/10">
           <button
             onClick={handleLogout}
-            className="flex items-center gap-3 px-3 py-2.5 rounded-lg cursor-pointer text-sm text-red-400 hover:bg-red-500/10 transition-all w-full text-left"
+            className="flex items-center gap-3 px-3 py-2.5 rounded-lg cursor-pointer text-sm text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 transition-all w-full text-left"
           >
             🚪 Logout
           </button>
         </div>
       </aside>
 
-      <main className="flex-1 p-8 overflow-y-auto">
+      <main className="flex-1 p-8 overflow-y-auto bg-slate-50 dark:bg-slate-950 transition-colors duration-200">
         {(title || subtitle || actions) && (
           <div className="flex justify-between items-start mb-8">
             <div>
-              {subtitle && <p className="text-slate-500 text-sm m-0 mb-1">{subtitle}</p>}
-              {title && <h1 className="font-['Syne'] text-3xl font-extrabold text-slate-900 m-0 tracking-tight">{title}</h1>}
+              {subtitle && <p className="text-slate-500 dark:text-slate-400 text-sm m-0 mb-1">{subtitle}</p>}
+              {title && <h1 className="font-['Syne'] text-3xl font-extrabold text-slate-900 dark:text-white m-0 tracking-tight transition-colors duration-200">{title}</h1>}
             </div>
-            {actions}
+            <div className="flex items-center gap-4">
+              {actions}
+              <button
+                onClick={toggleTheme}
+                className="w-10 h-10 flex items-center justify-center rounded-xl bg-white dark:bg-slate-800 text-slate-800 dark:text-white border border-slate-200 dark:border-slate-700 shadow-sm hover:shadow-md transition-all duration-200 cursor-pointer shrink-0"
+                title={isDark ? "Switch to Light Mode" : "Switch to Dark Mode"}
+              >
+                {isDark ? (
+                  <svg className="w-5 h-5 text-amber-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364-6.364l-.707.707M6.343 17.657l-.707.707m12.728 0l-.707-.707M6.343 6.364l-.707-.707M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                  </svg>
+                ) : (
+                  <svg className="w-5 h-5 text-slate-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+                  </svg>
+                )}
+              </button>
+            </div>
           </div>
         )}
         {children}

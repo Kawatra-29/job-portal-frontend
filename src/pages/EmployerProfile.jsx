@@ -1,5 +1,4 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
 import {
   useEmployerProfile,
   useUserMe,
@@ -28,16 +27,16 @@ const companySizeLabels = {
 const companySizeOptions = ["STARTUP", "SMALL", "MEDIUM", "LARGE", "ENTERPRISE"];
 
 // ─── Reusable InfoCard ────────────────────────────────────────────────────────
-function InfoCard({ icon, label, value, valueClass = "text-slate-900" }) {
+function InfoCard({ icon, label, value, valueClass = "text-slate-900 dark:text-white" }) {
   return (
-    <div className="bg-slate-50 border border-slate-100 rounded-xl p-4 flex items-start gap-3">
-      <span className="w-9 h-9 bg-white border border-slate-200 rounded-lg flex items-center justify-center text-lg shrink-0 shadow-sm">
+    <div className="bg-slate-50 dark:bg-slate-800/40 border border-slate-100 dark:border-slate-800/60 rounded-xl p-4 flex items-start gap-3">
+      <span className="w-9 h-9 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg flex items-center justify-center text-lg shrink-0 shadow-sm">
         {icon}
       </span>
       <div className="min-w-0">
-        <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-0.5">{label}</p>
+        <p className="text-xs font-semibold text-slate-400 dark:text-slate-505 uppercase tracking-wider mb-0.5">{label}</p>
         <p className={`font-semibold text-sm break-words ${valueClass}`}>
-          {value || <span className="text-slate-400 font-normal italic">Not provided</span>}
+          {value || <span className="text-slate-400 dark:text-slate-500 font-normal italic">Not provided</span>}
         </p>
       </div>
     </div>
@@ -49,8 +48,8 @@ function Toast({ type, message }) {
   if (!message) return null;
   const styles =
     type === "success"
-      ? "bg-green-50 border-green-200 text-green-700"
-      : "bg-red-50 border-red-200 text-red-600";
+      ? "bg-green-50 border-green-200 text-green-700 dark:bg-green-950/20 dark:text-green-400 dark:border-green-900/30"
+      : "bg-red-50 border-red-200 text-red-600 dark:bg-red-950/20 dark:text-red-400 dark:border-red-900/30";
   return (
     <div className={`border px-5 py-3 rounded-xl flex items-center gap-2 font-medium text-sm ${styles}`}>
       {type === "success" ? "✅" : "⚠️"} {message}
@@ -62,11 +61,11 @@ function Toast({ type, message }) {
 function SectionHeader({ title, onEdit }) {
   return (
     <div className="flex items-center justify-between mb-5">
-      <h2 className="font-['Syne'] text-sm font-bold text-slate-900 uppercase tracking-wider">{title}</h2>
+      <h2 className="font-['Syne'] text-sm font-bold text-slate-900 dark:text-white uppercase tracking-wider">{title}</h2>
       {onEdit && (
         <button
           onClick={onEdit}
-          className="text-xs font-semibold text-violet-600 hover:text-violet-800 transition-all flex items-center gap-1 px-3 py-1.5 rounded-lg hover:bg-violet-50"
+          className="text-xs font-semibold text-violet-600 dark:text-violet-400 hover:text-violet-800 dark:hover:text-violet-300 transition-all flex items-center gap-1 px-3 py-1.5 rounded-lg hover:bg-violet-50 dark:hover:bg-violet-950/20"
         >
           ✏️ Edit
         </button>
@@ -79,7 +78,7 @@ function SectionHeader({ title, onEdit }) {
 function Field({ label, required, children }) {
   return (
     <div>
-      <label className="block text-sm font-semibold text-slate-700 mb-1.5">
+      <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
         {label} {required && <span className="text-red-500">*</span>}
       </label>
       {children}
@@ -88,7 +87,7 @@ function Field({ label, required, children }) {
 }
 
 const inputCls =
-  "w-full px-4 py-2.5 border border-slate-300 rounded-xl focus:ring-2 focus:ring-violet-500 focus:border-transparent outline-none transition-all text-sm font-['DM_Sans']";
+  "w-full px-4 py-2.5 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-white rounded-xl focus:ring-2 focus:ring-violet-500 focus:border-transparent outline-none transition-all text-sm font-['DM_Sans']";
 
 // ─── Action Buttons ───────────────────────────────────────────────────────────
 function ActionButtons({ onCancel, onSave, saving, disabled }) {
@@ -96,7 +95,7 @@ function ActionButtons({ onCancel, onSave, saving, disabled }) {
     <div className="flex gap-3 justify-end pt-2">
       <button
         onClick={onCancel}
-        className="px-5 py-2.5 border border-slate-300 rounded-xl text-sm font-semibold text-slate-600 hover:bg-slate-50 transition-all"
+        className="px-5 py-2.5 border border-slate-300 dark:border-slate-700 rounded-xl text-sm font-semibold text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-850 transition-all bg-transparent cursor-pointer"
       >
         Cancel
       </button>
@@ -113,8 +112,6 @@ function ActionButtons({ onCancel, onSave, saving, disabled }) {
 
 // ══════════════════════════════════════════════════════════════════════════════
 export default function EmployerProfile() {
-  const navigate = useNavigate();
-
   // ── Data
   const { data: profile, isLoading: profileLoading, isError: profileError, refetch } = useEmployerProfile();
   const { data: userInfo, isLoading: userLoading, refetch: refetchUser } = useUserMe();
@@ -147,6 +144,7 @@ export default function EmployerProfile() {
   // Populate forms when data loads
   useEffect(() => {
     if (profile) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setCompanyForm({
         companyName: profile.companyName || "",
         companySize: profile.companySize || "STARTUP",
@@ -157,6 +155,7 @@ export default function EmployerProfile() {
 
   useEffect(() => {
     if (userInfo) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setPersonalForm({ fullName: userInfo.fname || "", phone: userInfo.phone || "" });
     }
   }, [userInfo]);
@@ -207,11 +206,11 @@ export default function EmployerProfile() {
       <SidebarLayout navItems={navItems} title="My Profile" subtitle="Employer Panel 🏢">
         <div className="max-w-4xl mx-auto space-y-5">
           {[1, 2, 3].map((i) => (
-            <div key={i} className="bg-white border border-slate-200 rounded-2xl p-6 animate-pulse">
-              <div className="h-6 bg-slate-200 rounded w-1/4 mb-4" />
+            <div key={i} className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 animate-pulse transition-colors duration-200">
+              <div className="h-6 bg-slate-200 dark:bg-slate-800 rounded w-1/4 mb-4" />
               <div className="space-y-2">
-                <div className="h-4 bg-slate-200 rounded w-full" />
-                <div className="h-4 bg-slate-200 rounded w-3/4" />
+                <div className="h-4 bg-slate-200 dark:bg-slate-800 rounded w-full" />
+                <div className="h-4 bg-slate-200 dark:bg-slate-800 rounded w-3/4" />
               </div>
             </div>
           ))}
@@ -224,10 +223,10 @@ export default function EmployerProfile() {
     return (
       <SidebarLayout navItems={navItems} title="My Profile" subtitle="Employer Panel 🏢">
         <div className="max-w-4xl mx-auto">
-          <div className="bg-red-50 border border-red-200 text-red-600 p-6 rounded-2xl text-center">
+          <div className="bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-900/30 text-red-600 dark:text-red-400 p-6 rounded-2xl text-center">
             <p className="text-2xl mb-2">⚠️</p>
             <p className="font-semibold">Failed to load profile. Please try again.</p>
-            <button onClick={() => refetch()} className="mt-4 px-5 py-2 bg-red-600 text-white rounded-lg text-sm font-medium hover:bg-red-700 transition-all">
+            <button onClick={() => refetch()} className="mt-4 px-5 py-2 bg-red-600 text-white rounded-lg text-sm font-medium hover:bg-red-700 transition-all border-none cursor-pointer">
               Retry
             </button>
           </div>
@@ -276,7 +275,7 @@ export default function EmployerProfile() {
         </div>
 
         {/* ── Company Information ────────────────────────────────────────────── */}
-        <div className="bg-white border border-slate-200 rounded-2xl p-6">
+        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 transition-colors duration-200">
           <SectionHeader
             title="Company Information"
             onEdit={editSection !== "company" ? () => { cancelEdit(); setEditSection("company"); } : null}
@@ -288,8 +287,8 @@ export default function EmployerProfile() {
                 <input type="text" value={companyForm.companyName} onChange={(e) => setCompanyForm({ ...companyForm, companyName: e.target.value })} placeholder="e.g. Acme Corporation" className={inputCls} />
               </Field>
               <Field label="Company Size">
-                <select value={companyForm.companySize} onChange={(e) => setCompanyForm({ ...companyForm, companySize: e.target.value })} className={`${inputCls} bg-white`}>
-                  {companySizeOptions.map((s) => <option key={s} value={s}>{companySizeLabels[s]}</option>)}
+                <select value={companyForm.companySize} onChange={(e) => setCompanyForm({ ...companyForm, companySize: e.target.value })} className={inputCls}>
+                  {companySizeOptions.map((s) => <option key={s} value={s} className="dark:bg-slate-900">{companySizeLabels[s]}</option>)}
                 </select>
               </Field>
               <Field label="Description">
@@ -302,13 +301,13 @@ export default function EmployerProfile() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <InfoCard icon="🏢" label="Company Name" value={profile?.companyName} />
                 <InfoCard icon="📊" label="Company Size" value={companySizeLabels[profile?.companySize]} />
-                <InfoCard icon="✅" label="Verification" value={isVerified ? "Verified" : "Pending"} valueClass={isVerified ? "text-green-600" : "text-amber-600"} />
+                <InfoCard icon="✅" label="Verification" value={isVerified ? "Verified" : "Pending"} valueClass={isVerified ? "text-green-600 dark:text-green-400" : "text-amber-600 dark:text-amber-400"} />
                 <InfoCard icon="#️⃣" label="Employer ID" value={`#${profile?.id}`} />
               </div>
               {profile?.description && (
-                <div className="bg-slate-50 border border-slate-100 rounded-xl p-4">
-                  <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1.5">About</p>
-                  <p className="text-slate-700 text-sm leading-relaxed">{profile.description}</p>
+                <div className="bg-slate-50 dark:bg-slate-800/40 border border-slate-100 dark:border-slate-800/60 rounded-xl p-4">
+                  <p className="text-xs font-semibold text-slate-400 dark:text-slate-550 uppercase tracking-wider mb-1.5">About</p>
+                  <p className="text-slate-700 dark:text-slate-300 text-sm leading-relaxed">{profile.description}</p>
                 </div>
               )}
             </div>
@@ -316,7 +315,7 @@ export default function EmployerProfile() {
         </div>
 
         {/* ── Personal Information ───────────────────────────────────────────── */}
-        <div className="bg-white border border-slate-200 rounded-2xl p-6">
+        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 transition-colors duration-200">
           <SectionHeader
             title="Personal Information"
             onEdit={editSection !== "personal" ? () => { cancelEdit(); setEditSection("personal"); } : null}
@@ -324,7 +323,7 @@ export default function EmployerProfile() {
 
           {editSection === "personal" ? (
             <div className="space-y-4">
-              <div className="bg-blue-50 border border-blue-200 rounded-xl px-4 py-3 text-blue-700 text-sm">
+              <div className="bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-800/40 rounded-xl px-4 py-3 text-blue-700 dark:text-blue-400 text-sm">
                 ℹ️ <strong>Note:</strong> Email cannot be changed here. To change your email, contact support.
               </div>
               <Field label="Full Name" required>
@@ -346,7 +345,7 @@ export default function EmployerProfile() {
         </div>
 
         {/* ── Change Password ────────────────────────────────────────────────── */}
-        <div className="bg-white border border-slate-200 rounded-2xl p-6">
+        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 transition-colors duration-200">
           <SectionHeader
             title="Change Password"
             onEdit={editSection !== "password" ? () => { cancelEdit(); setEditSection("password"); } : null}
@@ -368,10 +367,10 @@ export default function EmployerProfile() {
                 <div className="space-y-1">
                   <div className="flex gap-1">
                     {[1, 2, 3, 4].map((i) => (
-                      <div key={i} className={`h-1 flex-1 rounded-full transition-all ${passwordForm.newPassword.length >= i * 3 ? (passwordForm.newPassword.length >= 10 ? "bg-green-500" : passwordForm.newPassword.length >= 7 ? "bg-amber-500" : "bg-red-400") : "bg-slate-200"}`} />
+                      <div key={i} className={`h-1 flex-1 rounded-full transition-all ${passwordForm.newPassword.length >= i * 3 ? (passwordForm.newPassword.length >= 10 ? "bg-green-500" : passwordForm.newPassword.length >= 7 ? "bg-amber-500" : "bg-red-400") : "bg-slate-200 dark:bg-slate-800"}`} />
                     ))}
                   </div>
-                  <p className="text-xs text-slate-500">
+                  <p className="text-xs text-slate-500 dark:text-slate-400">
                     {passwordForm.newPassword.length < 6 ? "Too short" : passwordForm.newPassword.length < 10 ? "Fair" : "Strong"}
                   </p>
                 </div>
@@ -391,10 +390,10 @@ export default function EmployerProfile() {
             </div>
           ) : (
             <div className="flex items-center gap-4 py-2">
-              <div className="w-10 h-10 bg-slate-100 rounded-xl flex items-center justify-center text-xl">🔒</div>
+              <div className="w-10 h-10 bg-slate-100 dark:bg-slate-800 rounded-xl flex items-center justify-center text-xl">🔒</div>
               <div>
-                <p className="text-sm font-semibold text-slate-900">Password</p>
-                <p className="text-xs text-slate-500 mt-0.5">Click "Edit" to change your password</p>
+                <p className="text-sm font-semibold text-slate-900 dark:text-white">Password</p>
+                <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Click "Edit" to change your password</p>
               </div>
             </div>
           )}

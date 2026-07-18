@@ -3,6 +3,8 @@ import { useJob } from "../queries/jobQueries";
 import { useQueryClient } from "@tanstack/react-query";
 import axios from "axios";
 
+const BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:8080/api/v1";
+
 // ─── Toast Component ───────────────────────────────────────────────────────────
 function Toast({ message, type, onClose }) {
   useEffect(() => {
@@ -98,6 +100,11 @@ export default function JobDetailModal({ job: cardJob, isApplied: initialApplied
     return () => clearTimeout(t);
   }, []);
 
+  const handleClose = useCallback(() => {
+    setVisible(false);
+    setTimeout(onClose, 300);
+  }, [onClose]);
+
   // ESC key to close
   useEffect(() => {
     const handler = (e) => { if (e.key === "Escape") handleClose(); };
@@ -111,18 +118,13 @@ export default function JobDetailModal({ job: cardJob, isApplied: initialApplied
     return () => { document.body.style.overflow = ""; };
   }, []);
 
-  const handleClose = useCallback(() => {
-    setVisible(false);
-    setTimeout(onClose, 300);
-  }, [onClose]);
-
   const handleApply = useCallback(async () => {
     if (!job?.id || applied || applying) return;
     setApplying(true);
     const token = localStorage.getItem("token");
     try {
       await axios.post(
-        `http://localhost:8080/api/v1/applications/${job.id}/apply`,
+        `${BASE_URL}/applications/${job.id}/apply`,
         null,
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -146,7 +148,7 @@ export default function JobDetailModal({ job: cardJob, isApplied: initialApplied
     } finally {
       setApplying(false);
     }
-  }, [job?.id, applied, applying, queryClient]);
+  }, [job, applied, applying, queryClient]);
 
   // Derived display values
   const typeStyle     = jobTypeColors[job?.jobType]   || { bg: "bg-slate-100",  text: "text-slate-600",  border: "border-slate-200" };

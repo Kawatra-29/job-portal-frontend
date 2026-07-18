@@ -15,7 +15,7 @@ const CompanyCard = memo(function CompanyCard({ companies, index = 0 }) {
     .join("");
 
   return (
-    <div className="bg-white rounded-2xl border border-slate-200 p-6 flex flex-col gap-4 transition-all duration-300 hover:shadow-xl hover:-translate-y-1 hover:border-blue-300">
+    <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-6 flex flex-col gap-4 transition-all duration-300 hover:shadow-xl hover:-translate-y-1 hover:border-blue-300 dark:hover:border-blue-500 transition-colors duration-200">
       {/* Logo avatar */}
       <div className="w-13 h-13 rounded-xl border-2 flex items-center justify-center font-['Syne'] font-extrabold text-lg"
         style={{ backgroundColor: `${color}18`, borderColor: `${color}30`, color }}>
@@ -23,10 +23,10 @@ const CompanyCard = memo(function CompanyCard({ companies, index = 0 }) {
       </div>
 
       <div className="flex-1">
-        <h2 className="font-['Syne'] text-sm font-bold text-slate-900 mb-1.5 leading-snug">
+        <h2 className="font-['Syne'] text-sm font-bold text-slate-900 dark:text-white mb-1.5 leading-snug">
           {companies.name}
         </h2>
-        <p className="text-sm text-slate-500 flex items-center gap-1">
+        <p className="text-sm text-slate-500 dark:text-slate-400 flex items-center gap-1">
           📍 {companies.location}
         </p>
       </div>

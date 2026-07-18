@@ -3,6 +3,8 @@ import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import { AuthContext } from "../context/AuthContext";
 
+const BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:8080/api/v1";
+
 export default function useApi(initialUrl = "", initialMethod = "GET") {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(initialMethod === "GET" && !!initialUrl);
@@ -10,14 +12,20 @@ export default function useApi(initialUrl = "", initialMethod = "GET") {
   const navigate = useNavigate();
   const { logout } = useContext(AuthContext);
 
-  const request = useCallback(async (url, method = "GET", body = null, headers = {}) => {
+  const request = useCallback(async (url, method = "GET", body = null, headers = {}, options = {}) => {
     setLoading(true);
     setError(null);
     const token = localStorage.getItem("token");
+    
+    const finalUrl = url.startsWith("http://localhost:8080/api/v1")
+      ? url.replace("http://localhost:8080/api/v1", BASE_URL)
+      : url.startsWith("http")
+        ? url
+        : `${BASE_URL}${url.startsWith("/") ? "" : "/"}${url}`;
 
     try {
       const res = await axios({
-        url,
+        url: finalUrl,
         method,
         data: body,
         headers: {
@@ -39,6 +47,9 @@ export default function useApi(initialUrl = "", initialMethod = "GET") {
       } else {
         setError(err.message);
       }
+      if (options.throwError) {
+        throw err;
+      }
       return null;
     } finally {
       setLoading(false);
@@ -59,10 +70,10 @@ export default function useApi(initialUrl = "", initialMethod = "GET") {
     };
   }, [initialUrl, initialMethod, request]);
 
-  const get = useCallback((url) => request(url, "GET"), [request]);
-  const post = useCallback((url, body) => request(url, "POST", body), [request]);
-  const put = useCallback((url, body) => request(url, "PUT", body), [request]);
-  const del = useCallback((url) => request(url, "DELETE"), [request]);
+  const get = useCallback((url, headers = {}, options = {}) => request(url, "GET", null, headers, options), [request]);
+  const post = useCallback((url, body, headers = {}, options = {}) => request(url, "POST", body, headers, options), [request]);
+  const put = useCallback((url, body, headers = {}, options = {}) => request(url, "PUT", body, headers, options), [request]);
+  const del = useCallback((url, headers = {}, options = {}) => request(url, "DELETE", null, headers, options), [request]);
 
   return {
     data,

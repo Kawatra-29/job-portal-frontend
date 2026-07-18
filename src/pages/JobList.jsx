@@ -4,8 +4,10 @@ import axios from "axios";
 import JobCard from "../components/JobCard";
 import JobDetailModal from "../components/JobDetailModal";
 
+const BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:8080/api/v1";
+
 const fetchJobs = async ({ page, size, title, location }) => {
-  let url = `http://localhost:8080/api/v1/jobs?page=${page}&size=${size}`;
+  let url = `${BASE_URL}/jobs?page=${page}&size=${size}`;
   if (title) url += `&title=${encodeURIComponent(title)}`;
   if (location) url += `&location=${encodeURIComponent(location)}`;
   const res = await axios.get(url);
@@ -37,7 +39,7 @@ export default function JobList() {
   const { data: myApps } = useQuery({
     queryKey: ["applications", "my"],
     queryFn: async () => {
-      const res = await axios.get("http://localhost:8080/api/v1/applications/my", {
+      const res = await axios.get(`${BASE_URL}/applications/my`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       return Array.isArray(res.data) ? res.data : [];
@@ -81,19 +83,15 @@ export default function JobList() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 font-['DM_Sans']">
-      <link
-        href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=Syne:wght@700;800&display=swap"
-        rel="stylesheet"
-      />
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 font-['DM_Sans'] transition-colors duration-200">
 
       {/* Header */}
-      <div className="bg-white border-b border-slate-200 px-6 py-8">
+      <div className="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 px-6 py-8 transition-colors duration-200">
         <div className="max-w-3xl mx-auto">
-          <h1 className="font-['Syne'] text-3xl font-extrabold text-slate-900 tracking-tight mb-2">
+          <h1 className="font-['Syne'] text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight mb-2">
             Latest Jobs
           </h1>
-          <p className="text-slate-500 text-sm mb-6">
+          <p className="text-slate-500 dark:text-slate-400 text-sm mb-6">
             {isLoading
               ? "Loading opportunities..."
               : jobs.length > 0
@@ -104,9 +102,9 @@ export default function JobList() {
               ? `You've applied to all ${appliedJobIds.size} jobs on this page`
               : "Explore all open positions"}
           </p>
-
+ 
           {/* Search Bar */}
-          <form onSubmit={handleSearchSubmit} className="grid grid-cols-1 sm:grid-cols-[1fr_1fr_auto] gap-3 bg-slate-50 border border-slate-200 p-3 rounded-2xl shadow-xs">
+          <form onSubmit={handleSearchSubmit} className="grid grid-cols-1 sm:grid-cols-[1fr_1fr_auto] gap-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 p-3 rounded-2xl shadow-xs transition-colors duration-200">
             <div className="relative">
               <span className="absolute left-3.5 top-3 text-slate-400">🔍</span>
               <input
@@ -114,7 +112,7 @@ export default function JobList() {
                 placeholder="Search by job title..."
                 value={titleInput}
                 onChange={(e) => setTitleInput(e.target.value)}
-                className="w-full pl-9 pr-3 py-2.5 bg-white border border-slate-200 rounded-xl text-sm outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all font-medium text-slate-700 font-['DM_Sans']"
+                className="w-full pl-9 pr-3 py-2.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-sm outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all font-medium text-slate-700 dark:text-white font-['DM_Sans']"
               />
             </div>
             <div className="relative">
@@ -124,13 +122,13 @@ export default function JobList() {
                 placeholder="Search by location..."
                 value={locationInput}
                 onChange={(e) => setLocationInput(e.target.value)}
-                className="w-full pl-9 pr-3 py-2.5 bg-white border border-slate-200 rounded-xl text-sm outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all font-medium text-slate-700 font-['DM_Sans']"
+                className="w-full pl-9 pr-3 py-2.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-sm outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all font-medium text-slate-700 dark:text-white font-['DM_Sans']"
               />
             </div>
             <div className="flex gap-2">
               <button
                 type="submit"
-                className="w-full sm:w-auto px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-semibold text-sm rounded-xl transition-all shadow-sm shadow-blue-300 hover:-translate-y-0.5"
+                className="w-full sm:w-auto px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-semibold text-sm rounded-xl transition-all shadow-sm shadow-blue-300 dark:shadow-none hover:-translate-y-0.5 cursor-pointer"
               >
                 Search
               </button>
@@ -138,7 +136,7 @@ export default function JobList() {
                 <button
                   type="button"
                   onClick={handleClearFilters}
-                  className="px-3.5 py-2.5 bg-slate-200 hover:bg-slate-300 text-slate-700 font-semibold text-sm rounded-xl transition-all"
+                  className="px-3.5 py-2.5 bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 dark:hover:bg-slate-650 text-slate-700 dark:text-white font-semibold text-sm rounded-xl transition-all border-none cursor-pointer"
                   title="Clear Filters"
                 >
                   ✕
@@ -154,10 +152,10 @@ export default function JobList() {
         {isLoading ? (
           <div className="flex flex-col gap-4">
             {[1, 2, 3].map((i) => (
-              <div key={i} className="bg-white rounded-2xl p-6 border border-slate-200 animate-pulse">
-                <div className="h-5 bg-slate-100 rounded-md mb-3 w-3/5" />
-                <div className="h-3.5 bg-slate-100 rounded-md mb-5 w-1/3" />
-                <div className="h-10 bg-slate-100 rounded-xl" />
+              <div key={i} className="bg-white dark:bg-slate-900 rounded-2xl p-6 border border-slate-200 dark:border-slate-800 animate-pulse transition-colors duration-200">
+                <div className="h-5 bg-slate-100 dark:bg-slate-800 rounded-md mb-3 w-3/5" />
+                <div className="h-3.5 bg-slate-100 dark:bg-slate-800 rounded-md mb-5 w-1/3" />
+                <div className="h-10 bg-slate-100 dark:bg-slate-800 rounded-xl" />
               </div>
             ))}
           </div>
@@ -176,8 +174,8 @@ export default function JobList() {
             {isJobSeeker && appliedJobIds.size > 0 ? (
               <>
                 <p className="text-5xl mb-4">🎉</p>
-                <p className="text-xl font-semibold text-slate-600">All caught up!</p>
-                <p className="text-sm text-slate-400 mt-2">
+                <p className="text-xl font-semibold text-slate-600 dark:text-slate-400">All caught up!</p>
+                <p className="text-sm text-slate-400 dark:text-slate-500 mt-2">
                   You've already applied to all {appliedJobIds.size} jobs here.<br/>
                   Try searching a different title or location.
                 </p>
@@ -185,7 +183,7 @@ export default function JobList() {
             ) : (
               <>
                 <p className="text-5xl mb-4">🔍</p>
-                <p className="text-xl font-semibold text-slate-500">No jobs found</p>
+                <p className="text-xl font-semibold text-slate-500 dark:text-slate-400">No jobs found</p>
               </>
             )}
           </div>

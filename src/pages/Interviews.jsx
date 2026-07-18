@@ -54,15 +54,15 @@ export default function Interviews() {
         {isLoading ? (
           <div className="space-y-4">
             {[1, 2, 3].map((i) => (
-              <div key={i} className="bg-white border border-slate-200 rounded-2xl p-6 animate-pulse flex items-center justify-between">
+              <div key={i} className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 animate-pulse flex items-center justify-between transition-colors duration-200">
                 <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 bg-slate-200 rounded-full" />
+                  <div className="w-12 h-12 bg-slate-200 dark:bg-slate-800 rounded-full" />
                   <div className="space-y-2">
-                    <div className="h-4 bg-slate-200 rounded w-48" />
-                    <div className="h-3 bg-slate-200 rounded w-32" />
+                    <div className="h-4 bg-slate-200 dark:bg-slate-800 rounded w-48" />
+                    <div className="h-3 bg-slate-200 dark:bg-slate-800 rounded w-32" />
                   </div>
                 </div>
-                <div className="h-8 bg-slate-200 rounded w-28" />
+                <div className="h-8 bg-slate-200 dark:bg-slate-800 rounded w-28" />
               </div>
             ))}
           </div>
@@ -75,10 +75,10 @@ export default function Interviews() {
             </button>
           </div>
         ) : interviews.length === 0 ? (
-          <div className="bg-white border border-slate-200 rounded-2xl py-16 text-center text-slate-400">
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl py-16 text-center text-slate-400 transition-colors duration-200">
             <p className="text-5xl mb-4">📅</p>
-            <p className="text-lg font-semibold text-slate-600">No interviews scheduled</p>
-            <p className="text-sm text-slate-400 mt-1">There are no candidates in the "INTERVIEW" stage right now.</p>
+            <p className="text-lg font-semibold text-slate-600 dark:text-slate-300">No interviews scheduled</p>
+            <p className="text-sm text-slate-400 dark:text-slate-500 mt-1">There are no candidates in the "INTERVIEW" stage right now.</p>
           </div>
         ) : (
           <>
@@ -91,7 +91,7 @@ export default function Interviews() {
                 const initials = jobTitle.split(" ").map(w => w[0]).join("").slice(0, 2).toUpperCase();
 
                 return (
-                  <div key={app.id} className="bg-white border border-slate-200 rounded-2xl p-5 hover:shadow-md transition-all flex flex-col justify-between gap-4">
+                  <div key={app.id} className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 hover:shadow-md transition-all flex flex-col justify-between gap-4 transition-colors duration-200">
                     <div className="flex items-start gap-4">
                       <div className="w-12 h-12 rounded-xl bg-linear-to-br from-violet-500 to-purple-600 flex items-center justify-center font-extrabold text-white text-base shadow-sm shrink-0">
                         {initials}
@@ -100,21 +100,21 @@ export default function Interviews() {
                         <span className="bg-violet-100 text-violet-700 text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider">
                           Interview Status
                         </span>
-                        <h3 className="text-base font-bold text-slate-900 mt-1.5 mb-1 truncate">{jobTitle}</h3>
-                        <p className="text-xs text-slate-500 font-semibold m-0">{app.companyName || "Your Company"}</p>
-                        <p className="text-xs text-slate-400 mt-2 m-0">📅 Applied: {formattedDate}</p>
+                        <h3 className="text-base font-bold text-slate-900 dark:text-white mt-1.5 mb-1 truncate">{jobTitle}</h3>
+                        <p className="text-xs text-slate-500 dark:text-slate-400 font-semibold m-0">{app.companyName || "Your Company"}</p>
+                        <p className="text-xs text-slate-455 text-slate-400 dark:text-slate-500 mt-2 m-0">📅 Applied: {formattedDate}</p>
                       </div>
                     </div>
-
-                    <div className="flex items-center justify-between pt-3 border-t border-slate-100">
-                      <span className="text-xs text-slate-400 font-bold">ID: #{app.id}</span>
+ 
+                    <div className="flex items-center justify-between pt-3 border-t border-slate-100 dark:border-slate-850">
+                      <span className="text-xs text-slate-400 dark:text-slate-505 font-bold">ID: #{app.id}</span>
                       
                       <div className="flex items-center gap-2">
                         <select
                           disabled={updating}
                           value={app.status}
                           onChange={(e) => handleStatusChange(app.id, e.target.value)}
-                          className="px-3 py-1.5 border border-slate-200 rounded-xl text-xs font-semibold text-slate-700 outline-none focus:ring-2 focus:ring-violet-500 focus:border-transparent transition-all bg-white cursor-pointer shadow-sm hover:border-slate-300"
+                          className="px-3 py-1.5 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-semibold text-slate-700 dark:text-white outline-none focus:ring-2 focus:ring-violet-500 focus:border-transparent transition-all bg-white dark:bg-slate-900 cursor-pointer shadow-sm hover:border-slate-300 dark:hover:border-slate-600"
                         >
                           <option value="INTERVIEW">Interviewing</option>
                           <option value="HIRED">Hired</option>
@@ -135,7 +135,7 @@ export default function Interviews() {
                 <button
                   onClick={() => setPage((p) => Math.max(0, p - 1))}
                   disabled={page === 0}
-                  className="px-4 py-2 bg-white border border-slate-200 rounded-xl text-sm font-medium text-slate-600 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-slate-50 transition"
+                  className="px-4 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl text-sm font-medium text-slate-655 text-slate-600 dark:text-slate-300 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-slate-50 dark:hover:bg-slate-850 transition cursor-pointer"
                 >
                   ← Prev
                 </button>
@@ -144,10 +144,10 @@ export default function Interviews() {
                     <button
                       key={i}
                       onClick={() => setPage(i)}
-                      className={`w-9 h-9 rounded-xl text-sm font-semibold transition ${
+                      className={`w-9 h-9 rounded-xl text-sm font-semibold transition cursor-pointer ${
                         page === i
                           ? "bg-violet-600 text-white"
-                          : "bg-white border border-slate-200 hover:bg-slate-50 text-slate-700"
+                          : "bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-850 text-slate-750 dark:text-slate-300"
                       }`}
                     >
                       {i + 1}
@@ -157,7 +157,7 @@ export default function Interviews() {
                 <button
                   onClick={() => setPage((p) => Math.min(totalPages - 1, p + 1))}
                   disabled={page >= totalPages - 1}
-                  className="px-4 py-2 bg-white border border-slate-200 rounded-xl text-sm font-medium text-slate-600 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-slate-50 transition"
+                  className="px-4 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl text-sm font-medium text-slate-655 text-slate-600 dark:text-slate-300 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-slate-50 dark:hover:bg-slate-850 transition cursor-pointer"
                 >
                   Next →
                 </button>

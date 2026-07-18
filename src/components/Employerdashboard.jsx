@@ -44,20 +44,20 @@ function ApplicantRow({ applicant }) {
   };
 
   return (
-    <div className="flex justify-between items-center px-3 py-3 bg-slate-50 rounded-xl">
+    <div className="flex justify-between items-center px-3 py-3 bg-slate-50 dark:bg-slate-800/40 transition-colors duration-200 rounded-xl">
       <div className="flex items-center gap-2.5 min-w-0 flex-1">
         <div className="w-9 h-9 rounded-full bg-linear-to-br from-violet-500 to-blue-500 flex items-center justify-center text-white text-xs font-bold shrink-0">
           {initials}
         </div>
         <div className="min-w-0 flex-1">
-          <p className="font-semibold text-sm text-slate-900 m-0 truncate">Applied for: {jobTitle}</p>
-          <p className="text-xs text-slate-500 m-0">{appliedDate && `📅 ${appliedDate}`}</p>
+          <p className="font-semibold text-sm text-slate-900 dark:text-white m-0 truncate">Applied for: {jobTitle}</p>
+          <p className="text-xs text-slate-500 dark:text-slate-400 m-0">{appliedDate && `📅 ${appliedDate}`}</p>
         </div>
       </div>
       <select
         value={applicant.status}
         onChange={handleStatusChange}
-        className={`text-xs font-semibold px-2.5 py-1 rounded-full outline-none border border-slate-200 cursor-pointer ${style.bg} ${style.color}`}
+        className={`text-xs font-semibold px-2.5 py-1 rounded-full outline-none border border-slate-200 dark:border-slate-700 dark:bg-slate-800 dark:text-white cursor-pointer ${style.bg} ${style.color}`}
       >
         <option value="APPLIED">Applied</option>
         <option value="SHORTLISTED">Shortlisted</option>
@@ -101,11 +101,11 @@ function JobRow({ job }) {
   };
 
   return (
-    <div className="p-4 border border-slate-200 rounded-xl transition-all hover:border-violet-300 hover:shadow-md">
+    <div className="p-4 border border-slate-200 dark:border-slate-800 rounded-xl transition-all hover:border-violet-300 dark:hover:border-violet-500 hover:shadow-md">
       <div className="flex justify-between items-start gap-4">
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-2 mb-1 flex-wrap">
-            <p className="font-semibold text-sm text-slate-900 m-0">{job.title}</p>
+            <p className="font-semibold text-sm text-slate-900 dark:text-white m-0">{job.title}</p>
             {isUrgent && (
               <span className="bg-red-50 text-red-600 text-[10px] font-bold px-1.5 py-0.5 rounded">URGENT</span>
             )}
@@ -113,7 +113,7 @@ function JobRow({ job }) {
               value={job.status}
               onChange={handleStatusChange}
               onClick={(e) => e.stopPropagation()}
-              className={`text-[10px] font-bold px-1.5 py-0.5 rounded outline-none border border-slate-200 cursor-pointer ${badgeCls}`}
+              className={`text-[10px] font-bold px-1.5 py-0.5 rounded outline-none border border-slate-200 dark:border-slate-700 dark:bg-slate-800 dark:text-white cursor-pointer ${badgeCls}`}
             >
               <option value="OPEN">Open</option>
               <option value="CLOSED">Closed</option>
@@ -121,22 +121,22 @@ function JobRow({ job }) {
               <option value="FILLED">Filled</option>
             </select>
           </div>
-          <p className="text-xs text-slate-500 m-0">
+          <p className="text-xs text-slate-500 dark:text-slate-400 m-0">
             📍 {job.location || "Remote"} &nbsp;·&nbsp; {job.jobType?.replace("_", " ")} &nbsp;·&nbsp; {job.workMode}
           </p>
           {deadlineStr && (
-            <p className="text-xs text-slate-400 mt-1 m-0">⏰ Deadline: {deadlineStr}</p>
+            <p className="text-xs text-slate-400 dark:text-slate-500 mt-1 m-0">⏰ Deadline: {deadlineStr}</p>
           )}
         </div>
         <div className="flex flex-col items-end justify-between min-h-12 shrink-0">
           <div className="text-right">
             {job.salaryMin && (
-              <p className="font-['Syne'] font-extrabold text-base text-violet-600 m-0">
+              <p className="font-['Syne'] font-extrabold text-base text-violet-600 dark:text-violet-400 m-0">
                 ₹{(job.salaryMin / 100000).toFixed(0)}L
               </p>
             )}
             {job.salaryMax && (
-              <p className="text-xs text-slate-400 m-0">– ₹{(job.salaryMax / 100000).toFixed(0)}L</p>
+              <p className="text-xs text-slate-400 dark:text-slate-500 m-0">– ₹{(job.salaryMax / 100000).toFixed(0)}L</p>
             )}
           </div>
           <button
@@ -163,12 +163,12 @@ function StatCard({ stat, isLoading }) {
     );
   }
   return (
-    <div className="bg-white border border-slate-200 rounded-2xl p-5 transition-all hover:shadow-lg hover:-translate-y-0.5">
-      <div className={`w-10 h-10 rounded-xl bg-${stat.color}-50 flex items-center justify-center text-xl mb-3`}>
+    <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 transition-colors duration-200 rounded-2xl p-5 transition-all hover:shadow-lg hover:-translate-y-0.5">
+      <div className={`w-10 h-10 rounded-xl bg-${stat.color}-50 dark:bg-${stat.color}-950/30 flex items-center justify-center text-xl mb-3`}>
         {stat.icon}
       </div>
-      <div className="font-['Syne'] text-3xl font-extrabold text-slate-900">{stat.value}</div>
-      <div className="text-xs text-slate-500 font-medium mt-0.5">{stat.label}</div>
+      <div className="font-['Syne'] text-3xl font-extrabold text-slate-900 dark:text-white">{stat.value}</div>
+      <div className="text-xs text-slate-500 dark:text-slate-400 font-medium mt-0.5">{stat.label}</div>
     </div>
   );
 }
@@ -216,13 +216,13 @@ export default function EmployerDashboard() {
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
         {/* Recent Applicants */}
-        <div className="bg-white border border-slate-200 rounded-2xl p-6">
-          <h2 className="font-['Syne'] text-base font-bold text-slate-900 m-0 mb-5">Recent Applicants</h2>
+        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 transition-colors duration-200 rounded-2xl p-6">
+          <h2 className="font-['Syne'] text-base font-bold text-slate-900 dark:text-white m-0 mb-5">Recent Applicants</h2>
           <div className="flex flex-col gap-3">
             {applicantsLoading ? (
               <div className="space-y-3">
                 {[1, 2, 3].map((i) => (
-                  <div key={i} className="h-14 bg-slate-100 rounded-xl animate-pulse" />
+                  <div key={i} className="h-14 bg-slate-100 dark:bg-slate-800 rounded-xl animate-pulse" />
                 ))}
               </div>
             ) : recentApplicants?.length > 0 ? (
@@ -237,13 +237,13 @@ export default function EmployerDashboard() {
         </div>
 
         {/* Active Job Posts */}
-        <div className="bg-white border border-slate-200 rounded-2xl p-6">
-          <h2 className="font-['Syne'] text-base font-bold text-slate-900 m-0 mb-5">Active Job Posts</h2>
+        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 transition-colors duration-200 rounded-2xl p-6">
+          <h2 className="font-['Syne'] text-base font-bold text-slate-900 dark:text-white m-0 mb-5">Active Job Posts</h2>
           <div className="flex flex-col gap-3">
             {jobsLoading ? (
               <div className="space-y-3">
                 {[1, 2, 3].map((i) => (
-                  <div key={i} className="h-28 bg-slate-100 rounded-xl animate-pulse" />
+                  <div key={i} className="h-28 bg-slate-100 dark:bg-slate-800 rounded-xl animate-pulse" />
                 ))}
               </div>
             ) : activeJobs?.length > 0 ? (
@@ -257,7 +257,7 @@ export default function EmployerDashboard() {
           </div>
           <Link
             to="/post-job"
-            className="block w-full mt-4 bg-violet-50 border border-violet-200 text-violet-600 rounded-xl px-4 py-2.5 text-sm font-semibold cursor-pointer font-['DM_Sans'] hover:bg-violet-100 transition-all text-center"
+            className="block w-full mt-4 bg-violet-50 dark:bg-violet-950/20 border border-violet-200 dark:border-violet-800/40 text-violet-600 dark:text-violet-400 rounded-xl px-4 py-2.5 text-sm font-semibold cursor-pointer font-['DM_Sans'] hover:bg-violet-100 dark:hover:bg-violet-900/30 transition-all text-center"
           >
             + Post Another Job
           </Link>

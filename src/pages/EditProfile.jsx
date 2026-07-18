@@ -1,6 +1,7 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useContext } from "react";
 import { useNavigate } from "react-router-dom";
 import useApi from "../Hooks/useApi";
+import { ThemeContext } from "../context/ThemeContext.jsx";
 
 const skillLevels = ["BEGINNER", "INTERMEDIATE", "ADVANCED", "EXPERT"];
 
@@ -8,6 +9,7 @@ export default function EditProfile() {
   const navigate = useNavigate();
   const { get, put: putSeeker, loading, error } = useApi();
   const { put: putUser } = useApi();
+  const { isDark, toggleTheme } = useContext(ThemeContext);
   const [formData, setFormData] = useState({
     fullName: "",
     phone: "",
@@ -29,8 +31,8 @@ export default function EditProfile() {
     const fetchData = async () => {
       // Dono requests parallel mein chalao
       const [skillsList, profileResult] = await Promise.all([
-        get("http://localhost:8080/api/v1/skills"),
-        get("http://localhost:8080/api/v1/jobseekers/me"),
+        get("/skills"),
+        get("/jobseekers/me"),
       ]);
 
       // Available skills state mein save karo
@@ -129,8 +131,8 @@ export default function EditProfile() {
       })),
     };
 
-    const userResult = await putUser("http://localhost:8080/api/v1/users/me", userPayload);
-    const seekerResult = await putSeeker("http://localhost:8080/api/v1/jobseekers/me", seekerPayload);
+    const userResult = await putUser("/users/me", userPayload);
+    const seekerResult = await putSeeker("/jobseekers/me", seekerPayload);
     setSaving(false);
 
     if (userResult && seekerResult) {
@@ -143,27 +145,40 @@ export default function EditProfile() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-slate-50 font-['DM_Sans'] flex items-center justify-center">
-        <div className="text-slate-500">Loading...</div>
+      <div className="min-h-screen bg-slate-50 dark:bg-slate-950 font-['DM_Sans'] flex items-center justify-center transition-colors duration-200">
+        <div className="text-slate-500 dark:text-slate-400">Loading...</div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 font-['DM_Sans'] p-6">
-      <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=Syne:wght@700;800&display=swap" rel="stylesheet" />
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 font-['DM_Sans'] p-6 transition-colors duration-200">
 
       <div className="max-w-3xl mx-auto">
         {/* Header */}
         <div className="flex items-center justify-between mb-6">
           <button
             onClick={() => navigate("/dashboard/jobseeker")}
-            className="text-slate-600 hover:text-slate-900 font-medium flex items-center gap-2"
+            className="text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white font-medium flex items-center gap-2"
           >
             ← Back
           </button>
-          <h1 className="font-['Syne'] text-2xl font-bold text-slate-900">Edit Profile</h1>
-          <div className="w-16" />
+          <h1 className="font-['Syne'] text-2xl font-bold text-slate-900 dark:text-white">Edit Profile</h1>
+          <button
+            onClick={toggleTheme}
+            className="w-10 h-10 flex items-center justify-center rounded-xl bg-white dark:bg-slate-800 text-slate-800 dark:text-white border border-slate-200 dark:border-slate-700 shadow-sm hover:shadow-md transition-all duration-200 cursor-pointer"
+            title={isDark ? "Switch to Light Mode" : "Switch to Dark Mode"}
+          >
+            {isDark ? (
+              <svg className="w-5 h-5 text-amber-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364-6.364l-.707.707M6.343 17.657l-.707.707m12.728 0l-.707-.707M6.343 6.364l-.707-.707M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+              </svg>
+            ) : (
+              <svg className="w-5 h-5 text-slate-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+              </svg>
+            )}
+          </button>
         </div>
 
         {error && (
@@ -186,102 +201,102 @@ export default function EditProfile() {
 
         <form onSubmit={handleSubmit} className="space-y-5">
           {/* Basic Info */}
-          <div className="bg-white border border-slate-200 rounded-2xl p-6">
-            <h2 className="font-['Syne'] text-sm font-bold text-slate-900 uppercase tracking-wider mb-4">
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 transition-colors duration-200">
+            <h2 className="font-['Syne'] text-sm font-bold text-slate-900 dark:text-white uppercase tracking-wider mb-4">
               Basic Information
             </h2>
             <div className="grid gap-4">
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1.5">Full Name</label>
+                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5">Full Name</label>
                 <input
                   type="text"
                   name="fullName"
                   value={formData.fullName}
                   onChange={handleChange}
                   placeholder="Your full name"
-                  className="w-full px-4 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
+                  className="w-full px-4 py-2.5 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all placeholder:text-slate-400 dark:placeholder:text-slate-500"
                   required
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1.5">Headline</label>
+                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5">Headline</label>
                 <input
                   type="text"
                   name="headline"
                   value={formData.headline}
                   onChange={handleChange}
                   placeholder="e.g. Full Stack Developer | React & Node.js"
-                  className="w-full px-4 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
+                  className="w-full px-4 py-2.5 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all placeholder:text-slate-400 dark:placeholder:text-slate-500"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1.5">Summary</label>
+                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5">Summary</label>
                 <textarea
                   name="summary"
                   value={formData.summary}
                   onChange={handleChange}
                   rows={4}
                   placeholder="Tell employers about yourself, your experience, and what you're looking for..."
-                  className="w-full px-4 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all resize-none"
+                  className="w-full px-4 py-2.5 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all resize-none placeholder:text-slate-400 dark:placeholder:text-slate-500"
                 />
               </div>
             </div>
           </div>
 
           {/* Contact & Location */}
-          <div className="bg-white border border-slate-200 rounded-2xl p-6">
-            <h2 className="font-['Syne'] text-sm font-bold text-slate-900 uppercase tracking-wider mb-4">
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 transition-colors duration-200">
+            <h2 className="font-['Syne'] text-sm font-bold text-slate-900 dark:text-white uppercase tracking-wider mb-4">
               Contact & Location
             </h2>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1.5">Phone Number</label>
+                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5">Phone Number</label>
                 <input
                   type="text"
                   name="phone"
                   value={formData.phone}
                   onChange={handleChange}
                   placeholder="e.g. +91 9876543210"
-                  className="w-full px-4 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
+                  className="w-full px-4 py-2.5 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all placeholder:text-slate-400 dark:placeholder:text-slate-500"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1.5">Location</label>
+                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5">Location</label>
                 <input
                   type="text"
                   name="location"
                   value={formData.location}
                   onChange={handleChange}
                   placeholder="e.g. Mumbai, Maharashtra"
-                  className="w-full px-4 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
+                  className="w-full px-4 py-2.5 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all placeholder:text-slate-400 dark:placeholder:text-slate-500"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1.5">Availability</label>
+                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5">Availability</label>
                 <select
                   name="availability"
                   value={formData.availability}
                   onChange={handleChange}
-                  className="w-full px-4 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all bg-white"
+                  className="w-full px-4 py-2.5 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all cursor-pointer"
                 >
-                  <option value="OPEN_TO_WORK">Open to Work</option>
-                  <option value="NOT_LOOKING">Not Looking</option>
-                  <option value="FREELANCE">Freelance</option>
-                  <option value="FULL_TIME">Full Time</option>
-                  <option value="PART_TIME">Part Time</option>
+                  <option value="OPEN_TO_WORK" className="dark:bg-slate-900">Open to Work</option>
+                  <option value="NOT_LOOKING" className="dark:bg-slate-900">Not Looking</option>
+                  <option value="FREELANCE" className="dark:bg-slate-900">Freelance</option>
+                  <option value="FULL_TIME" className="dark:bg-slate-900">Full Time</option>
+                  <option value="PART_TIME" className="dark:bg-slate-900">Part Time</option>
                 </select>
               </div>
             </div>
           </div>
 
           {/* Experience & Salary */}
-          <div className="bg-white border border-slate-200 rounded-2xl p-6">
-            <h2 className="font-['Syne'] text-sm font-bold text-slate-900 uppercase tracking-wider mb-4">
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 transition-colors duration-200">
+            <h2 className="font-['Syne'] text-sm font-bold text-slate-900 dark:text-white uppercase tracking-wider mb-4">
               Experience & Salary
             </h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1.5">Years of Experience</label>
+                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5">Years of Experience</label>
                 <input
                   type="number"
                   name="yearsOfExperience"
@@ -289,11 +304,11 @@ export default function EditProfile() {
                   onChange={handleChange}
                   min="0"
                   max="50"
-                  className="w-full px-4 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
+                  className="w-full px-4 py-2.5 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1.5">Expected Salary (₹/year)</label>
+                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5">Expected Salary (₹/year)</label>
                 <input
                   type="number"
                   name="expectedSalary"
@@ -302,15 +317,15 @@ export default function EditProfile() {
                   min="0"
                   step="10000"
                   placeholder="e.g. 1200000"
-                  className="w-full px-4 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
+                  className="w-full px-4 py-2.5 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all placeholder:text-slate-400 dark:placeholder:text-slate-555"
                 />
               </div>
             </div>
           </div>
 
           {/* Skills */}
-          <div className="bg-white border border-slate-200 rounded-2xl p-6">
-            <h2 className="font-['Syne'] text-sm font-bold text-slate-900 uppercase tracking-wider mb-4">
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 transition-colors duration-200">
+            <h2 className="font-['Syne'] text-sm font-bold text-slate-900 dark:text-white uppercase tracking-wider mb-4">
               Skills
             </h2>
 
@@ -319,18 +334,18 @@ export default function EditProfile() {
                 {formData.skills.map((skill, index) => (
                   <div
                     key={index}
-                    className="flex items-center gap-2 bg-blue-50 border border-blue-200 rounded-lg px-3 py-2"
+                    className="flex items-center gap-2 bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-800/40 rounded-lg px-3 py-2"
                   >
-                    <span className="font-semibold text-sm text-slate-900">
+                    <span className="font-semibold text-sm text-slate-900 dark:text-slate-200">
                       {skill.skillName || skill.skill || skill.name}
                     </span>
-                    <span className="text-[11px] font-semibold uppercase text-blue-600 bg-blue-100 px-2 py-0.5 rounded">
+                    <span className="text-[11px] font-semibold uppercase text-blue-600 dark:text-blue-400 bg-blue-100 dark:bg-blue-900/30 px-2 py-0.5 rounded">
                       {skill.proficiencyLevel || skill.level || "INTERMEDIATE"}
                     </span>
                     <button
                       type="button"
                       onClick={() => handleRemoveSkill(index)}
-                      className="text-red-500 hover:text-red-700 text-lg leading-none"
+                      className="text-red-500 hover:text-red-700 text-lg leading-none border-none bg-transparent cursor-pointer"
                     >
                       ×
                     </button>
@@ -353,11 +368,11 @@ export default function EditProfile() {
                     level: newSkill.level,
                   });
                 }}
-                className="flex-1 min-w-40 px-4 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all bg-white"
+                className="flex-1 min-w-40 px-4 py-2.5 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all cursor-pointer"
               >
-                <option value="">-- Select a skill --</option>
+                <option value="" className="dark:bg-slate-900">-- Select a skill --</option>
                 {availableSkills.map((skill) => (
-                  <option key={skill.id} value={skill.id}>
+                  <option key={skill.id} value={skill.id} className="dark:bg-slate-900">
                     {skill.name}
                   </option>
                 ))}
@@ -367,10 +382,10 @@ export default function EditProfile() {
               <select
                 value={newSkill.level}
                 onChange={(e) => setNewSkill({ ...newSkill, level: e.target.value })}
-                className="px-4 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all bg-white"
+                className="px-4 py-2.5 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all cursor-pointer"
               >
                 {skillLevels.map((level) => (
-                  <option key={level} value={level}>
+                  <option key={level} value={level} className="dark:bg-slate-900">
                     {level.charAt(0) + level.slice(1).toLowerCase()}
                   </option>
                 ))}
@@ -380,7 +395,7 @@ export default function EditProfile() {
                 type="button"
                 onClick={handleAddSkill}
                 disabled={!newSkill.skillId}
-                className="bg-slate-800 hover:bg-slate-900 disabled:opacity-40 disabled:cursor-not-allowed text-white px-5 py-2.5 rounded-lg font-medium transition-all"
+                className="bg-slate-800 dark:bg-slate-700 hover:bg-slate-900 dark:hover:bg-slate-600 disabled:opacity-40 disabled:cursor-not-allowed text-white px-5 py-2.5 rounded-lg font-medium transition-all border-none cursor-pointer"
               >
                 Add
               </button>
@@ -392,14 +407,14 @@ export default function EditProfile() {
             <button
               type="button"
               onClick={() => navigate("/dashboard/jobseeker")}
-              className="px-6 py-2.5 border border-slate-300 text-slate-700 rounded-lg font-medium hover:bg-slate-50 transition-all"
+              className="px-6 py-2.5 border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-300 rounded-lg font-medium hover:bg-slate-50 dark:hover:bg-slate-800 transition-all bg-transparent cursor-pointer"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={saving}
-              className="px-6 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+              className="px-6 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-all disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer border-none"
             >
               {saving ? "Saving..." : "Save Changes"}
             </button>

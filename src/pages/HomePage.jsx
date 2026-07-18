@@ -1,4 +1,5 @@
 import Search from "../components/Search";
+import { Link } from "react-router-dom";
 
 const stats = [
   { number: "5L+", label: "Active Jobs" },
@@ -32,8 +33,7 @@ const features = [
 
 const HomePage = () => {
   return (
-    <div className="font-['DM_Sans'] bg-slate-50">
-      <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=Syne:wght@700;800&display=swap" rel="stylesheet" />
+    <div className="font-['DM_Sans'] bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 transition-colors duration-200">
 
       {/* Hero Section */}
       <section className="bg-linear-to-br from-slate-900 via-slate-800 to-blue-800 px-6 pt-20 pb-32 relative overflow-hidden">
@@ -61,14 +61,14 @@ const HomePage = () => {
       </section>
 
       {/* Stats Bar */}
-      <section className="bg-white border-b border-slate-200 p-6">
+      <section className="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 transition-colors duration-200 p-6">
         <div className="max-w-5xl mx-auto grid grid-cols-4 gap-4 text-center">
           {stats.map((s) => (
             <div key={s.label}>
-              <div className="font-['Syne'] text-3xl font-extrabold text-blue-600">
+              <div className="font-['Syne'] text-3xl font-extrabold text-blue-600 dark:text-blue-400">
                 {s.number}
               </div>
-              <div className="text-sm text-slate-500 font-medium">{s.label}</div>
+              <div className="text-sm text-slate-500 dark:text-slate-400 font-medium">{s.label}</div>
             </div>
           ))}
         </div>
@@ -77,10 +77,10 @@ const HomePage = () => {
       {/* Why Choose Us */}
       <section className="py-20 px-6 max-w-6xl mx-auto">
         <div className="text-center mb-14">
-          <h2 className="font-['Syne'] text-4xl font-extrabold text-slate-900 tracking-tight mb-3">
+          <h2 className="font-['Syne'] text-4xl font-extrabold text-slate-900 dark:text-white tracking-tight mb-3">
             Why Choose Us?
           </h2>
-          <p className="text-slate-500 text-base">
+          <p className="text-slate-500 dark:text-slate-400 text-base">
             Everything you need to land your next opportunity, in one place.
           </p>
         </div>
@@ -89,15 +89,15 @@ const HomePage = () => {
           {features.map((f) => (
             <div
               key={f.title}
-              className="bg-white border border-slate-200 rounded-2xl p-8 transition-all duration-300 hover:shadow-lg hover:border-blue-300 hover:-translate-y-1 cursor-default"
+              className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-8 transition-all duration-300 hover:shadow-lg hover:border-blue-300 dark:hover:border-blue-700 hover:-translate-y-1 cursor-default"
             >
-              <div className="text-4xl mb-4 w-16 h-16 bg-blue-50 rounded-xl flex items-center justify-center">
+              <div className="text-4xl mb-4 w-16 h-16 bg-blue-50 dark:bg-slate-800 rounded-xl flex items-center justify-center">
                 {f.icon}
               </div>
-              <h3 className="font-['Syne'] text-lg font-bold text-slate-900 mb-2">
+              <h3 className="font-['Syne'] text-lg font-bold text-slate-900 dark:text-white mb-2">
                 {f.title}
               </h3>
-              <p className="text-slate-500 text-sm leading-relaxed">{f.desc}</p>
+              <p className="text-slate-500 dark:text-slate-400 text-sm leading-relaxed">{f.desc}</p>
             </div>
           ))}
         </div>
@@ -111,12 +111,12 @@ const HomePage = () => {
         <p className="text-blue-200 mb-8 text-base">
           Join 2 million+ professionals who found their dream jobs here.
         </p>
-        <a
-          href="/auth"
-          className="inline-block bg-white text-blue-800 px-9 py-3.5 rounded-xl font-bold text-base shadow-lg hover:shadow-xl transition-shadow"
+        <Link
+          to="/auth?mode=register"
+          className="inline-block bg-white text-blue-800 px-9 py-3.5 rounded-xl font-bold text-base shadow-lg hover:shadow-xl transition-shadow no-underline"
         >
           Create Free Account →
-        </a>
+        </Link>
       </section>
     </div>
   );

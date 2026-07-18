@@ -32,7 +32,7 @@ export default function MyJobs() {
   const { mutate: updateStatus } = useUpdateJobStatus();
   const { mutate: deleteJob } = useDeleteJob();
 
-  const allJobs = Array.isArray(data) ? data : [];
+  const allJobs = Array.isArray(data) ? data : (data?.content || []);
   const totalElements = allJobs.length;
   const totalPages = Math.ceil(totalElements / size);
   const jobs = allJobs.slice(page * size, (page + 1) * size);
@@ -78,10 +78,10 @@ export default function MyJobs() {
         {isLoading ? (
           <div className="space-y-4">
             {[1, 2, 3].map((i) => (
-              <div key={i} className="bg-white border border-slate-200 rounded-2xl p-6 animate-pulse flex flex-col gap-4">
-                <div className="h-6 bg-slate-200 rounded w-1/3" />
-                <div className="h-4 bg-slate-200 rounded w-1/2" />
-                <div className="h-8 bg-slate-200 rounded w-28" />
+              <div key={i} className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 animate-pulse flex flex-col gap-4 transition-colors duration-200">
+                <div className="h-6 bg-slate-200 dark:bg-slate-800 rounded w-1/3" />
+                <div className="h-4 bg-slate-200 dark:bg-slate-800 rounded w-1/2" />
+                <div className="h-8 bg-slate-200 dark:bg-slate-800 rounded w-28" />
               </div>
             ))}
           </div>
@@ -94,13 +94,13 @@ export default function MyJobs() {
             </button>
           </div>
         ) : jobs.length === 0 ? (
-          <div className="bg-white border border-slate-200 rounded-2xl py-16 text-center text-slate-400 shadow-sm">
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl py-16 text-center text-slate-400 shadow-sm transition-colors duration-200">
             <p className="text-5xl mb-4">📋</p>
-            <p className="text-lg font-semibold text-slate-600">No job posts yet</p>
-            <p className="text-sm text-slate-400 mt-1">Get started by creating your first job posting.</p>
+            <p className="text-lg font-semibold text-slate-655 text-slate-600 dark:text-slate-300">No job posts yet</p>
+            <p className="text-sm text-slate-455 text-slate-400 dark:text-slate-500 mt-1">Get started by creating your first job posting.</p>
             <button
               onClick={() => navigate("/post-job")}
-              className="mt-5 px-5 py-2.5 bg-violet-600 hover:bg-violet-750 text-white rounded-xl text-sm font-bold shadow-md transition-all hover:-translate-y-0.5"
+              className="mt-5 px-5 py-2.5 bg-violet-600 hover:bg-violet-750 text-white rounded-xl text-sm font-bold shadow-md transition-all hover:-translate-y-0.5 cursor-pointer border-none"
             >
               Post a Job Now
             </button>
@@ -116,21 +116,21 @@ export default function MyJobs() {
                 const isUrgent = job.deadline && new Date(job.deadline) - new Date() < 7 * 24 * 60 * 60 * 1000;
 
                 return (
-                  <div key={job.id} className="bg-white border border-slate-200 rounded-2xl p-6 hover:shadow-md transition-all flex flex-col md:flex-row md:items-center justify-between gap-6 shadow-sm">
+                  <div key={job.id} className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 hover:shadow-md transition-all flex flex-col md:flex-row md:items-center justify-between gap-6 shadow-sm transition-colors duration-200">
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 mb-1.5 flex-wrap">
-                        <h3 className="font-bold text-lg text-slate-900 m-0">{job.title}</h3>
+                        <h3 className="font-bold text-lg text-slate-900 dark:text-white m-0">{job.title}</h3>
                         {isUrgent && (
-                          <span className="bg-red-50 text-red-600 text-[10px] font-extrabold px-1.5 py-0.5 rounded border border-red-200">URGENT</span>
+                          <span className="bg-red-50 dark:bg-red-950/20 text-red-600 dark:text-red-400 text-[10px] font-extrabold px-1.5 py-0.5 rounded border border-red-200 dark:border-red-900/30">URGENT</span>
                         )}
                         <span className={`text-[10px] font-bold px-2 py-0.5 rounded border ${badgeCls}`}>
                           {job.status}
                         </span>
                       </div>
-                      <p className="text-xs text-slate-500 font-semibold m-0">
+                      <p className="text-xs text-slate-500 dark:text-slate-400 font-semibold m-0">
                         📍 {job.location || "Remote"} &nbsp;·&nbsp; {job.jobType?.replace("_", " ")} &nbsp;·&nbsp; {job.workMode}
                       </p>
-                      <div className="flex flex-wrap gap-4 mt-3 text-xs text-slate-400 font-medium">
+                      <div className="flex flex-wrap gap-4 mt-3 text-xs text-slate-400 dark:text-slate-500 font-medium">
                         {deadlineStr && <span>⏰ Deadline: {deadlineStr}</span>}
                         <span>ID: #{job.id}</span>
                         {job.experienceLevel && <span>🎯 Exp: {job.experienceLevel.replace("_", " ")}</span>}
@@ -140,12 +140,12 @@ export default function MyJobs() {
                     <div className="flex items-center gap-4 shrink-0 justify-between md:justify-end">
                       <div className="text-right mr-2">
                         {job.salaryMin && (
-                          <p className="font-['Syne'] font-extrabold text-lg text-violet-650 m-0">
+                          <p className="font-['Syne'] font-extrabold text-lg text-violet-650 dark:text-violet-400 m-0">
                             ₹{(job.salaryMin / 100000).toFixed(0)}L
                           </p>
                         )}
                         {job.salaryMax && (
-                          <p className="text-xs text-slate-400 font-medium m-0">
+                          <p className="text-xs text-slate-400 dark:text-slate-500 font-medium m-0">
                             to ₹{(job.salaryMax / 100000).toFixed(0)}L / yr
                           </p>
                         )}
@@ -181,7 +181,7 @@ export default function MyJobs() {
                 <button
                   onClick={() => setPage((p) => Math.max(0, p - 1))}
                   disabled={page === 0}
-                  className="px-4 py-2 bg-white border border-slate-200 rounded-xl text-sm font-medium text-slate-600 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-slate-50 transition"
+                  className="px-4 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl text-sm font-medium text-slate-655 text-slate-600 dark:text-slate-300 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-slate-50 dark:hover:bg-slate-800 transition cursor-pointer"
                 >
                   ← Prev
                 </button>
@@ -190,10 +190,10 @@ export default function MyJobs() {
                     <button
                       key={i}
                       onClick={() => setPage(i)}
-                      className={`w-9 h-9 rounded-xl text-sm font-semibold transition ${
+                      className={`w-9 h-9 rounded-xl text-sm font-semibold transition cursor-pointer ${
                         page === i
                           ? "bg-violet-600 text-white"
-                          : "bg-white border border-slate-200 hover:bg-slate-50 text-slate-700"
+                          : "bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300"
                       }`}
                     >
                       {i + 1}
@@ -203,14 +203,14 @@ export default function MyJobs() {
                 <button
                   onClick={() => setPage((p) => Math.min(totalPages - 1, p + 1))}
                   disabled={page >= totalPages - 1}
-                  className="px-4 py-2 bg-white border border-slate-200 rounded-xl text-sm font-medium text-slate-600 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-slate-50 transition"
+                  className="px-4 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl text-sm font-medium text-slate-655 text-slate-600 dark:text-slate-300 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-slate-50 dark:hover:bg-slate-800 transition cursor-pointer"
                 >
                   Next →
                 </button>
               </div>
             )}
-
-            <p className="text-center text-xs text-slate-400">
+ 
+            <p className="text-center text-xs text-slate-400 dark:text-slate-500">
               Showing page {page + 1} of {totalPages} ({totalElements} total job posts)
             </p>
           </>

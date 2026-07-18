@@ -2,7 +2,7 @@ import CompanyCard from "./CompanyCard";
 import useApi from "../Hooks/useApi";
 
 function Companies() {
-  const { data, loading, error } = useApi("http://localhost:8080/api/v1/jobs?size=100");
+  const { data, loading, error } = useApi("/jobs?size=100");
 
   // Extract unique companies from jobs
   const companyList = data?.content?.reduce((acc, job) => {
@@ -18,8 +18,8 @@ function Companies() {
   }, []) || [];
 
   return (
-    <div className="min-h-screen bg-slate-50">
-      <h1 className="text-4xl font-['Syne'] font-extrabold text-center py-10 bg-slate-100 border-b-2 border-blue-500">
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 transition-colors duration-200">
+      <h1 className="text-4xl font-['Syne'] font-extrabold text-center py-10 bg-slate-100 dark:bg-slate-900 border-b-2 border-blue-500 text-slate-900 dark:text-white transition-colors duration-200">
         Companies
       </h1>
 

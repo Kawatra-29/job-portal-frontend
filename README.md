@@ -1,12 +1,12 @@
-# 🚀 JobPortal Frontend
+# 🚀 Stride Frontend
 
-A modern, full-featured **Job Portal Web Application** built with React 19, Vite, and Tailwind CSS — fully integrated with a Spring Boot backend.
+A modern, full-featured **Stride Web Application** built with React 19, Vite, and Tailwind CSS — fully integrated with a Spring Boot backend.
 
 ---
 
 ## 📸 Overview
 
-JobPortal is a production-ready frontend application that connects job seekers with top employers. It features role-based dashboards, real-time job listings, one-click apply, company discovery, and a seamless authentication flow.
+Stride is a production-ready frontend application that connects job seekers with top employers. It features role-based dashboards, real-time job listings, one-click apply, company discovery, and a seamless authentication flow.
 
 ---
 
@@ -59,7 +59,7 @@ JobPortal is a production-ready frontend application that connects job seekers w
 ## 📁 Project Structure
 
 ```
-job-portal-frontend/
+stride-frontend/
 ├── public/
 ├── src/
 │   ├── pages/
@@ -148,8 +148,8 @@ const response = await post("http://localhost:8080/api/v1/auth/login", payload);
 
 ```bash
 # Clone the repository
-git clone https://github.com/your-username/job-portal-frontend.git
-cd job-portal-frontend
+git clone https://github.com/your-username/stride-frontend.git
+cd stride-frontend
 
 # Install dependencies
 npm install

@@ -47,8 +47,7 @@ function App() {
     <Suspense fallback={<LoadingFallback />}>
       <Routes>
         {/* Public Routes */}
-        <Route path="/" element={<Navigate to="/home" replace />} />
-        <Route path="/home" element={<HomePage />} />
+        <Route path="/" element={<HomePage />} />
         <Route path="/auth" element={<AuthPage />} />
         <Route path="/jobs" element={<JobList />} />
         <Route path="/companies" element={<Companies />} />
