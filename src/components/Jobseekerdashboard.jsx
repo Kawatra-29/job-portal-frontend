@@ -187,8 +187,21 @@ export default function JobSeekerDashboard() {
         </header>
 
         <main className="flex-1 p-6 md:p-8 overflow-y-auto bg-slate-50 dark:bg-slate-900 transition-colors duration-200">
-          {/* Header */}
-          <div className="mb-8 flex flex-col sm:flex-row justify-between items-start gap-4">
+          {showProfile ? (
+            <UserProfile />
+          ) : showJobs ? (
+            <JobList />
+          ) : showApplications ? (
+            <MyApplications
+              applications={applications}
+              loading={appsLoading}
+              handleWithdraw={handleWithdraw}
+              onViewDetails={setSelectedJob}
+            />
+          ) : (
+            <>
+              {/* Header */}
+              <div className="mb-8 flex flex-col sm:flex-row justify-between items-start gap-4">
             <div>
               <p className="text-slate-500 dark:text-slate-400 text-sm m-0 mb-1">{greeting}</p>
               <h1 className="font-['Syne'] text-3xl font-extrabold text-slate-900 dark:text-white m-0 tracking-tight">
@@ -334,6 +347,7 @@ export default function JobSeekerDashboard() {
           </>
         )}
       </main>
+      </div>
 
       {/* Job Detail Modal */}
       {selectedJob && (
