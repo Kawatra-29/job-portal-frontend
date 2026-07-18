@@ -83,7 +83,7 @@ export function SidebarLayout({
         </div>
 
         {/* Nav */}
-        <nav className="p-4 flex-1">
+        <nav className="p-4 flex-1 overflow-y-auto min-h-0">
           {navItems.map((item) => (
             <Link
               key={item.label}
