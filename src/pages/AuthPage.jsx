@@ -99,7 +99,9 @@ export default function AuthPage() {
         setApiError(response?.message || "Something went wrong. Please try again.");
       }
     } catch (err) {
-      if (err.response?.status === 401) {
+      if (err.response?.status === 429) {
+        setApiError("Too many attempts. Please wait 1 minute before trying again.");
+      } else if (err.response?.status === 401) {
         setApiError("Invalid credentials. Please check your email and password.");
       } else if (err.response?.data?.authStatus === "USER_ALREADY_EXISTS") {
         setApiError("Email is already registered. Please login or use a different email.");
@@ -143,8 +145,12 @@ export default function AuthPage() {
         setOtpError("Invalid or expired OTP. Please try again.");
       }
     } catch (err) {
-      const errorMsg = err.response?.data?.message || (err.response?.data?.authStatus === "INVALID_OR_EXPIRED_OTP" ? "Invalid or expired OTP. Please check the code and try again." : null);
-      setOtpError(errorMsg || "Invalid or expired OTP. Please try again.");
+      if (err.response?.status === 429) {
+        setOtpError("Too many attempts. Please wait 1 minute before trying again.");
+      } else {
+        const errorMsg = err.response?.data?.message || (err.response?.data?.authStatus === "INVALID_OR_EXPIRED_OTP" ? "Invalid or expired OTP. Please check the code and try again." : null);
+        setOtpError(errorMsg || "Invalid or expired OTP. Please try again.");
+      }
     } finally {
       setVerifyingOtp(false);
     }
@@ -161,7 +167,7 @@ export default function AuthPage() {
       setResendTimer(60);
       setTimeout(() => setOtpSuccess(null), 4000);
     } catch (err) {
-      setOtpError(err.response?.data?.message || "Failed to resend OTP. Please try again.");
+      setOtpError(err.response?.status === 429 ? "Too many attempts. Please wait 1 minute before trying again." : (err.response?.data?.message || "Failed to resend OTP. Please try again."));
     }
   };
 
@@ -180,7 +186,7 @@ export default function AuthPage() {
       setForgotSuccess("Password reset OTP sent to your email address!");
       setShowForgotStep("RESET");
     } catch (err) {
-      setForgotError(err.response?.data?.message || "No account found with this email address.");
+      setForgotError(err.response?.status === 429 ? "Too many attempts. Please wait 1 minute before trying again." : (err.response?.data?.message || "No account found with this email address."));
     } finally {
       setSendingResetOtp(false);
     }
@@ -219,7 +225,7 @@ export default function AuthPage() {
         setNewPassword("");
       }, 1500);
     } catch (err) {
-      setForgotError(err.response?.data?.message || (err.response?.data?.authStatus === "INVALID_OR_EXPIRED_OTP" ? "Invalid or expired OTP code." : "Failed to reset password. Please try again."));
+      setForgotError(err.response?.status === 429 ? "Too many attempts. Please wait 1 minute before trying again." : (err.response?.data?.message || (err.response?.data?.authStatus === "INVALID_OR_EXPIRED_OTP" ? "Invalid or expired OTP code." : "Failed to reset password. Please try again.")));
     } finally {
       setResettingPassword(false);
     }
