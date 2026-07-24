@@ -6,6 +6,9 @@ import {
 import { SidebarLayout } from "../components/SidebarLayout";
 import { Helmet } from "react-helmet-async";
 
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:8080/api/v1";
+const BACKEND_BASE_URL = API_BASE_URL.replace("/api/v1", "");
+
 const navItems = [
   { icon: "🏠", label: "Dashboard", path: "/dashboard/employer" },
   { icon: "📢", label: "Post a Job", path: "/post-job" },
@@ -246,8 +249,8 @@ export default function AllApplicants() {
                               <p className="text-slate-800 dark:text-slate-200 m-0 flex items-center gap-1 capitalize">⏰ {jobSeeker?.availability?.toLowerCase()?.replace("_", " ") || "N/A"}</p>
                             </div>
                             <div>
-                              <p className="text-[9px] uppercase tracking-wider text-slate-455 text-slate-400 dark:text-slate-550 m-0 mb-1">CONTACT CHANNELS</p>
-                              <div className="flex gap-3 mt-0.5">
+                              <p className="text-[9px] uppercase tracking-wider text-slate-455 text-slate-400 dark:text-slate-550 m-0 mb-1">CONTACT & RESUME</p>
+                              <div className="flex flex-wrap items-center gap-3 mt-0.5">
                                 {jobSeeker?.user?.email && (
                                   <a href={`mailto:${jobSeeker.user.email}`} className="text-violet-600 dark:text-violet-400 hover:underline flex items-center gap-1">
                                     📧 Email
@@ -257,6 +260,18 @@ export default function AllApplicants() {
                                   <a href={`tel:${jobSeeker.user.phone}`} className="text-violet-600 dark:text-violet-400 hover:underline flex items-center gap-1">
                                     📞 Call
                                   </a>
+                                )}
+                                {jobSeeker?.resumeUrl ? (
+                                  <a
+                                    href={jobSeeker.resumeUrl.startsWith("http") ? jobSeeker.resumeUrl : `${BACKEND_BASE_URL}${jobSeeker.resumeUrl}`}
+                                    target="_blank"
+                                    rel="noreferrer"
+                                    className="px-2.5 py-1 bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800/40 rounded-lg text-xs font-bold hover:underline flex items-center gap-1"
+                                  >
+                                    📄 View Resume
+                                  </a>
+                                ) : (
+                                  <span className="text-slate-400 dark:text-slate-600 text-[11px] italic">No Resume Uploaded</span>
                                 )}
                               </div>
                             </div>

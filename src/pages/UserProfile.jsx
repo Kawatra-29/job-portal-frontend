@@ -2,6 +2,10 @@ import { useState, useEffect, useContext } from "react";
 import { useNavigate } from "react-router-dom";
 import useApi from "../Hooks/useApi";
 import { ThemeContext } from "../context/ThemeContext.jsx";
+import { AuthContext } from "../context/AuthContext";
+
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:8080/api/v1";
+const BACKEND_BASE_URL = API_BASE_URL.replace("/api/v1", "");
 
 const skillColors = {
   BEGINNER: { bg: "bg-yellow-50 dark:bg-yellow-950/20", text: "text-amber-700 dark:text-amber-400" },
@@ -23,8 +27,12 @@ export default function UserProfile() {
   const navigate = useNavigate();
   const { get, del, loading, error } = useApi();
   const { isDark, toggleTheme } = useContext(ThemeContext);
+  const { logout } = useContext(AuthContext);
   const [userData, setUserData] = useState(null);
   const [applications, setApplications] = useState([]);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState(null);
 
   useEffect(() => {
     const fetchUserData = async () => {
@@ -58,8 +66,21 @@ export default function UserProfile() {
   };
 
   const handleLogout = () => {
-    localStorage.clear();
+    logout();
     navigate("/auth");
+  };
+
+  const handleDeleteAccount = async () => {
+    setDeleting(true);
+    setDeleteError(null);
+    try {
+      await del("/users/me", {}, { throwError: true });
+      logout();
+      navigate("/auth");
+    } catch (err) {
+      setDeleteError(err.response?.data?.message || err.message || "Failed to delete account. Please try again.");
+      setDeleting(false);
+    }
   };
 
   if (loading) {
@@ -139,15 +160,25 @@ export default function UserProfile() {
                   </svg>
                 )}
               </button>
+              {userData?.resumeUrl && (
+                <a
+                  href={userData.resumeUrl.startsWith("http") ? userData.resumeUrl : `${BACKEND_BASE_URL}${userData.resumeUrl}`}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-lg text-sm font-semibold transition-all flex items-center gap-2 no-underline"
+                >
+                  <span>📄</span> View Resume
+                </a>
+              )}
               <button
                 onClick={() => navigate("/me/edit")}
-                className="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2 rounded-lg text-sm font-semibold transition-all flex items-center gap-2"
+                className="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2 rounded-lg text-sm font-semibold transition-all flex items-center gap-2 border-none cursor-pointer"
               >
                 Edit Profile
               </button>
               <button
                 onClick={handleLogout}
-                className="bg-white/10 hover:bg-white/20 text-white px-4 py-2 rounded-lg text-sm font-medium transition-all"
+                className="bg-white/10 hover:bg-white/20 text-white px-4 py-2 rounded-lg text-sm font-medium transition-all border-none cursor-pointer"
               >
                 Logout
               </button>
@@ -257,7 +288,65 @@ export default function UserProfile() {
             <p className="text-slate-500 dark:text-slate-400 text-sm">No applications submitted yet.</p>
           )}
         </div>
+
+        {/* Danger Zone */}
+        <div className="bg-red-50/50 dark:bg-red-950/20 border border-red-200 dark:border-red-900/40 rounded-2xl p-6 mt-5 transition-colors duration-200">
+          <h2 className="font-['Syne'] text-sm font-bold text-red-600 dark:text-red-400 uppercase tracking-wider mb-2">
+            Danger Zone
+          </h2>
+          <p className="text-slate-600 dark:text-slate-400 text-sm mb-4">
+            Once you delete your account, there is no going back. All your profile data, applications, and account settings will be permanently erased.
+          </p>
+          <button
+            onClick={() => setShowDeleteModal(true)}
+            className="bg-red-600 hover:bg-red-700 text-white px-5 py-2.5 rounded-lg text-sm font-bold transition-all border-none cursor-pointer flex items-center gap-2 shadow-sm"
+          >
+            <span>🗑️</span> Delete Account
+          </button>
+        </div>
       </div>
+
+      {/* Delete Account Modal */}
+      {showDeleteModal && (
+        <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 max-w-md w-full shadow-2xl transition-all">
+            <div className="w-12 h-12 rounded-full bg-red-100 dark:bg-red-950/50 text-red-600 dark:text-red-400 flex items-center justify-center text-2xl mb-4">
+              ⚠️
+            </div>
+            <h3 className="text-xl font-bold font-['Syne'] text-slate-900 dark:text-white mb-2">
+              Delete Account Permanently?
+            </h3>
+            <p className="text-slate-600 dark:text-slate-400 text-sm mb-6 leading-relaxed">
+              Are you sure you want to delete your account? This action is <strong className="text-red-600 dark:text-red-400">irreversible</strong> and will permanently remove all your data, applications, and profile settings.
+            </p>
+
+            {deleteError && (
+              <div className="mb-4 p-3 bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-900/50 rounded-lg text-xs text-red-600 dark:text-red-400">
+                {deleteError}
+              </div>
+            )}
+
+            <div className="flex items-center justify-end gap-3">
+              <button
+                type="button"
+                onClick={() => setShowDeleteModal(false)}
+                disabled={deleting}
+                className="px-4 py-2.5 text-sm font-semibold text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors border-none cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleDeleteAccount}
+                disabled={deleting}
+                className="px-5 py-2.5 text-sm font-bold text-white bg-red-600 hover:bg-red-700 disabled:opacity-50 rounded-lg transition-colors border-none cursor-pointer flex items-center gap-2"
+              >
+                {deleting ? "Deleting..." : "Yes, Delete Account"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

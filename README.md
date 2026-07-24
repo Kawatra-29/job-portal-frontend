@@ -36,6 +36,9 @@ Stride is designed to simplify the recruitment process for both job seekers and 
 
 ### 👤 Authentication & Security
 - **Unified Auth Gateway**: A clean, single-page portal with tabs for switching between Login and Registration.
+- **OTP Email Verification**: 6-digit OTP verification flow with countdown timer and resend support before user activation.
+- **2-Step Password Reset**: Dedicated Forgot Password flow with OTP verification and new password creation.
+- **Danger Zone & Account Deletion**: Self-account deletion with a red-themed confirmation modal that erases all profile & application data.
 - **JWT Persistence & Auto-Injection**: JWTs are automatically saved to `localStorage` and injected as a `Bearer` token in subsequent API headers.
 - **Protected Routing & Verification**: Custom wrapper components (`ProtectedRoute` & `RoleRoute`) prevent unauthorized views.
 - **Auto-Logout Session Lifespan**: Detects `401 Unauthorized` responses from the backend API, automatically clearing credentials and redirecting users to `/auth`.

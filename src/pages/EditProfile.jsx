@@ -1,9 +1,12 @@
 import { useState, useEffect, useContext } from "react";
 import { useNavigate } from "react-router-dom";
+import axios from "axios";
 import useApi from "../Hooks/useApi";
 import { ThemeContext } from "../context/ThemeContext.jsx";
 
 const skillLevels = ["BEGINNER", "INTERMEDIATE", "ADVANCED", "EXPERT"];
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:8080/api/v1";
+const BACKEND_BASE_URL = API_BASE_URL.replace("/api/v1", "");
 
 export default function EditProfile() {
   const navigate = useNavigate();
@@ -26,6 +29,13 @@ export default function EditProfile() {
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState(null);
   const [saveSuccess, setSaveSuccess] = useState(false);
+
+  // Resume Upload States
+  const [resumeUrl, setResumeUrl] = useState("");
+  const [resumeFile, setResumeFile] = useState(null);
+  const [uploadingResume, setUploadingResume] = useState(false);
+  const [resumeError, setResumeError] = useState(null);
+  const [resumeSuccess, setResumeSuccess] = useState(false);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -64,10 +74,58 @@ export default function EditProfile() {
           availability: profileResult.availability || "OPEN_TO_WORK",
           skills: mappedSkills,
         });
+
+        if (profileResult.resumeUrl) {
+          setResumeUrl(profileResult.resumeUrl);
+        }
       }
     };
     fetchData();
   }, [get]);
+
+  const handleResumeUpload = async () => {
+    if (!resumeFile) {
+      setResumeError("Please select a PDF or DOC file to upload.");
+      return;
+    }
+
+    setUploadingResume(true);
+    setResumeError(null);
+    setResumeSuccess(false);
+
+    try {
+      const token = localStorage.getItem("token");
+      if (!token) {
+        navigate("/auth");
+        return;
+      }
+
+      const data = new FormData();
+      data.append("file", resumeFile);
+
+      const res = await axios.post(`${API_BASE_URL}/jobseekers/me/resume`, data, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "multipart/form-data",
+        },
+      });
+
+      setResumeUrl(res.data.resumeUrl);
+      setResumeSuccess(true);
+      setResumeFile(null);
+      setTimeout(() => setResumeSuccess(false), 4000);
+    } catch (err) {
+      console.error(err);
+      if (err.response?.status === 401) {
+        localStorage.clear();
+        navigate("/auth");
+        return;
+      }
+      setResumeError(err.response?.data?.message || err.message || "Failed to upload resume");
+    } finally {
+      setUploadingResume(false);
+    }
+  };
 
   const handleChange = (e) => {
     const { name, value, type } = e.target;
@@ -398,6 +456,65 @@ export default function EditProfile() {
                 className="bg-slate-800 dark:bg-slate-700 hover:bg-slate-900 dark:hover:bg-slate-600 disabled:opacity-40 disabled:cursor-not-allowed text-white px-5 py-2.5 rounded-lg font-medium transition-all border-none cursor-pointer"
               >
                 Add
+              </button>
+            </div>
+          </div>
+
+          {/* Resume Upload Section */}
+          <div className="bg-slate-50 dark:bg-slate-800/50 p-5 rounded-xl border border-slate-200 dark:border-slate-800 space-y-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <h2 className="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2 m-0">
+                  <span>📄</span> Resume / CV
+                </h2>
+                <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 m-0">
+                  Upload your resume in PDF or DOC format (Max 5MB)
+                </p>
+              </div>
+              {resumeUrl && (
+                <a
+                  href={resumeUrl.startsWith("http") ? resumeUrl : `${BACKEND_BASE_URL}${resumeUrl}`}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="px-3 py-1.5 bg-blue-50 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400 border border-blue-200 dark:border-blue-800/40 rounded-lg text-xs font-semibold hover:underline flex items-center gap-1 cursor-pointer"
+                >
+                  <span>👁️</span> View Current Resume
+                </a>
+              )}
+            </div>
+
+            {resumeError && (
+              <div className="p-3 bg-red-50 dark:bg-red-950/30 text-red-600 dark:text-red-400 text-xs rounded-lg border border-red-200 dark:border-red-800">
+                {resumeError}
+              </div>
+            )}
+
+            {resumeSuccess && (
+              <div className="p-3 bg-emerald-50 dark:bg-emerald-950/30 text-emerald-600 dark:text-emerald-400 text-xs rounded-lg border border-emerald-200 dark:border-emerald-800">
+                ✓ Resume uploaded successfully!
+              </div>
+            )}
+
+            <div className="flex flex-col sm:flex-row gap-3 items-stretch sm:items-center">
+              <input
+                type="file"
+                accept=".pdf,.doc,.docx"
+                onChange={(e) => setResumeFile(e.target.files[0] || null)}
+                className="flex-1 text-sm text-slate-600 dark:text-slate-300 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 dark:file:bg-blue-950/50 dark:file:text-blue-300 border border-slate-300 dark:border-slate-700 rounded-lg p-1.5 cursor-pointer bg-white dark:bg-slate-800"
+              />
+              <button
+                type="button"
+                onClick={handleResumeUpload}
+                disabled={!resumeFile || uploadingResume}
+                className="px-5 py-2.5 bg-slate-900 dark:bg-slate-700 hover:bg-slate-800 dark:hover:bg-slate-600 text-white rounded-lg text-sm font-semibold transition-all disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer border-none flex items-center justify-center gap-2"
+              >
+                {uploadingResume ? (
+                  <>
+                    <span className="animate-spin text-xs">🌀</span> Uploading...
+                  </>
+                ) : (
+                  "Upload Resume"
+                )}
               </button>
             </div>
           </div>
