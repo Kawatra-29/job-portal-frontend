@@ -2,24 +2,59 @@
 
 @variant dark (&:where(.dark, .dark *));
 
+:root {
+  --font-sans: 'DM Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+}
+
 body {
   margin: 0;
-  font-family: 'DM Sans', system-ui, -apple-system, sans-serif;
-  background-color: #f7f4ee;
-  color: #1f1b16;
+  font-family: var(--font-sans);
+  background-color: #f8fafc;
+  color: #0f172a;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 .dark body {
-  background-color: #0f0f10;
-  color: #efe9de;
+  background-color: #090d16;
+  color: #f1f5f9;
 }
 
-/* Smooth color transitions only — no layout animations */
-*, *::before, *::after {
-  transition-property: color, background-color, border-color, opacity;
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 7px;
+  height: 7px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 9999px;
+}
+
+.dark ::-webkit-scrollbar-thumb {
+  background: #334155;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+.dark ::-webkit-scrollbar-thumb:hover {
+  background: #475569;
+}
+
+/* Tabular figures for salary, counts, timestamps */
+.tabular {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Interactive transitions */
+button, a, input, select, textarea {
+  transition-property: color, background-color, border-color, box-shadow, transform;
   transition-duration: 150ms;
-  transition-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
+  transition-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
 }
-
-/* Tabular figures for numbers */
-.tabular { font-variant-numeric: tabular-nums; }

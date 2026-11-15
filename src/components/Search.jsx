@@ -1,32 +1,81 @@
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faMagnifyingGlass, faLocationDot } from "@fortawesome/free-solid-svg-icons";
+import {
+  faMagnifyingGlass,
+  faLocationDot,
+  faArrowRight,
+} from "@fortawesome/free-solid-svg-icons";
 
-const Search = () => {
+export default function Search({ initialTitle = "", initialLocation = "", onSearch }) {
+  const [title, setTitle] = useState(initialTitle);
+  const [location, setLocation] = useState(initialLocation);
+  const navigate = useNavigate();
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    if (onSearch) {
+      onSearch({ title: title.trim(), location: location.trim() });
+    } else {
+      const params = new URLSearchParams();
+      if (title.trim()) params.set("title", title.trim());
+      if (location.trim()) params.set("location", location.trim());
+      navigate(`/jobs?${params.toString()}`);
+    }
+  };
+
   return (
-    <div className="flex justify-center">
-      <div className="bg-[#fdfbf7] rounded-xl p-1.5 pl-4 flex items-center gap-2 shadow-[0_8px_32px_rgba(0,0,0,0.18)] w-full max-w-xl flex-wrap">
-        <FontAwesomeIcon icon={faMagnifyingGlass} className="text-[#8a847a] text-sm shrink-0" />
-        <input
-          type="text"
-          placeholder="Job title, skills or company"
-          className="border-none outline-none text-sm text-[#1f1b16] font-['DM_Sans'] flex-1 min-w-36 py-2 bg-transparent placeholder:text-[#8a847a]"
-        />
-        <div className="w-px h-5 bg-[#1f1b16]/10 shrink-0" />
-        <FontAwesomeIcon icon={faLocationDot} className="text-[#8a847a] text-sm shrink-0" />
-        <input
-          type="text"
-          placeholder="City or remote"
-          className="border-none outline-none text-sm text-[#1f1b16] font-['DM_Sans'] flex-1 min-w-28 py-2 bg-transparent placeholder:text-[#8a847a]"
-        />
+    <form
+      onSubmit={handleSubmit}
+      className="w-full max-w-4xl mx-auto bg-white dark:bg-slate-900 rounded-2xl shadow-xl shadow-slate-900/10 dark:shadow-black/40 border border-slate-200 dark:border-slate-800 p-2 sm:p-2.5 transition-all"
+    >
+      <div className="flex flex-col md:flex-row items-stretch gap-2">
+        
+        {/* Title / Role / Keyword Input */}
+        <div className="flex-1 flex items-center gap-3 px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-transparent focus-within:border-blue-500/40 focus-within:bg-white dark:focus-within:bg-slate-800 transition-all">
+          <FontAwesomeIcon icon={faMagnifyingGlass} className="text-slate-400 dark:text-slate-500 text-sm shrink-0" />
+          <div className="flex-1 min-w-0">
+            <label htmlFor="search-title" className="block text-[10px] uppercase font-bold tracking-wider text-slate-400 dark:text-slate-500 leading-none mb-1">
+              Job Title / Skill
+            </label>
+            <input
+              id="search-title"
+              type="text"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              placeholder="e.g. Java, React, Product Designer"
+              className="w-full bg-transparent text-sm font-medium text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 outline-none border-none p-0 leading-tight"
+            />
+          </div>
+        </div>
+
+        {/* Location Input */}
+        <div className="flex-1 flex items-center gap-3 px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-transparent focus-within:border-blue-500/40 focus-within:bg-white dark:focus-within:bg-slate-800 transition-all">
+          <FontAwesomeIcon icon={faLocationDot} className="text-slate-400 dark:text-slate-500 text-sm shrink-0" />
+          <div className="flex-1 min-w-0">
+            <label htmlFor="search-location" className="block text-[10px] uppercase font-bold tracking-wider text-slate-400 dark:text-slate-500 leading-none mb-1">
+              City / Work Location
+            </label>
+            <input
+              id="search-location"
+              type="text"
+              value={location}
+              onChange={(e) => setLocation(e.target.value)}
+              placeholder="e.g. Bangalore, Mumbai, Remote"
+              className="w-full bg-transparent text-sm font-medium text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 outline-none border-none p-0 leading-tight"
+            />
+          </div>
+        </div>
+
+        {/* Submit Search Button */}
         <button
           type="submit"
-          className="bg-[#1a1714] text-[#efe9de] border-none rounded-lg px-6 py-2.5 text-sm font-medium cursor-pointer transition-colors duration-150 hover:bg-[#2c2520] shrink-0"
+          className="flex items-center justify-center gap-2 px-6 py-3.5 bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white font-semibold text-sm rounded-xl shadow-md shadow-blue-500/25 transition-all cursor-pointer border-none shrink-0"
         >
-          Search
+          <span>Find Jobs</span>
+          <FontAwesomeIcon icon={faArrowRight} className="text-xs" />
         </button>
       </div>
-    </div>
+    </form>
   );
-};
-
-export default Search;
+}

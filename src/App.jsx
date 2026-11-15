@@ -2,7 +2,7 @@ import { Routes, Route, Navigate } from "react-router-dom";
 import { lazy, Suspense, useContext } from "react";
 import { AuthContext } from "./context/AuthContext";
 
-// Lazy load all route components for code splitting
+// Lazy load all route components
 const UserProfile = lazy(() => import("./pages/UserProfile"));
 const EditProfile = lazy(() => import("./pages/EditProfile"));
 const JobList = lazy(() => import("./pages/JobList"));
@@ -13,6 +13,7 @@ const PageNotFound = lazy(() => import("./components/PageNotFound"));
 const AuthPage = lazy(() => import("./pages/AuthPage"));
 const JobSeekerDashboard = lazy(() => import("./components/Jobseekerdashboard"));
 const EmployerDashboard = lazy(() => import("./components/Employerdashboard"));
+const AdminDashboard = lazy(() => import("./pages/AdminDashboard"));
 const CompanyProfile = lazy(() => import("./pages/CompanyProfile"));
 const EmployerProfile = lazy(() => import("./pages/EmployerProfile"));
 const AllApplicants = lazy(() => import("./pages/AllApplicants"));
@@ -23,13 +24,13 @@ const MyApplications = lazy(() => import("./pages/MyApplications"));
 // Loading fallback component
 function LoadingFallback() {
   return (
-    <div className="flex items-center justify-center min-h-screen">
-      <div className="w-10 h-10 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin" />
+    <div className="flex items-center justify-center min-h-screen bg-slate-50 dark:bg-slate-950">
+      <div className="w-10 h-10 border-4 border-blue-600 border-t-transparent rounded-full animate-spin" />
     </div>
   );
 }
 
-// Protected Route — login nahi hai toh /auth pe redirect
+// Protected Route — login required
 function ProtectedRoute({ children }) {
   const { auth } = useContext(AuthContext);
 
@@ -49,7 +50,12 @@ function RoleRoute({ children, allowedRole }) {
   }
 
   if (!auth.isAuthenticated) return <Navigate to="/auth" replace />;
-  if (allowedRole && auth.role !== allowedRole) return <Navigate to="/auth" replace />;
+  if (allowedRole && auth.role !== allowedRole) {
+    // Redirect to user's appropriate default dashboard
+    if (auth.role === "EMPLOYER") return <Navigate to="/dashboard/employer" replace />;
+    if (auth.role === "ADMIN") return <Navigate to="/dashboard/admin" replace />;
+    return <Navigate to="/dashboard/jobseeker" replace />;
+  }
   return children;
 }
 
@@ -63,7 +69,7 @@ function App() {
         <Route path="/jobs" element={<JobList />} />
         <Route path="/companies" element={<Companies />} />
 
-        {/* Protected Routes */}
+        {/* Job Seeker Protected Routes */}
         <Route
           path="/me"
           element={
@@ -96,6 +102,8 @@ function App() {
             </RoleRoute>
           }
         />
+
+        {/* Employer Protected Routes */}
         <Route
           path="/dashboard/employer"
           element={
@@ -153,7 +161,17 @@ function App() {
           }
         />
 
-        {/* 404 */}
+        {/* Administrator Protected Route */}
+        <Route
+          path="/dashboard/admin"
+          element={
+            <RoleRoute allowedRole="ADMIN">
+              <AdminDashboard />
+            </RoleRoute>
+          }
+        />
+
+        {/* 404 Not Found Catch-All */}
         <Route path="*" element={<PageNotFound />} />
       </Routes>
     </Suspense>

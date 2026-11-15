@@ -1,383 +1,346 @@
-import { useNavigate, Link } from "react-router-dom";
-import { useState, useContext } from "react";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
-import axios from "axios";
-import useApi from "../Hooks/useApi";
-import UserProfile from "../pages/UserProfile";
-import JobList from "../pages/JobList";
+import { useState, useId } from "react";
+import { Link } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
+import apiClient from "../api/apiClient";
+import SidebarLayout from "./SidebarLayout";
 import MyApplications from "../pages/MyApplications";
-import JobDetailModal from "./JobDetailModal";
-import ConfirmModal from "./ConfirmModal";
-import { ThemeContext } from "../context/ThemeContext.jsx";
-import { AuthContext } from "../context/AuthContext.jsx";
-
-const statusStyles = {
-  APPLIED: { color: "text-blue-600", bg: "bg-blue-50" },
-  SHORTLISTED: { color: "text-green-600", bg: "bg-green-50" },
-  INTERVIEW: { color: "text-violet-600", bg: "bg-violet-50" },
-  REJECTED: { color: "text-red-600", bg: "bg-red-50" },
-  HIRED: { color: "text-emerald-700", bg: "bg-emerald-50" },
-  default: { color: "text-slate-600", bg: "bg-slate-50" }
-};
-
-
-const BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:8080/api/v1";
+import { Helmet } from "react-helmet-async";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import {
+  faFilePdf,
+  faMagnifyingGlass,
+  faCheck,
+  faCloudArrowUp,
+  faTrashCan,
+} from "@fortawesome/free-solid-svg-icons";
 
 export default function JobSeekerDashboard() {
-  const navigate = useNavigate();
-  const queryClient = useQueryClient();
-  const [showProfile, setShowProfile] = useState(false);
-  const [showJobs, setShowJobs] = useState(false);
-  const [showApplications, setShowApplications] = useState(false);
-  const [selectedJob, setSelectedJob] = useState(null);
-  const [isMobileOpen, setIsMobileOpen] = useState(false); // Controls mobile drawer state
-  const { isDark, toggleTheme } = useContext(ThemeContext);
-  const { logout } = useContext(AuthContext);
+  const resumeInputId = useId();
+  const [uploadingResume, setUploadingResume] = useState(false);
+  const [resumeMessage, setResumeMessage] = useState(null);
+  const [newSkillInput, setNewSkillInput] = useState("");
+  const [addingSkill, setAddingSkill] = useState(false);
 
-  const { data: profile, loading, error } = useApi("/jobseekers/me");
-
-  // Applications — always fetch fresh on dashboard mount
-  const { data: applications, isLoading: appsLoading } = useQuery({
-    queryKey: ["applications", "my"],
+  // Fetch Candidate Profile
+  const { data: profile, refetch: refetchProfile } = useQuery({
+    queryKey: ["jobseeker", "me"],
     queryFn: async () => {
-      const res = await axios.get(`${BASE_URL}/applications/my`, {
-        withCredentials: true,
-      });
-      // API returns array directly
-      return Array.isArray(res.data) ? res.data : [];
+      const res = await apiClient.get("/jobseekers/me");
+      return res.data;
     },
-    enabled: true,
-    staleTime: 0,              // Always consider stale — refetch on every mount
-    refetchOnMount: "always",  // Force refetch whenever dashboard renders
-    refetchOnWindowFocus: true,
+    staleTime: 1000 * 60 * 5,
   });
 
-  const { del: deleteApp } = useApi();
+  // Fetch Candidate Applications
+  const { data: applications, refetch: refetchApps, isLoading: appsLoading } = useQuery({
+    queryKey: ["applications", "my"],
+    queryFn: async () => {
+      const res = await apiClient.get("/applications/my");
+      return Array.isArray(res.data) ? res.data : [];
+    },
+    staleTime: 1000 * 60,
+  });
 
-  const user = profile?.user;
-  const name = user?.fname || "Job Seeker";
+  // Fetch Candidate Attached Skills
+  const { data: skills, refetch: refetchSkills } = useQuery({
+    queryKey: ["jobseeker", "skills"],
+    queryFn: async () => {
+      const res = await apiClient.get("/jobseekers/me/skills");
+      return Array.isArray(res.data) ? res.data : [];
+    },
+    staleTime: 1000 * 60 * 5,
+  });
 
-  const [withdrawAppId, setWithdrawAppId] = useState(null);
-  const [withdrawing, setWithdrawing] = useState(false);
+  const navItems = [
+    {
+      icon: "📊",
+      label: "Dashboard Overview",
+      path: "/dashboard/jobseeker",
+      active: true,
+    },
+    {
+      icon: "📋",
+      label: "My Applications",
+      path: "/my-applications",
+    },
+    {
+      icon: "👤",
+      label: "Profile & Resume",
+      path: "/me",
+    },
+    {
+      icon: "🔍",
+      label: "Explore Jobs",
+      path: "/jobs",
+    },
+  ];
 
-  const handleWithdraw = (appId) => setWithdrawAppId(appId);
+  const handleResumeUpload = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
 
-  const confirmWithdraw = async () => {
-    if (!withdrawAppId) return;
-    setWithdrawing(true);
+    setUploadingResume(true);
+    setResumeMessage(null);
+
+    const formData = new FormData();
+    formData.append("file", file);
+
     try {
-      const res = await deleteApp(`/applications/${withdrawAppId}`);
-      if (res !== null) {
-        queryClient.invalidateQueries({ queryKey: ["applications", "my"] });
-      }
+      await apiClient.post("/jobseekers/me/resume", formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
+      setResumeMessage({ type: "success", text: "Resume uploaded successfully!" });
+      refetchProfile();
+    } catch {
+      setResumeMessage({ type: "error", text: "Failed to upload resume. PDF/DOC up to 5MB." });
     } finally {
-      setWithdrawing(false);
-      setWithdrawAppId(null);
+      setUploadingResume(false);
     }
   };
 
-  const appCount       = Array.isArray(applications) ? applications.length : 0;
-  const interviewCount = Array.isArray(applications) ? applications.filter(a => a.status === "INTERVIEW").length : 0;
-
-  const statItems = [
-    { icon: "📋", label: "Applications Sent",   value: appsLoading ? "…" : String(appCount),        color: "blue" },
-    { icon: "✅", label: "Interviews Scheduled", value: appsLoading ? "…" : String(interviewCount),  color: "green" },
-  ];
-
-  // Dynamic greeting
-  const hour = new Date().getHours();
-  const greeting = hour < 12 ? "Good morning 👋" : hour < 17 ? "Good afternoon ☀️" : "Good evening 🌙";
-
-  const handleLogout = () => {
-    logout();          // clears AuthContext state + localStorage
-    navigate("/auth");
+  const handleAddSkill = async (e) => {
+    e.preventDefault();
+    if (!newSkillInput.trim()) return;
+    setAddingSkill(true);
+    try {
+      await apiClient.post(`/jobseekers/me/skills?request=${encodeURIComponent(newSkillInput.trim())}`);
+      setNewSkillInput("");
+      refetchSkills();
+    } catch {
+      // Ignore
+    } finally {
+      setAddingSkill(false);
+    }
   };
 
+  const handleDeleteSkill = async (skillId) => {
+    try {
+      await apiClient.delete(`/jobseekers/me/skills/${skillId}`);
+      refetchSkills();
+    } catch {
+      // Ignore
+    }
+  };
+
+  const appList = applications || [];
+  const shortlistedCount = appList.filter((a) => a.status === "SHORTLISTED").length;
+  const interviewCount = appList.filter((a) => a.status === "INTERVIEW").length;
+  const hiredCount = appList.filter((a) => a.status === "HIRED" || a.status === "ACCEPTED").length;
+
   return (
-    <div className="flex min-h-screen bg-slate-50 dark:bg-slate-950 font-['DM_Sans'] transition-colors duration-200">
-      {/* Backdrop (visible only when mobile drawer is open) */}
-      {isMobileOpen && (
-        <div
-          onClick={() => setIsMobileOpen(false)}
-          className="fixed inset-0 z-40 bg-slate-900/50 backdrop-blur-xs md:hidden"
-        />
-      )}
-
-      {/* Sidebar */}
-      <aside className={`fixed inset-y-0 left-0 z-50 w-60 bg-white dark:bg-slate-900 text-slate-800 dark:text-white flex flex-col pt-6 pb-2 shrink-0 border-r border-slate-200/80 dark:border-white/10 transition-transform duration-300 ease-in-out ${
-        isMobileOpen ? "translate-x-0" : "-translate-x-full"
-      } md:translate-x-0 md:sticky md:top-0 md:h-screen`}>
-        {/* Mobile close button */}
-        <button
-          onClick={() => setIsMobileOpen(false)}
-          className="absolute top-4 right-4 md:hidden text-slate-400 hover:text-slate-700 dark:hover:text-white text-xl font-bold bg-transparent border-none cursor-pointer"
-          title="Close Menu"
+    <SidebarLayout
+      navItems={navItems}
+      title="Candidate Dashboard"
+      subtitle="Track your applications, resume, and profile"
+      actions={
+        <Link
+          to="/jobs"
+          className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-semibold shadow-md shadow-blue-500/20 flex items-center gap-1.5 transition-colors no-underline"
         >
-          ✕
-        </button>
-
-        {/* Logo */}
-        <div className="px-6 pb-5 border-b border-slate-100 dark:border-white/10 shrink-0">
-          <Link to="/" className="flex items-center gap-2.5 no-underline">
-            <div className="w-9 h-9 bg-linear-to-br from-blue-500 to-blue-700 rounded-xl flex items-center justify-center shadow-lg shadow-blue-500/40">
-              <span className="text-white text-lg font-bold font-['Syne']">S</span>
-            </div>
-            <span className="font-['Syne'] font-extrabold text-lg text-slate-900 dark:text-white">Stride</span>
-          </Link>
-        </div>
-
-        {/* User info */}
-        <div className="px-6 py-4 border-b border-slate-100 dark:border-white/10 shrink-0">
-          {user ? (
-            <>
-              <div className="w-11 h-11 rounded-full bg-linear-to-br from-blue-500 to-violet-500 flex items-center justify-center font-extrabold text-base mb-2.5 text-white">
-                {user.fname.charAt(0).toUpperCase()}
-              </div>
-              <p className="text-sm font-semibold text-slate-900 dark:text-white m-0">{user.fname}</p>
-              <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5 m-0">{user.email}</p>
-            </>
-          ) : (
-            <div className="animate-pulse">
-              <div className="w-11 h-11 rounded-full bg-slate-200 dark:bg-slate-700 mb-2.5" />
-              <div className="h-4 bg-slate-200 dark:bg-slate-700 rounded w-24 mb-2" />
-              <div className="h-3 bg-slate-200 dark:bg-slate-700 rounded w-32" />
-            </div>
-          )}
-        </div>
-
-        {/* Nav Links */}
-        <nav className="p-4 flex-1 overflow-y-auto min-h-0">
-          {[
-            { icon: "🏠", label: "Dashboard", active: !showProfile && !showJobs && !showApplications, onClick: () => { setShowProfile(false); setShowJobs(false); setShowApplications(false); setIsMobileOpen(false); } },
-            { icon: "💼", label: "Browse Jobs", active: showJobs, onClick: () => { setShowProfile(false); setShowJobs(true); setShowApplications(false); setIsMobileOpen(false); } },
-            { icon: "📋", label: "My Applications", active: showApplications, onClick: () => { setShowProfile(false); setShowJobs(false); setShowApplications(true); setIsMobileOpen(false); } },
-            { icon: "🔖", label: "Saved Jobs", active: false, onClick: () => { setShowProfile(false); setShowJobs(false); setShowApplications(false); setIsMobileOpen(false); } },
-            { icon: "👤", label: "My Profile", active: showProfile, onClick: () => { setShowProfile(true); setShowJobs(false); setShowApplications(false); setIsMobileOpen(false); } },
-          ].map((item) => (
-            <div key={item.label}
-              onClick={() => item.to ? navigate(item.to) : item.onClick?.()}
-              className={`flex items-center gap-3 px-3 py-2.5 rounded-lg mb-1 cursor-pointer text-sm transition-all ${
-                item.active
-                  ? "bg-blue-50 text-blue-600 font-semibold dark:bg-blue-500/20 dark:text-blue-400"
-                  : "text-slate-600 hover:bg-slate-100 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-white/5 dark:hover:text-white"
-              }`}
-            >
-              <span>{item.icon}</span> {item.label}
-            </div>
-          ))}
-        </nav>
-
-        {/* Logout */}
-        <div className="p-4 border-t border-slate-100 dark:border-white/10 shrink-0 mt-auto">
-          <div onClick={handleLogout} className="flex items-center gap-3 px-3 py-2.5 rounded-lg cursor-pointer text-sm text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 transition-all">
-            🚪 Logout
-          </div>
-        </div>
-      </aside>
-
-      {/* Main Content Wrapper */}
-      <div className="flex-1 flex flex-col min-w-0">
-        {/* Mobile Header Bar */}
-        <header className="flex items-center justify-between px-6 py-4 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 md:hidden transition-colors duration-200">
-          <Link to="/" className="flex items-center gap-2 no-underline">
-            <div className="w-8 h-8 bg-linear-to-br from-blue-500 to-blue-700 rounded-lg flex items-center justify-center">
-              <span className="text-white text-sm font-bold font-['Syne']">S</span>
-            </div>
-            <span className="font-['Syne'] font-extrabold text-base text-slate-900 dark:text-white">Stride</span>
-          </Link>
-          
-          <button
-            onClick={() => setIsMobileOpen(true)}
-            className="w-10 h-10 flex items-center justify-center rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-white cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-700"
-            title="Open Menu"
-          >
-            ☰
-          </button>
-        </header>
-
-        <main className="flex-1 p-6 md:p-8 overflow-y-auto bg-slate-50 dark:bg-slate-900 transition-colors duration-200">
-          {showProfile ? (
-            <UserProfile />
-          ) : showJobs ? (
-            <JobList />
-          ) : showApplications ? (
-            <MyApplications
-              applications={applications}
-              loading={appsLoading}
-              handleWithdraw={handleWithdraw}
-              onViewDetails={setSelectedJob}
-            />
-          ) : (
-            <>
-              {/* Header */}
-              <div className="mb-8 flex flex-col sm:flex-row justify-between items-start gap-4">
-            <div>
-              <p className="text-slate-500 dark:text-slate-400 text-sm m-0 mb-1">{greeting}</p>
-              <h1 className="font-['Syne'] text-3xl font-extrabold text-slate-900 dark:text-white m-0 tracking-tight">
-                Welcome back, {name.split(" ")[0]}!
-              </h1>
-            </div>
-            <button
-              onClick={toggleTheme}
-              className="w-10 h-10 flex items-center justify-center rounded-xl bg-white dark:bg-slate-800 text-slate-800 dark:text-white border border-slate-200 dark:border-slate-700 shadow-sm hover:shadow-md transition-all duration-200 cursor-pointer shrink-0 ml-4 self-end sm:self-auto"
-              title={isDark ? "Switch to Light Mode" : "Switch to Dark Mode"}
-            >
-              {isDark ? (
-                <svg className="w-5 h-5 text-amber-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364-6.364l-.707.707M6.343 17.657l-.707.707m12.728 0l-.707-.707M6.343 6.364l-.707-.707M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                </svg>
-              ) : (
-                <svg className="w-5 h-5 text-slate-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
-                </svg>
-              )}
-            </button>
-          </div>
-
-        {loading && (
-          <div className="space-y-4 animate-pulse mb-6">
-            <div className="h-40 bg-slate-200 rounded-2xl" />
-          </div>
-        )}
-
-        {error && (
-          <div className="bg-red-50 border border-red-200 text-red-600 p-4 rounded-xl mb-6">
-            Failed to load profile: {error}
-          </div>
-        )}
-
-        {/* Profile Section */}
-        {profile && (
-          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 mb-6">
-            <div className="flex items-start gap-5">
-              <div className="w-20 h-20 rounded-2xl bg-linear-to-br from-blue-500 to-violet-500 flex items-center justify-center font-extrabold text-3xl text-white shrink-0">
-                {user?.fname?.charAt(0).toUpperCase()}
-              </div>
-              <div className="flex-1 min-w-0">
-                <div className="flex justify-between items-start flex-wrap gap-3">
-                  <div>
-                    <h2 className="font-['Syne'] text-xl font-extrabold text-slate-900 dark:text-white m-0">{user?.fname}</h2>
-                    <p className="text-slate-500 dark:text-slate-400 text-sm mt-1">
-                      {profile.headline || "Add headline"}
-                      {profile.location && ` • 📍 ${profile.location}`}
-                    </p>
-                  </div>
-                  <div className="text-right">
-                    {profile.expectedSalary && (
-                      <p className="text-lg font-bold text-slate-900 dark:text-white">₹{profile.expectedSalary}L</p>
-                    )}
-                    <p className="text-xs text-slate-500 dark:text-slate-400">Expected Salary</p>
-                  </div>
-                </div>
-
-                <div className="flex gap-4 mt-3 text-sm text-slate-600 dark:text-slate-300">
-                  <span>📧 {user?.email}</span>
-                  {user?.phone && <span>📱 {user.phone}</span>}
-                  {profile.yearsOfExperience && <span>💼 {profile.yearsOfExperience} yrs exp</span>}
-                  {profile.availability && <span>⏰ {profile.availability}</span>}
-                </div>
-
-                {profile.skills?.length > 0 && (
-                  <div className="mt-4">
-                    <p className="text-xs font-semibold text-slate-500 mb-2">SKILLS</p>
-                    <div className="flex flex-wrap gap-2">
-                      {profile.skills.map((skill, idx) => (
-                        <span key={idx} className="px-3 py-1 bg-blue-50 text-blue-700 text-xs font-semibold rounded-full">
-                          {skill.skillName}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {profile.summary && (
-                  <div className="mt-4">
-                    <p className="text-xs font-semibold text-slate-500 mb-1">SUMMARY</p>
-                    <p className="text-sm text-slate-600 leading-relaxed">{profile.summary}</p>
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Stats */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-          {statItems.map((s) => (
-            <div key={s.label} className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 transition-all hover:shadow-lg hover:-translate-y-0.5">
-              <div className={`w-10 h-10 rounded-xl bg-${s.color}-50 dark:bg-${s.color}-950/30 flex items-center justify-center text-xl mb-3`}>{s.icon}</div>
-              <div className="font-['Syne'] text-3xl font-extrabold text-slate-900 dark:text-white">{s.value}</div>
-              <div className="text-xs text-slate-500 dark:text-slate-400 font-medium mt-0.5">{s.label}</div>
-            </div>
-          ))}
-        </div>
-
-          {/* Recent Applications */}
-          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6">
-            <h2 className="font-['Syne'] text-base font-bold text-slate-900 dark:text-white m-0 mb-5">Recent Applications</h2>
-            <div className="flex flex-col gap-3">
-              {appsLoading ? (
-                <div className="text-slate-400 text-sm py-4 text-center">Loading applications...</div>
-              ) : Array.isArray(applications) && applications.length > 0 ? (
-                applications.map((app) => {
-                  const style = statusStyles[app.status] || statusStyles.default;
-                  const companyName = app.job?.employer?.companyName || "Unknown Company";
-                  return (
-                    <div key={app.id} className="flex justify-between items-center px-4 py-3 bg-slate-50 dark:bg-slate-800/40 rounded-xl">
-                      <div>
-                        <p className="font-semibold text-sm text-slate-900 dark:text-white m-0">{app.job?.title || "Job Title"}</p>
-                        <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5 m-0">{companyName}</p>
-                      </div>
-                      <div className="flex items-center gap-3">
-                        <span className={`${style.bg} ${style.color} text-xs font-semibold px-2.5 py-1 rounded-full`}>
-                          {app.status}
-                        </span>
-                        {app.status !== "HIRED" && app.status !== "REJECTED" && (
-                          <button
-                            onClick={() => setWithdrawAppId(app.id)}
-                            className="text-xs text-red-500 hover:text-red-700 bg-transparent border-none cursor-pointer"
-                          >
-                            Withdraw
-                          </button>
-                        )}
-                      </div>
-                    </div>
-                  );
-                })
-              ) : (
-                <div className="text-center py-8 text-slate-400">
-                  <p className="text-4xl mb-2">👥</p>
-                  <p className="font-medium text-sm">No applications sent yet</p>
-                </div>
-              )}
-            </div>
-          </div>
-
-          </>
-        )}
-      </main>
-      </div>
-
-      {/* Job Detail Modal */}
-      {selectedJob && (
-        <JobDetailModal
-          job={selectedJob}
-          isApplied={true}
-          onClose={() => setSelectedJob(null)}
+          <FontAwesomeIcon icon={faMagnifyingGlass} className="text-[10px]" />
+          <span>Find Jobs</span>
+        </Link>
+      }
+    >
+      <Helmet>
+        <title>Candidate Dashboard | STRIDE</title>
+        <meta
+          name="description"
+          content="Review application status, manage resumes and skills in your personal Stride candidate dashboard."
         />
-      )}
+      </Helmet>
 
-      {/* Withdraw Confirmation Modal */}
-      <ConfirmModal
-        isOpen={!!withdrawAppId}
-        onClose={() => setWithdrawAppId(null)}
-        onConfirm={confirmWithdraw}
-        loading={withdrawing}
-        title="Withdraw Application?"
-        description="Are you sure you want to withdraw this job application? This action cannot be undone."
-        confirmText="Withdraw Application"
-        variant="danger"
-      />
-    </div>
+      <div className="space-y-8">
+        
+        {/* Metric Summary Cards */}
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 shadow-xs">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-xs font-bold uppercase tracking-wider text-slate-400">Total Applied</span>
+              <div className="w-8 h-8 rounded-lg bg-blue-50 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400 flex items-center justify-center text-xs">
+                📋
+              </div>
+            </div>
+            <div className="text-2xl font-bold text-slate-900 dark:text-white tabular">
+              {appsLoading ? "..." : appList.length}
+            </div>
+            <p className="text-[11px] text-slate-400 mt-1">Submitted applications</p>
+          </div>
+
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 shadow-xs">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-xs font-bold uppercase tracking-wider text-slate-400">Shortlisted</span>
+              <div className="w-8 h-8 rounded-lg bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 flex items-center justify-center text-xs">
+                ⭐
+              </div>
+            </div>
+            <div className="text-2xl font-bold text-slate-900 dark:text-white tabular">
+              {appsLoading ? "..." : shortlistedCount}
+            </div>
+            <p className="text-[11px] text-slate-400 mt-1">Passed initial review</p>
+          </div>
+
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 shadow-xs">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-xs font-bold uppercase tracking-wider text-slate-400">Interviews</span>
+              <div className="w-8 h-8 rounded-lg bg-purple-50 dark:bg-purple-950/40 text-purple-600 dark:text-purple-400 flex items-center justify-center text-xs">
+                📅
+              </div>
+            </div>
+            <div className="text-2xl font-bold text-slate-900 dark:text-white tabular">
+              {appsLoading ? "..." : interviewCount}
+            </div>
+            <p className="text-[11px] text-slate-400 mt-1">Active interview stages</p>
+          </div>
+
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 shadow-xs">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-xs font-bold uppercase tracking-wider text-slate-400">Offers / Hired</span>
+              <div className="w-8 h-8 rounded-lg bg-teal-50 dark:bg-teal-950/40 text-teal-600 dark:text-teal-400 flex items-center justify-center text-xs">
+                🎉
+              </div>
+            </div>
+            <div className="text-2xl font-bold text-slate-900 dark:text-white tabular">
+              {appsLoading ? "..." : hiredCount}
+            </div>
+            <p className="text-[11px] text-slate-400 mt-1">Confirmed offers</p>
+          </div>
+        </div>
+
+        {/* Profile & Resume Quick Management */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          
+          {/* Resume Upload Card */}
+          <div className="lg:col-span-1 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 shadow-xs flex flex-col justify-between">
+            <div>
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-10 h-10 rounded-xl bg-blue-50 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400 flex items-center justify-center text-base">
+                  <FontAwesomeIcon icon={faFilePdf} />
+                </div>
+                <div>
+                  <h3 className="text-sm font-bold text-slate-900 dark:text-white m-0">Candidate Resume</h3>
+                  <p className="text-xs text-slate-400 m-0">Uploaded to your profile</p>
+                </div>
+              </div>
+
+              {resumeMessage && (
+                <div
+                  className={`p-3 rounded-xl text-xs font-semibold mb-3 ${
+                    resumeMessage.type === "success"
+                      ? "bg-emerald-50 dark:bg-emerald-950/40 text-emerald-800 dark:text-emerald-300"
+                      : "bg-rose-50 dark:bg-rose-950/40 text-rose-800 dark:text-rose-300"
+                  }`}
+                >
+                  {resumeMessage.text}
+                </div>
+              )}
+
+              {profile?.resumeUrl ? (
+                <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 flex items-center justify-between mb-4">
+                  <div className="flex items-center gap-2.5 truncate">
+                    <FontAwesomeIcon icon={faCheck} className="text-emerald-500 text-xs shrink-0" />
+                    <span className="text-xs font-semibold text-slate-800 dark:text-slate-200 truncate">
+                      Resume on file
+                    </span>
+                  </div>
+                  <a
+                    href={profile.resumeUrl}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="text-xs font-bold text-blue-600 dark:text-blue-400 hover:underline shrink-0"
+                  >
+                    View
+                  </a>
+                </div>
+              ) : (
+                <div className="p-3.5 rounded-xl bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-900/40 text-amber-800 dark:text-amber-300 text-xs mb-4">
+                  No resume attached yet. Upload a PDF/DOC so employers can review your credentials.
+                </div>
+              )}
+            </div>
+
+            <label
+              htmlFor={resumeInputId}
+              className="w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl border border-dashed border-blue-400 dark:border-blue-600 bg-blue-50/50 dark:bg-blue-950/20 text-blue-600 dark:text-blue-400 text-xs font-bold hover:bg-blue-100 dark:hover:bg-blue-950/40 transition-colors cursor-pointer text-center"
+            >
+              <FontAwesomeIcon icon={faCloudArrowUp} />
+              <span>{uploadingResume ? "Uploading..." : "Upload New Resume"}</span>
+              <input
+                id={resumeInputId}
+                type="file"
+                accept=".pdf,.doc,.docx"
+                onChange={handleResumeUpload}
+                disabled={uploadingResume}
+                className="hidden"
+              />
+            </label>
+          </div>
+
+          {/* Candidate Skills Card */}
+          <div className="lg:col-span-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 shadow-xs flex flex-col justify-between">
+            <div>
+              <div className="flex items-center justify-between mb-4">
+                <div>
+                  <h3 className="text-sm font-bold text-slate-900 dark:text-white m-0">Skills & Competencies</h3>
+                  <p className="text-xs text-slate-400 m-0">Employers search candidate profiles by these skills</p>
+                </div>
+              </div>
+
+              <div className="flex flex-wrap gap-2 mb-6 min-h-[48px]">
+                {skills && skills.length > 0 ? (
+                  skills.map((s) => (
+                    <span
+                      key={s.id || s.name}
+                      className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200 text-xs font-semibold border border-slate-200/80 dark:border-slate-700/80"
+                    >
+                      <span>{s.name}</span>
+                      <button
+                        type="button"
+                        onClick={() => handleDeleteSkill(s.id)}
+                        className="text-slate-400 hover:text-rose-500 border-none bg-transparent cursor-pointer p-0 text-[10px]"
+                        title="Remove skill"
+                      >
+                        <FontAwesomeIcon icon={faTrashCan} />
+                      </button>
+                    </span>
+                  ))
+                ) : (
+                  <span className="text-xs text-slate-400 italic">No skills added yet.</span>
+                )}
+              </div>
+            </div>
+
+            <form onSubmit={handleAddSkill} className="flex items-center gap-2">
+              <input
+                type="text"
+                value={newSkillInput}
+                onChange={(e) => setNewSkillInput(e.target.value)}
+                placeholder="Add skill (e.g. React, Java, Docker)..."
+                className="flex-1 px-3.5 py-2 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs text-slate-900 dark:text-white outline-none focus:border-blue-500"
+              />
+              <button
+                type="submit"
+                disabled={addingSkill || !newSkillInput.trim()}
+                className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-semibold disabled:opacity-40 cursor-pointer border-none"
+              >
+                {addingSkill ? "Adding..." : "Add"}
+              </button>
+            </form>
+          </div>
+        </div>
+
+        {/* Embedded Applications Component */}
+        <div>
+          <MyApplications
+            applications={appList}
+            loading={appsLoading}
+            handleWithdraw={async (id) => {
+              await apiClient.delete(`/applications/${id}`);
+              refetchApps();
+            }}
+          />
+        </div>
+      </div>
+    </SidebarLayout>
   );
 }
