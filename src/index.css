@@ -4,6 +4,22 @@
 
 body {
   margin: 0;
-  font-family: system-ui, -apple-system, sans-serif;
-  @apply bg-white text-slate-900 transition-colors duration-200 dark:bg-slate-950 dark:text-slate-100;
+  font-family: 'DM Sans', system-ui, -apple-system, sans-serif;
+  background-color: #f7f4ee;
+  color: #1f1b16;
 }
+
+.dark body {
+  background-color: #0f0f10;
+  color: #efe9de;
+}
+
+/* Smooth color transitions only — no layout animations */
+*, *::before, *::after {
+  transition-property: color, background-color, border-color, opacity;
+  transition-duration: 150ms;
+  transition-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* Tabular figures for numbers */
+.tabular { font-variant-numeric: tabular-nums; }

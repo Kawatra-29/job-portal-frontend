@@ -1,10 +1,11 @@
-import { useState, useContext } from "react";
+import { useState, useContext, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { Link, useNavigate } from "react-router-dom";
 import { useCompanyProfile, useUpdateCompanyProfile } from "../queries/employerQueries";
 import { SidebarLayout } from "../components/SidebarLayout";
 import useApi from "../Hooks/useApi";
 import { AuthContext } from "../context/AuthContext";
+import { Helmet } from "react-helmet-async";
 
 const navItems = [
   { icon: "🏠", label: "Dashboard", path: "/dashboard/employer" },
@@ -56,29 +57,55 @@ export default function CompanyProfile() {
   });
 
   // Populate form when profile loads
-  if (profile) {
-    reset({
-      name: profile.name || "",
-      description: profile.description || "",
-      website: profile.website || "",
-      location: profile.location || "",
-      size: profile.size || "1-10",
-      industry: profile.industry || "",
-      foundedYear: profile.foundedYear || "",
-      logoUrl: profile.logoUrl || "",
-      linkedinUrl: profile.linkedinUrl || "",
-      twitterUrl: profile.twitterUrl || "",
-      facebookUrl: profile.facebookUrl || "",
-    });
-  }
+  useEffect(() => {
+    if (profile) {
+      reset({
+        name: profile.companyName || profile.name || "",
+        description: profile.description || "",
+        website: profile.website || "",
+        location: profile.location || "",
+        size: profile.companySize || "1-10",
+        industry: profile.industry || "",
+        foundedYear: profile.foundedYear || "",
+        logoUrl: profile.logoUrl || "",
+        linkedinUrl: profile.linkedinUrl || "",
+        twitterUrl: profile.twitterUrl || "",
+        facebookUrl: profile.facebookUrl || "",
+      });
+    }
+  }, [profile, reset]);
+
+  const [feedback, setFeedback] = useState(null);
+
+  const sizeMap = {
+    "1-10": "STARTUP",
+    "11-50": "SMALL",
+    "51-200": "MEDIUM",
+    "201-500": "LARGE",
+    "501-1000": "LARGE",
+    "1001-5000": "ENTERPRISE",
+    "5000+": "ENTERPRISE",
+    "STARTUP": "STARTUP",
+    "SMALL": "SMALL",
+    "MEDIUM": "MEDIUM",
+    "LARGE": "LARGE",
+    "ENTERPRISE": "ENTERPRISE",
+  };
 
   const onSubmit = async (data) => {
+    setFeedback(null);
     try {
-      await updateProfile(data);
+      const payload = {
+        companyName: data.name || data.companyName,
+        companySize: sizeMap[data.size] || "STARTUP",
+        description: data.description || "",
+      };
+      await updateProfile(payload);
       refetch();
-      alert("Company profile updated successfully!");
+      setFeedback({ type: "success", text: "Company profile updated successfully! 🎉" });
+      setTimeout(() => setFeedback(null), 4000);
     } catch {
-      alert("Failed to update profile. Please try again.");
+      setFeedback({ type: "error", text: "Failed to update profile. Please try again." });
     }
   };
 
@@ -136,7 +163,20 @@ export default function CompanyProfile() {
       title="Company Profile"
       subtitle="Employer Panel 🏢"
     >
+      <Helmet>
+        <title>Company Profile | Stride Employer</title>
+        <meta name="description" content="Manage and update your company branding and details on Stride." />
+      </Helmet>
       <div className="max-w-4xl mx-auto">
+        {feedback && (
+          <div className={`mb-6 p-4 rounded-xl text-sm font-semibold border ${
+            feedback.type === "success" 
+              ? "bg-emerald-50 dark:bg-emerald-950/30 border-emerald-200 dark:border-emerald-900/50 text-emerald-600 dark:text-emerald-400" 
+              : "bg-red-50 dark:bg-red-950/30 border-red-200 dark:border-red-900/50 text-red-600 dark:text-red-400"
+          }`}>
+            {feedback.text}
+          </div>
+        )}
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
           {/* Logo Section */}
           <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 transition-colors duration-200">

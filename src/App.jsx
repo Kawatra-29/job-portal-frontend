@@ -1,5 +1,6 @@
 import { Routes, Route, Navigate } from "react-router-dom";
-import { lazy, Suspense } from "react";
+import { lazy, Suspense, useContext } from "react";
+import { AuthContext } from "./context/AuthContext";
 
 // Lazy load all route components for code splitting
 const UserProfile = lazy(() => import("./pages/UserProfile"));
@@ -17,6 +18,7 @@ const EmployerProfile = lazy(() => import("./pages/EmployerProfile"));
 const AllApplicants = lazy(() => import("./pages/AllApplicants"));
 const Interviews = lazy(() => import("./pages/Interviews"));
 const MyJobs = lazy(() => import("./pages/MyJobs"));
+const MyApplications = lazy(() => import("./pages/MyApplications"));
 
 // Loading fallback component
 function LoadingFallback() {
@@ -29,16 +31,25 @@ function LoadingFallback() {
 
 // Protected Route — login nahi hai toh /auth pe redirect
 function ProtectedRoute({ children }) {
-  const token = localStorage.getItem("token");
-  return token ? children : <Navigate to="/auth" replace />;
+  const { auth } = useContext(AuthContext);
+
+  if (auth.loading) {
+    return <LoadingFallback />;
+  }
+
+  return auth.isAuthenticated ? children : <Navigate to="/auth" replace />;
 }
 
 // Role-based Protected Route
 function RoleRoute({ children, allowedRole }) {
-  const token = localStorage.getItem("token");
-  const role = localStorage.getItem("role");
-  if (!token) return <Navigate to="/auth" replace />;
-  if (allowedRole && role !== allowedRole) return <Navigate to="/auth" replace />;
+  const { auth } = useContext(AuthContext);
+
+  if (auth.loading) {
+    return <LoadingFallback />;
+  }
+
+  if (!auth.isAuthenticated) return <Navigate to="/auth" replace />;
+  if (allowedRole && auth.role !== allowedRole) return <Navigate to="/auth" replace />;
   return children;
 }
 
@@ -74,6 +85,14 @@ function App() {
           element={
             <RoleRoute allowedRole="JOBSEEKER">
               <JobSeekerDashboard />
+            </RoleRoute>
+          }
+        />
+        <Route
+          path="/my-applications"
+          element={
+            <RoleRoute allowedRole="JOBSEEKER">
+              <MyApplications />
             </RoleRoute>
           }
         />

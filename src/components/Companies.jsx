@@ -5,11 +5,16 @@ function Companies() {
   const { data, loading, error } = useApi("/jobs?size=100");
 
   // Extract unique companies from jobs
-  const companyList = data?.content?.reduce((acc, job) => {
-    if (job.companyName && !acc.find(c => c.name === job.companyName)) {
+  const rawList = Array.isArray(data) && data.length === 2 && data[0] === "java.util.ArrayList" 
+    ? data[1] 
+    : (Array.isArray(data) ? data : (data?.content || []));
+
+  const companyList = rawList.reduce((acc, job) => {
+    const cName = job.companyName || job.company;
+    if (cName && !acc.find(c => c.name === cName)) {
       acc.push({
-        id: job.id,
-        name: job.companyName,
+        id: Array.isArray(job.id) ? job.id[1] : job.id,
+        name: cName,
         location: job.location || "Location not specified",
         isVerified: job.isVerified,
       });

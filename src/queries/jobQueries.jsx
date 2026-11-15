@@ -1,15 +1,12 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import axios from "axios";
-
-const API = import.meta.env.VITE_API_BASE_URL || "http://localhost:8080/api/v1";
-const getToken = () => localStorage.getItem("token");
+import apiClient from "../api/apiClient";
 
 // --- FETCH JOBS ---
 export function useJobs(page = 0, size = 10) {
     return useQuery({
         queryKey: ["jobs", "list", page],
         queryFn: async () => {
-            const res = await axios.get(`${API}/jobs?page=${page}&size=${size}`);
+            const res = await apiClient.get(`/jobs?page=${page}&size=${size}`);
             return res.data;
         },
         staleTime: 1000 * 60 * 2,
@@ -22,10 +19,10 @@ export function useJob(jobId) {
     return useQuery({
         queryKey: ["jobs", "detail", jobId],
         queryFn: async () => {
-            const res = await axios.get(`${API}/jobs/${jobId}`);
+            const res = await apiClient.get(`/jobs/${jobId}`);
             return res.data;
         },
-        enabled: !!jobId, // ← jobId exist kare tabhi fetch karo
+        enabled: !!jobId,
     });
 }
 
@@ -35,9 +32,7 @@ export function usePostJob() {
 
     return useMutation({
         mutationFn: async (jobData) => {
-            const res = await axios.post(`${API}/jobs`, jobData, {
-                headers: { Authorization: `Bearer ${getToken()}` }
-            });
+            const res = await apiClient.post("/jobs", jobData);
             return res.data;
         },
         onSuccess: () => {
@@ -51,11 +46,9 @@ export function useUserProfile() {
     return useQuery({
         queryKey: ["user", "profile"],
         queryFn: async () => {
-            const res = await axios.get(`${API}/users/me`, {
-                headers: { Authorization: `Bearer ${getToken()}` }
-            });
+            const res = await apiClient.get("/users/me");
             return res.data;
         },
-        staleTime: 1000 * 60 * 5, // 5 min cache for profile
+        staleTime: 1000 * 60 * 5,
     });
 }

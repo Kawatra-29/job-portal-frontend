@@ -83,9 +83,9 @@ export default function AuthPage() {
         return;
       }
 
-      if (response?.token) {
+      if (response?.token || response?.authStatus === "LOGIN_SUCCESS") {
         const role = response.role || data.role || "JOBSEEKER";
-        login(response.token, role);
+        login(role, response.token);
         if (role === "EMPLOYER") {
           navigate("/dashboard/employer");
         } else {
@@ -131,10 +131,10 @@ export default function AuthPage() {
     try {
       const response = await post(`/auth/verify-otp?email=${encodeURIComponent(registeredEmail.trim())}&otp=${encodeURIComponent(otpCode.trim())}`, {}, {}, { throwError: true });
 
-      if (response?.token) {
+      if (response?.token || response?.authStatus === "OTP_VERIFIED_SUCCESSFULLY") {
         setOtpSuccess("Email verified successfully! Logging you in...");
         setTimeout(() => {
-          login(response.token, response.role || "JOBSEEKER");
+          login(response.role || "JOBSEEKER", response.token);
           if (response.role === "EMPLOYER") {
             navigate("/dashboard/employer");
           } else {
@@ -239,234 +239,240 @@ export default function AuthPage() {
   };
 
   return (
-    <div className="min-h-[calc(100vh-4rem)] bg-linear-to-br from-slate-50 via-slate-100 to-blue-100 dark:from-slate-950 dark:via-slate-900 dark:to-blue-950 flex items-center justify-center p-6 font-['DM_Sans'] relative transition-colors duration-200">
+    <div className="min-h-[calc(100vh-4rem)] bg-[#f7f4ee] dark:bg-[#0f0f10] flex items-center justify-center p-6 font-['DM_Sans']">
       <Helmet>
-        <title>{showOtpStep ? "Verify OTP | Stride" : isLogin ? "Sign In | Stride" : "Register Free Account | Stride"}</title>
-        <meta name="description" content="Sign in or create a new free candidate/employer account on Stride." />
+        <title>{showOtpStep ? "Verify OTP — Stride" : isLogin ? "Sign in — Stride" : "Create account — Stride"}</title>
+        <meta name="description" content="Sign in or create a free candidate or employer account on Stride." />
       </Helmet>
 
-      <div className="bg-white dark:bg-slate-900 border border-transparent dark:border-slate-800 rounded-2xl p-8 w-full max-w-md shadow-2xl transition-all duration-200">
+      <div className="bg-[#fdfbf7] dark:bg-[#19191b] border border-[#1f1b16]/[0.08] dark:border-[#efe9de]/[0.08] rounded-2xl p-8 w-full max-w-md shadow-[0_8px_32px_rgba(0,0,0,0.06)]">
 
         {/* Forgot Password View (Email Step) */}
         {showForgotStep === "EMAIL" ? (
           <div>
             <div className="text-center mb-6">
-              <div className="w-14 h-14 bg-linear-to-br from-amber-500 via-orange-500 to-red-500 rounded-xl flex items-center justify-center mx-auto mb-4 shadow-lg text-2xl">
-                🔑
+              <div className="w-12 h-12 bg-[#efe9df] dark:bg-[#232325] border border-[#1f1b16]/[0.08] dark:border-[#efe9de]/[0.08] rounded-xl flex items-center justify-center mx-auto mb-4">
+                <svg className="w-5 h-5 text-[#5e554a] dark:text-[#aaa398]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 5.25a3 3 0 013 3m3 0a6 6 0 01-7.029 5.912c-.563-.097-1.159.026-1.563.43L10.5 17.25H8.25v2.25H6v2.25H2.25v-2.818c0-.597.237-1.17.659-1.591l6.499-6.499c.404-.404.527-1 .43-1.563A6 6 0 1121.75 8.25z" />
+                </svg>
               </div>
-              <h2 className="text-2xl font-bold font-['Syne'] text-slate-900 dark:text-white">
-                Reset Password
+              <h2 className="text-xl font-medium text-[#1f1b16] dark:text-[#efe9de]">
+                Reset password
               </h2>
-              <p className="text-slate-500 dark:text-slate-400 text-xs mt-2">
-                Enter your registered email address and we'll send you a 6-digit verification code.
+              <p className="text-[#7b7266] dark:text-[#8a847a] text-sm mt-1.5">
+                Enter your registered email and we'll send a 6-digit code.
               </p>
             </div>
 
             {forgotError && (
-              <div className="mb-4 bg-red-50 border border-red-200 rounded-lg p-3 text-xs text-red-600">
+              <div className="mb-4 bg-[#fee2e2] dark:bg-[#dc2626]/10 border border-[#dc2626]/20 rounded-lg p-3 text-sm text-[#dc2626] dark:text-[#e5484d]">
                 {forgotError}
               </div>
             )}
 
             <form onSubmit={handleRequestForgotOtp} className="space-y-4">
               <div>
-                <label className="text-xs font-semibold text-slate-600 dark:text-slate-400 block mb-1">
-                  Registered Email Address:
+                <label className="text-sm font-medium text-[#5e554a] dark:text-[#aaa398] block mb-1.5">
+                  Email address
                 </label>
                 <input
                   type="email"
                   value={forgotEmail}
                   onChange={(e) => setForgotEmail(e.target.value)}
-                  placeholder="e.g. name@example.com"
-                  className="w-full border border-slate-200 dark:border-slate-700 rounded-lg px-4 py-3 text-sm outline-none focus:border-blue-500 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white"
+                  placeholder="name@example.com"
+                  className="w-full border border-[#1f1b16]/[0.12] dark:border-[#efe9de]/[0.12] rounded-lg px-3.5 py-2.5 text-sm outline-none focus:border-[#1f1b16]/30 dark:focus:border-[#efe9de]/30 bg-[#f7f4ee] dark:bg-[#232325] text-[#1f1b16] dark:text-[#efe9de] placeholder:text-[#8a847a]"
                 />
               </div>
 
               <button
                 type="submit"
                 disabled={sendingResetOtp || !forgotEmail}
-                className="w-full bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white font-bold py-3 rounded-lg transition-colors cursor-pointer border-none"
+                className="w-full bg-[#1a1714] dark:bg-[#efe9de] text-[#efe9de] dark:text-[#1a1714] disabled:opacity-40 font-medium py-2.5 rounded-lg transition-colors duration-150 cursor-pointer border-none hover:bg-[#2c2520] dark:hover:bg-white"
               >
-                {sendingResetOtp ? "Sending Code..." : "Send Verification Code"}
+                {sendingResetOtp ? "Sending..." : "Send code"}
               </button>
             </form>
 
-            <div className="mt-6 pt-4 border-t border-slate-100 dark:border-slate-800 text-center">
+            <div className="mt-5 pt-4 border-t border-[#1f1b16]/[0.08] dark:border-[#efe9de]/[0.08] text-center">
               <button
                 type="button"
                 onClick={() => setShowForgotStep(false)}
-                className="text-slate-500 hover:text-slate-800 dark:hover:text-slate-300 text-xs font-medium bg-transparent border-none cursor-pointer"
+                className="text-[#7b7266] hover:text-[#1f1b16] dark:hover:text-[#efe9de] text-sm font-normal bg-transparent border-none cursor-pointer transition-colors duration-150"
               >
-                ← Back to Login
+                ← Back to sign in
               </button>
             </div>
           </div>
         ) : showForgotStep === "RESET" ? (
           <div>
             <div className="text-center mb-6">
-              <div className="w-14 h-14 bg-linear-to-br from-emerald-500 via-teal-500 to-blue-600 rounded-xl flex items-center justify-center mx-auto mb-4 shadow-lg text-2xl">
-                🔒
+              <div className="w-12 h-12 bg-[#efe9df] dark:bg-[#232325] border border-[#1f1b16]/[0.08] dark:border-[#efe9de]/[0.08] rounded-xl flex items-center justify-center mx-auto mb-4">
+                <svg className="w-5 h-5 text-[#5e554a] dark:text-[#aaa398]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" />
+                </svg>
               </div>
-              <h2 className="text-2xl font-bold font-['Syne'] text-slate-900 dark:text-white">
-                New Password
+              <h2 className="text-xl font-medium text-[#1f1b16] dark:text-[#efe9de]">
+                New password
               </h2>
-              <p className="text-slate-500 dark:text-slate-400 text-xs mt-2">
-                Enter the 6-digit OTP code sent to <strong className="text-blue-600 dark:text-blue-400">{forgotEmail}</strong>
+              <p className="text-[#7b7266] dark:text-[#8a847a] text-sm mt-1.5">
+                Enter the code sent to <span className="text-[#1f1b16] dark:text-[#efe9de] font-medium">{forgotEmail}</span>
               </p>
             </div>
 
             {forgotError && (
-              <div className="mb-4 bg-red-50 border border-red-200 rounded-lg p-3 text-xs text-red-600">
+              <div className="mb-4 bg-[#fee2e2] dark:bg-[#dc2626]/10 border border-[#dc2626]/20 rounded-lg p-3 text-sm text-[#dc2626] dark:text-[#e5484d]">
                 {forgotError}
               </div>
             )}
 
             {forgotSuccess && (
-              <div className="mb-4 bg-emerald-50 border border-emerald-200 rounded-lg p-3 text-xs text-emerald-600 font-semibold">
-                ✓ {forgotSuccess}
+              <div className="mb-4 bg-[#dcfce7] dark:bg-[#16a34a]/10 border border-[#16a34a]/20 rounded-lg p-3 text-sm text-[#16a34a] dark:text-[#4cc38a]">
+                {forgotSuccess}
               </div>
             )}
 
             <form onSubmit={handleResetPassword} className="space-y-4">
               <div>
-                <label className="text-xs font-semibold text-slate-600 dark:text-slate-400 block mb-1">
-                  6-Digit OTP Code:
+                <label className="text-sm font-medium text-[#5e554a] dark:text-[#aaa398] block mb-1.5">
+                  6-digit code
                 </label>
                 <input
                   type="text"
                   maxLength={6}
                   value={resetOtp}
                   onChange={(e) => setResetOtp(e.target.value.replace(/[^0-9]/g, ""))}
-                  placeholder="e.g. 849201"
-                  className="w-full text-center tracking-widest text-2xl font-mono border border-slate-200 dark:border-slate-700 rounded-lg px-4 py-3 outline-none focus:border-blue-500 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white font-bold"
+                  placeholder="849201"
+                  className="w-full text-center tracking-[0.3em] text-2xl font-mono border border-[#1f1b16]/[0.12] dark:border-[#efe9de]/[0.12] rounded-lg px-4 py-2.5 outline-none focus:border-[#1f1b16]/30 dark:focus:border-[#efe9de]/30 bg-[#f7f4ee] dark:bg-[#232325] text-[#1f1b16] dark:text-[#efe9de] font-medium"
                 />
               </div>
 
               <div>
-                <label className="text-xs font-semibold text-slate-600 dark:text-slate-400 block mb-1">
-                  New Password:
+                <label className="text-sm font-medium text-[#5e554a] dark:text-[#aaa398] block mb-1.5">
+                  New password
                 </label>
                 <input
                   type="password"
                   value={newPassword}
                   onChange={(e) => setNewPassword(e.target.value)}
                   placeholder="Min 6 characters"
-                  className="w-full border border-slate-200 dark:border-slate-700 rounded-lg px-4 py-3 text-sm outline-none focus:border-blue-500 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white"
+                  className="w-full border border-[#1f1b16]/[0.12] dark:border-[#efe9de]/[0.12] rounded-lg px-3.5 py-2.5 text-sm outline-none focus:border-[#1f1b16]/30 dark:focus:border-[#efe9de]/30 bg-[#f7f4ee] dark:bg-[#232325] text-[#1f1b16] dark:text-[#efe9de] placeholder:text-[#8a847a]"
                 />
               </div>
 
               <button
                 type="submit"
                 disabled={resettingPassword || resetOtp.length < 6 || !newPassword}
-                className="w-full bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white font-bold py-3 rounded-lg transition-colors cursor-pointer border-none"
+                className="w-full bg-[#1a1714] dark:bg-[#efe9de] text-[#efe9de] dark:text-[#1a1714] disabled:opacity-40 font-medium py-2.5 rounded-lg transition-colors duration-150 cursor-pointer border-none hover:bg-[#2c2520] dark:hover:bg-white"
               >
-                {resettingPassword ? "Resetting Password..." : "Reset Password & Login"}
+                {resettingPassword ? "Resetting..." : "Reset password"}
               </button>
             </form>
 
-            <div className="mt-6 pt-4 border-t border-slate-100 dark:border-slate-800 text-center">
+            <div className="mt-5 pt-4 border-t border-[#1f1b16]/[0.08] dark:border-[#efe9de]/[0.08] text-center">
               <button
                 type="button"
                 onClick={() => setShowForgotStep(false)}
-                className="text-slate-500 hover:text-slate-800 dark:hover:text-slate-300 text-xs font-medium bg-transparent border-none cursor-pointer"
+                className="text-[#7b7266] hover:text-[#1f1b16] dark:hover:text-[#efe9de] text-sm bg-transparent border-none cursor-pointer transition-colors duration-150"
               >
-                ← Back to Login
+                ← Back to sign in
               </button>
             </div>
           </div>
         ) : showOtpStep ? (
           <div>
             <div className="text-center mb-6">
-              <div className="w-14 h-14 bg-linear-to-br from-blue-500 via-indigo-500 to-purple-600 rounded-xl flex items-center justify-center mx-auto mb-4 shadow-lg text-2xl">
-                ✉️
+              <div className="w-12 h-12 bg-[#efe9df] dark:bg-[#232325] border border-[#1f1b16]/[0.08] dark:border-[#efe9de]/[0.08] rounded-xl flex items-center justify-center mx-auto mb-4">
+                <svg className="w-5 h-5 text-[#5e554a] dark:text-[#aaa398]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75" />
+                </svg>
               </div>
-              <h2 className="text-2xl font-bold font-['Syne'] text-slate-900 dark:text-white">
-                Verify Your Email
+              <h2 className="text-xl font-medium text-[#1f1b16] dark:text-[#efe9de]">
+                Verify your email
               </h2>
-              <p className="text-slate-500 dark:text-slate-400 text-xs mt-2">
-                We sent a 6-digit OTP code to <strong className="text-blue-600 dark:text-blue-400">{registeredEmail}</strong>
+              <p className="text-[#7b7266] dark:text-[#8a847a] text-sm mt-1.5">
+                We sent a 6-digit code to <span className="text-[#1f1b16] dark:text-[#efe9de] font-medium">{registeredEmail}</span>
               </p>
             </div>
 
             {otpError && (
-              <div className="mb-4 bg-red-50 border border-red-200 rounded-lg p-3 text-xs text-red-600">
+              <div className="mb-4 bg-[#fee2e2] dark:bg-[#dc2626]/10 border border-[#dc2626]/20 rounded-lg p-3 text-sm text-[#dc2626] dark:text-[#e5484d]">
                 {otpError}
               </div>
             )}
 
             {otpSuccess && (
-              <div className="mb-4 bg-emerald-50 border border-emerald-200 rounded-lg p-3 text-xs text-emerald-600 font-semibold">
-                ✓ {otpSuccess}
+              <div className="mb-4 bg-[#dcfce7] dark:bg-[#16a34a]/10 border border-[#16a34a]/20 rounded-lg p-3 text-sm text-[#16a34a] dark:text-[#4cc38a]">
+                {otpSuccess}
               </div>
             )}
 
             <form onSubmit={handleVerifyOtp} className="space-y-4">
               <div>
-                <label className="text-xs font-semibold text-slate-600 dark:text-slate-400 block mb-1">
-                  Enter 6-Digit OTP:
+                <label className="text-sm font-medium text-[#5e554a] dark:text-[#aaa398] block mb-1.5">
+                  6-digit code
                 </label>
                 <input
                   type="text"
                   maxLength={6}
                   value={otpCode}
                   onChange={(e) => setOtpCode(e.target.value.replace(/[^0-9]/g, ""))}
-                  placeholder="e.g. 482910"
-                  className="w-full text-center tracking-widest text-2xl font-mono border border-slate-200 dark:border-slate-700 rounded-lg px-4 py-3 outline-none focus:border-blue-500 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white font-bold"
+                  placeholder="482910"
+                  className="w-full text-center tracking-[0.3em] text-2xl font-mono border border-[#1f1b16]/[0.12] dark:border-[#efe9de]/[0.12] rounded-lg px-4 py-2.5 outline-none focus:border-[#1f1b16]/30 dark:focus:border-[#efe9de]/30 bg-[#f7f4ee] dark:bg-[#232325] text-[#1f1b16] dark:text-[#efe9de] font-medium"
                 />
               </div>
 
               <button
                 type="submit"
                 disabled={verifyingOtp || otpCode.length < 6}
-                className="w-full bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white font-bold py-3 rounded-lg transition-colors cursor-pointer border-none"
+                className="w-full bg-[#1a1714] dark:bg-[#efe9de] text-[#efe9de] dark:text-[#1a1714] disabled:opacity-40 font-medium py-2.5 rounded-lg transition-colors duration-150 cursor-pointer border-none hover:bg-[#2c2520] dark:hover:bg-white"
               >
-                {verifyingOtp ? "Verifying..." : "Verify & Continue"}
+                {verifyingOtp ? "Verifying..." : "Verify & continue"}
               </button>
             </form>
 
-            <div className="flex items-center justify-between mt-6 pt-4 border-t border-slate-100 dark:border-slate-800 text-xs">
+            <div className="flex items-center justify-between mt-5 pt-4 border-t border-[#1f1b16]/[0.08] dark:border-[#efe9de]/[0.08] text-sm">
               <button
                 type="button"
                 onClick={() => setShowOtpStep(false)}
-                className="text-slate-500 hover:text-slate-800 dark:hover:text-slate-300 font-medium bg-transparent border-none cursor-pointer"
+                className="text-[#7b7266] hover:text-[#1f1b16] dark:hover:text-[#efe9de] bg-transparent border-none cursor-pointer transition-colors duration-150"
               >
-                ← Back to Login
+                ← Back
               </button>
 
               <button
                 type="button"
                 onClick={handleResendOtp}
                 disabled={resendTimer > 0}
-                className="text-blue-600 dark:text-blue-400 font-semibold hover:underline bg-transparent border-none cursor-pointer disabled:opacity-50 disabled:no-underline"
+                className="text-[#1f1b16] dark:text-[#efe9de] font-medium hover:underline bg-transparent border-none cursor-pointer disabled:opacity-40 disabled:no-underline transition-colors duration-150"
               >
-                {resendTimer > 0 ? `Resend code in ${resendTimer}s` : "Resend OTP"}
+                {resendTimer > 0 ? `Resend in ${resendTimer}s` : "Resend code"}
               </button>
             </div>
           </div>
         ) : (
           <>
-            {/* Logo */}
-            <div className="text-center mb-8">
-              <div className="w-14 h-14 bg-linear-to-br from-indigo-500 via-purple-500 to-pink-500 rounded-xl flex items-center justify-center mx-auto mb-4 shadow-lg">
-                <span className="text-white text-2xl font-bold font-['Syne']">S</span>
+            {/* Header */}
+            <div className="text-center mb-7">
+              <div className="w-9 h-9 bg-[#1a1714] dark:bg-[#efe9de] rounded-xl flex items-center justify-center mx-auto mb-4">
+                <span className="text-[#efe9de] dark:text-[#1a1714] text-sm font-semibold">S</span>
               </div>
-              <h2 className="text-2xl font-bold font-['Syne'] text-slate-900 dark:text-white">
-                {isLogin ? "Welcome back" : "Create account"}
+              <h2 className="text-xl font-medium text-[#1f1b16] dark:text-[#efe9de]">
+                {isLogin ? "Sign in to Stride" : "Create your account"}
               </h2>
-              <p className="text-slate-500 dark:text-slate-400 text-sm mt-1">
-                {isLogin ? "Sign in to your account" : "Join job seekers today"}
+              <p className="text-[#7b7266] dark:text-[#8a847a] text-sm mt-1">
+                {isLogin ? "Welcome back" : "Start finding jobs in India"}
               </p>
             </div>
 
             {/* Toggle Tabs */}
-            <div className="flex bg-slate-100 dark:bg-slate-800 rounded-lg p-1 mb-6 transition-colors duration-200">
-              {["Login", "Register"].map((tab) => (
+            <div className="flex bg-[#efe9df] dark:bg-[#232325] rounded-lg p-1 mb-6">
+              {["Sign in", "Register"].map((tab) => (
                 <button
                   key={tab}
-                  onClick={() => handleToggle(tab === "Login")}
-                  className={`flex-1 py-2 rounded-md text-sm font-semibold transition-all ${(isLogin ? "Login" : "Register") === tab
-                    ? "bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-sm"
-                    : "text-slate-500 dark:text-slate-400"
+                  onClick={() => handleToggle(tab === "Sign in")}
+                  className={`flex-1 py-2 rounded-md text-sm font-medium transition-colors duration-150 border-none cursor-pointer ${(isLogin ? "Sign in" : "Register") === tab
+                    ? "bg-[#fdfbf7] dark:bg-[#19191b] text-[#1f1b16] dark:text-[#efe9de] shadow-[0_1px_3px_rgba(0,0,0,0.08)]"
+                    : "text-[#7b7266] dark:text-[#8a847a] bg-transparent"
                     }`}
                 >
                   {tab}
@@ -475,29 +481,29 @@ export default function AuthPage() {
             </div>
 
             {/* Form */}
-            <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4">
+            <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-3.5">
 
               {!isLogin && (
                 <>
                   <div>
                     <input
                       {...register("fname", { required: "Name is required" })}
-                      placeholder="Full Name"
-                      className="w-full border border-slate-200 dark:border-slate-700 rounded-lg px-4 py-3 text-sm outline-none focus:border-blue-500 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white transition-colors duration-200"
+                      placeholder="Full name"
+                      className="w-full border border-[#1f1b16]/[0.12] dark:border-[#efe9de]/[0.12] rounded-lg px-3.5 py-2.5 text-sm outline-none focus:border-[#1f1b16]/30 dark:focus:border-[#efe9de]/30 bg-[#f7f4ee] dark:bg-[#232325] text-[#1f1b16] dark:text-[#efe9de] placeholder:text-[#8a847a]"
                     />
                     {errors.fname && (
-                      <p className="text-red-500 text-xs mt-1">{errors.fname.message}</p>
+                      <p className="text-[#dc2626] dark:text-[#e5484d] text-xs mt-1">{errors.fname.message}</p>
                     )}
                   </div>
 
                   <div>
                     <input
                       {...register("phone", { required: "Phone is required" })}
-                      placeholder="Phone Number"
-                      className="w-full border border-slate-200 dark:border-slate-700 rounded-lg px-4 py-3 text-sm outline-none focus:border-blue-500 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white transition-colors duration-200"
+                      placeholder="Phone number"
+                      className="w-full border border-[#1f1b16]/[0.12] dark:border-[#efe9de]/[0.12] rounded-lg px-3.5 py-2.5 text-sm outline-none focus:border-[#1f1b16]/30 dark:focus:border-[#efe9de]/30 bg-[#f7f4ee] dark:bg-[#232325] text-[#1f1b16] dark:text-[#efe9de] placeholder:text-[#8a847a]"
                     />
                     {errors.phone && (
-                      <p className="text-red-500 text-xs mt-1">{errors.phone.message}</p>
+                      <p className="text-[#dc2626] dark:text-[#e5484d] text-xs mt-1">{errors.phone.message}</p>
                     )}
                   </div>
                 </>
@@ -514,10 +520,10 @@ export default function AuthPage() {
                   })}
                   type="email"
                   placeholder="Email address"
-                  className="w-full border border-slate-200 dark:border-slate-700 rounded-lg px-4 py-3 text-sm outline-none focus:border-blue-500 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white transition-colors duration-200"
+                  className="w-full border border-[#1f1b16]/[0.12] dark:border-[#efe9de]/[0.12] rounded-lg px-3.5 py-2.5 text-sm outline-none focus:border-[#1f1b16]/30 dark:focus:border-[#efe9de]/30 bg-[#f7f4ee] dark:bg-[#232325] text-[#1f1b16] dark:text-[#efe9de] placeholder:text-[#8a847a]"
                 />
                 {errors.email && (
-                  <p className="text-red-500 text-xs mt-1">{errors.email.message}</p>
+                  <p className="text-[#dc2626] dark:text-[#e5484d] text-xs mt-1">{errors.email.message}</p>
                 )}
               </div>
 
@@ -532,10 +538,10 @@ export default function AuthPage() {
                   })}
                   type="password"
                   placeholder="Password"
-                  className="w-full border border-slate-200 dark:border-slate-700 rounded-lg px-4 py-3 text-sm outline-none focus:border-blue-500 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white transition-colors duration-200"
+                  className="w-full border border-[#1f1b16]/[0.12] dark:border-[#efe9de]/[0.12] rounded-lg px-3.5 py-2.5 text-sm outline-none focus:border-[#1f1b16]/30 dark:focus:border-[#efe9de]/30 bg-[#f7f4ee] dark:bg-[#232325] text-[#1f1b16] dark:text-[#efe9de] placeholder:text-[#8a847a]"
                 />
                 {errors.password && (
-                  <p className="text-red-500 text-xs mt-1">{errors.password.message}</p>
+                  <p className="text-[#dc2626] dark:text-[#e5484d] text-xs mt-1">{errors.password.message}</p>
                 )}
                 {isLogin && (
                   <div className="text-right mt-1.5">
@@ -546,9 +552,9 @@ export default function AuthPage() {
                         setForgotError(null);
                         setForgotSuccess(null);
                       }}
-                      className="text-xs font-semibold text-blue-600 dark:text-blue-400 hover:underline bg-transparent border-none cursor-pointer"
+                      className="text-xs text-[#5e554a] dark:text-[#aaa398] hover:text-[#1f1b16] dark:hover:text-[#efe9de] bg-transparent border-none cursor-pointer transition-colors duration-150"
                     >
-                      Forgot Password?
+                      Forgot password?
                     </button>
                   </div>
                 )}
@@ -557,15 +563,15 @@ export default function AuthPage() {
               {!isLogin && (
                 <select
                   {...register("role")}
-                  className="w-full border border-slate-200 dark:border-slate-700 rounded-lg px-4 py-3 text-sm outline-none focus:border-blue-500 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white transition-colors duration-200"
+                  className="w-full border border-[#1f1b16]/[0.12] dark:border-[#efe9de]/[0.12] rounded-lg px-3.5 py-2.5 text-sm outline-none focus:border-[#1f1b16]/30 dark:focus:border-[#efe9de]/30 bg-[#f7f4ee] dark:bg-[#232325] text-[#1f1b16] dark:text-[#efe9de]"
                 >
-                  <option value="JOBSEEKER">Job Seeker</option>
+                  <option value="JOBSEEKER">Job seeker</option>
                   <option value="EMPLOYER">Employer</option>
                 </select>
               )}
 
               {apiError && (
-                <div className="bg-red-50 border border-red-200 rounded-lg px-4 py-3 text-sm text-red-600">
+                <div className="bg-[#fee2e2] dark:bg-[#dc2626]/10 border border-[#dc2626]/20 rounded-lg px-3.5 py-2.5 text-sm text-[#dc2626] dark:text-[#e5484d]">
                   {apiError}
                 </div>
               )}
@@ -573,18 +579,18 @@ export default function AuthPage() {
               <button
                 type="submit"
                 disabled={formState.isSubmitting}
-                className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-blue-300 text-white font-bold py-3 rounded-lg mt-2 transition-colors cursor-pointer"
+                className="w-full bg-[#1a1714] dark:bg-[#efe9de] text-[#efe9de] dark:text-[#1a1714] disabled:opacity-40 font-medium py-2.5 rounded-lg mt-1 transition-colors duration-150 cursor-pointer border-none hover:bg-[#2c2520] dark:hover:bg-white"
               >
-                {formState.isSubmitting ? "Please wait..." : isLogin ? "Sign In" : "Create Account"}
+                {formState.isSubmitting ? "Please wait..." : isLogin ? "Sign in" : "Create account"}
               </button>
             </form>
 
             {/* Toggle Link */}
-            <p className="text-center text-sm text-slate-400 dark:text-slate-500 mt-6">
-              {isLogin ? "Don't have an account? " : "Already have an account? "}
+            <p className="text-center text-sm text-[#7b7266] dark:text-[#8a847a] mt-5">
+              {isLogin ? "No account? " : "Already registered? "}
               <span
                 onClick={() => handleToggle(!isLogin)}
-                className="text-blue-600 dark:text-blue-400 cursor-pointer font-semibold"
+                className="text-[#1f1b16] dark:text-[#efe9de] cursor-pointer font-medium hover:underline"
               >
                 {isLogin ? "Register free" : "Sign in"}
               </span>

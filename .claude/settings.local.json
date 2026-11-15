@@ -1,0 +1,16 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(Get-ChildItem -Path . -Force)",
+      "Bash(Select-Object Name, Mode)",
+      "Bash(curl -s http://localhost:8080/swagger-ui/index.html)",
+      "Bash(curl -s \"http://localhost:8080/v3/api-docs\")",
+      "Bash(Invoke-WebRequest -Uri \"http://localhost:8080/v3/api-docs\" -UseBasicParsing)",
+      "Bash(ConvertFrom-Json)",
+      "Bash(ConvertTo-Json -Depth 10)",
+      "PowerShell(Invoke-WebRequest -Uri \"http://localhost:8080/v3/api-docs\" -UseBasicParsing)",
+      "Bash(npm run *)",
+      "Bash(Select-Object -First 30)"
+    ]
+  }
+}

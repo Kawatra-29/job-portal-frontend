@@ -4,21 +4,22 @@ import { AuthContext } from "../context/AuthContext";
 import { ThemeContext } from "../context/ThemeContext.jsx";
 import { useQuery } from "@tanstack/react-query";
 import axios from "axios";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faArrowRightFromBracket, faBars, faXmark, faSun, faMoon } from "@fortawesome/free-solid-svg-icons";
 
 const BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:8080/api/v1";
 
-// Fetch logged-in user's basic info (cached by React Query — no extra calls)
 function useCurrentUser() {
-  const token = localStorage.getItem("token");
+  const { auth } = useContext(AuthContext);
   return useQuery({
     queryKey: ["user", "me"],
     queryFn: async () => {
       const res = await axios.get(`${BASE_URL}/users/me`, {
-        headers: { Authorization: `Bearer ${token}` },
+        withCredentials: true,
       });
       return res.data;
     },
-    enabled: !!token,
+    enabled: auth.isAuthenticated,
     staleTime: 1000 * 60 * 5,
     retry: false,
   });
@@ -27,8 +28,8 @@ function useCurrentUser() {
 export function SidebarLayout({
   user,
   navItems,
-  logoColor = "from-violet-600 to-violet-800",
-  avatarColor = "from-violet-600 to-pink-600",
+  logoColor = "bg-[#1a1714]",
+  avatarColor = "bg-[#1a1714]",
   children,
   title,
   subtitle,
@@ -38,16 +39,13 @@ export function SidebarLayout({
   const navigate = useNavigate();
   const { logout, auth } = useContext(AuthContext);
   const { isDark, toggleTheme } = useContext(ThemeContext);
-  const [isOpen, setIsOpen] = useState(false); // Controls mobile drawer state
+  const [isOpen, setIsOpen] = useState(false);
 
-  // Fetch real user data from API
   const { data: currentUser } = useCurrentUser();
 
-  // Real name priority: API response → prop → fallback
   const name = currentUser?.fname || user?.fname || "User";
   const role = currentUser?.role || user?.role || auth?.role || "";
 
-  // Initials from name
   const initials = name
     .split(" ")
     .map((w) => w[0])
@@ -56,55 +54,55 @@ export function SidebarLayout({
     .toUpperCase();
 
   const handleLogout = () => {
-    logout();             // clears AuthContext state
-    localStorage.clear(); // clears any remaining localStorage keys
-    navigate("/auth");    // redirect to login page
+    logout();
+    navigate("/auth");
   };
 
   return (
-    <div className="flex min-h-screen bg-slate-50 dark:bg-slate-950 font-['DM_Sans'] transition-colors duration-200">
-      {/* Backdrop (visible only when mobile drawer is open) */}
+    <div className="flex min-h-screen bg-[#f7f4ee] dark:bg-[#0f0f10] font-['DM_Sans']">
+      {/* Backdrop */}
       {isOpen && (
         <div
           onClick={() => setIsOpen(false)}
-          className="fixed inset-0 z-40 bg-slate-900/50 backdrop-blur-xs md:hidden"
+          className="fixed inset-0 z-40 bg-[#1a1714]/40 backdrop-blur-xs md:hidden"
         />
       )}
 
-      {/* Sidebar aside */}
-      <aside className={`fixed inset-y-0 left-0 z-50 w-60 bg-white dark:bg-slate-900 text-slate-800 dark:text-white flex flex-col py-6 shrink-0 border-r border-slate-200/80 dark:border-white/10 transition-transform duration-300 ease-in-out ${
+      {/* Sidebar */}
+      <aside className={`fixed inset-y-0 left-0 z-50 w-60 bg-[#fdfbf7] dark:bg-[#0f0f10] flex flex-col py-5 shrink-0 border-r border-[#1f1b16]/[0.08] dark:border-[#efe9de]/[0.08] transition-transform duration-200 ease-out ${
         isOpen ? "translate-x-0" : "-translate-x-full"
       } md:translate-x-0 md:sticky md:top-0 md:h-screen`}>
-        {/* Mobile close button */}
+
+        {/* Mobile close */}
         <button
           onClick={() => setIsOpen(false)}
-          className="absolute top-4 right-4 md:hidden text-slate-400 hover:text-slate-700 dark:hover:text-white text-xl font-bold bg-transparent border-none cursor-pointer"
-          title="Close Menu"
+          className="absolute top-4 right-4 md:hidden text-[#7b7266] hover:text-[#1f1b16] dark:hover:text-[#efe9de] bg-transparent border-none cursor-pointer"
+          title="Close menu"
         >
-          ✕
+          <FontAwesomeIcon icon={faXmark} className="text-base" />
         </button>
 
         {/* Logo */}
-        <div className="px-6 pb-7 border-b border-slate-100 dark:border-white/10">
-          <Link to="/" className="flex items-center gap-2.5 no-underline">
-            <div className={`w-9 h-9 bg-linear-to-br ${logoColor} rounded-xl flex items-center justify-center shadow-lg shadow-violet-500/40`}>
-              <span className="text-white text-lg font-bold font-['Syne']">S</span>
+        <div className="px-5 pb-5 border-b border-[#1f1b16]/[0.08] dark:border-[#efe9de]/[0.08]">
+          <Link to="/" className="flex items-center gap-2 no-underline">
+            <div className="w-7 h-7 bg-[#1a1714] dark:bg-[#efe9de] rounded-lg flex items-center justify-center shrink-0">
+              <span className="text-[#efe9de] dark:text-[#1a1714] text-xs font-semibold">S</span>
             </div>
-            <span className="font-['Syne'] font-extrabold text-lg text-slate-900 dark:text-white">Stride</span>
+            <span className="font-['DM_Sans'] font-semibold text-[1.0625rem] text-[#1f1b16] dark:text-[#efe9de]">Stride</span>
           </Link>
         </div>
 
         {/* User info */}
-        <div className="px-6 py-5 border-b border-slate-100 dark:border-white/10">
-          <div className={`w-11 h-11 rounded-full bg-linear-to-br ${avatarColor} flex items-center justify-center font-extrabold text-base mb-2.5 text-white`}>
+        <div className="px-5 py-4 border-b border-[#1f1b16]/[0.08] dark:border-[#efe9de]/[0.08]">
+          <div className="w-9 h-9 rounded-full bg-[#1a1714] dark:bg-[#efe9de] flex items-center justify-center font-medium text-sm mb-2 text-[#efe9de] dark:text-[#1a1714]">
             {initials}
           </div>
-          <p className="text-sm font-semibold text-slate-900 dark:text-white m-0 truncate">{name}</p>
-          <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5 m-0">{role}</p>
+          <p className="text-sm font-medium text-[#1f1b16] dark:text-[#efe9de] m-0 truncate">{name}</p>
+          <p className="text-xs text-[#7b7266] dark:text-[#8a847a] mt-0.5 m-0">{role}</p>
         </div>
 
         {/* Nav */}
-        <nav className="p-4 flex-1 overflow-y-auto min-h-0">
+        <nav className="px-3 pt-3 flex-1 overflow-y-auto min-h-0">
           {navItems.map((item) => {
             const active = location.pathname === item.path;
             return (
@@ -112,71 +110,81 @@ export function SidebarLayout({
                 key={item.label}
                 to={item.path}
                 onClick={() => setIsOpen(false)}
-                className={`flex items-center gap-3 px-3 py-2.5 rounded-lg mb-1 text-sm transition-all ${
+                className={`flex items-center gap-2.5 px-3 py-2 rounded-lg mb-0.5 text-sm transition-colors duration-150 no-underline relative ${
                   active
-                    ? "bg-violet-50 text-violet-600 font-semibold dark:bg-violet-500/20 dark:text-violet-400"
-                    : "text-slate-600 hover:bg-slate-100 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-white/5 dark:hover:text-white"
+                    ? "bg-[#efe9df] dark:bg-[#232325] text-[#1f1b16] dark:text-[#efe9de] font-medium"
+                    : "text-[#5e554a] dark:text-[#8a847a] hover:bg-[#efe9df]/60 dark:hover:bg-[#232325]/60 hover:text-[#1f1b16] dark:hover:text-[#efe9de]"
                 }`}
               >
-                <span>{item.icon}</span> {item.label}
+                {/* Signature: left border line on active */}
+                {active && (
+                  <span className="absolute left-0 top-1 bottom-1 w-[2px] bg-[#1f1b16] dark:bg-[#efe9de] rounded-full" />
+                )}
+                {/* Icon slot — renders SVG if available, falls back to item.icon prop */}
+                <span className="w-4 h-4 flex items-center justify-center shrink-0 text-[#7b7266] dark:text-[#8a847a]">
+                  {item.faIcon ? (
+                    <FontAwesomeIcon icon={item.faIcon} className="text-sm" />
+                  ) : (
+                    item.icon
+                  )}
+                </span>
+                {item.label}
               </Link>
             );
           })}
         </nav>
 
-        {/* Logout */}
-        <div className="p-4 border-t border-slate-100 dark:border-white/10">
+        {/* Footer actions */}
+        <div className="px-3 pt-3 border-t border-[#1f1b16]/[0.08] dark:border-[#efe9de]/[0.08]">
           <button
             onClick={handleLogout}
-            className="flex items-center gap-3 px-3 py-2.5 rounded-lg cursor-pointer text-sm text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 transition-all w-full text-left"
+            className="flex items-center gap-2.5 px-3 py-2 rounded-lg cursor-pointer text-sm text-[#dc2626] dark:text-[#e5484d] hover:bg-[#dc2626]/6 dark:hover:bg-[#e5484d]/8 transition-colors duration-150 w-full text-left bg-transparent border-none"
           >
-            🚪 Logout
+            <FontAwesomeIcon icon={faArrowRightFromBracket} className="text-sm w-4 h-4" />
+            Sign out
           </button>
         </div>
       </aside>
 
-      {/* Main page content wrapper */}
+      {/* Main content */}
       <div className="flex-1 flex flex-col min-w-0">
-        {/* Mobile Header Bar */}
-        <header className="flex items-center justify-between px-6 py-4 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 md:hidden transition-colors duration-200">
+        {/* Mobile header */}
+        <header className="flex items-center justify-between px-5 py-3.5 bg-[#fdfbf7] dark:bg-[#0f0f10] border-b border-[#1f1b16]/[0.08] dark:border-[#efe9de]/[0.08] md:hidden">
           <Link to="/" className="flex items-center gap-2 no-underline">
-            <div className={`w-8 h-8 bg-linear-to-br ${logoColor} rounded-lg flex items-center justify-center`}>
-              <span className="text-white text-sm font-bold font-['Syne']">S</span>
+            <div className="w-7 h-7 bg-[#1a1714] dark:bg-[#efe9de] rounded-lg flex items-center justify-center">
+              <span className="text-[#efe9de] dark:text-[#1a1714] text-xs font-semibold">S</span>
             </div>
-            <span className="font-['Syne'] font-extrabold text-base text-slate-900 dark:text-white">Stride</span>
+            <span className="font-['DM_Sans'] font-semibold text-[1.0625rem] text-[#1f1b16] dark:text-[#efe9de]">Stride</span>
           </Link>
-          
+
           <button
             onClick={() => setIsOpen(true)}
-            className="w-10 h-10 flex items-center justify-center rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-white cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-700"
-            title="Open Menu"
+            className="w-9 h-9 flex items-center justify-center rounded-lg bg-[#efe9df] dark:bg-[#232325] border-none text-[#5e554a] dark:text-[#aaa398] cursor-pointer hover:bg-[#e5e0d6] dark:hover:bg-[#2c2a28] transition-colors duration-150"
+            title="Open menu"
           >
-            ☰
+            <FontAwesomeIcon icon={faBars} className="text-sm" />
           </button>
         </header>
 
-        <main className="flex-1 p-6 md:p-8 overflow-y-auto bg-slate-50 dark:bg-slate-950 transition-colors duration-200">
+        <main className="flex-1 p-5 md:p-8 overflow-y-auto">
           {(title || subtitle || actions) && (
             <div className="flex flex-col sm:flex-row justify-between items-start gap-4 mb-8">
               <div>
-                {subtitle && <p className="text-slate-500 dark:text-slate-400 text-sm m-0 mb-1">{subtitle}</p>}
-                {title && <h1 className="font-['Syne'] text-3xl font-extrabold text-slate-900 dark:text-white m-0 tracking-tight transition-colors duration-200">{title}</h1>}
+                {subtitle && <p className="text-[#7b7266] dark:text-[#8a847a] text-sm m-0 mb-1">{subtitle}</p>}
+                {title && <h1 className="font-['DM_Sans'] text-2xl font-medium text-[#1f1b16] dark:text-[#efe9de] m-0">{title}</h1>}
               </div>
-              <div className="flex items-center gap-3 self-end sm:self-auto">
+              <div className="flex items-center gap-2 self-end sm:self-auto">
                 {actions}
                 <button
                   onClick={toggleTheme}
-                  className="w-10 h-10 flex items-center justify-center rounded-xl bg-white dark:bg-slate-800 text-slate-800 dark:text-white border border-slate-200 dark:border-slate-700 shadow-sm hover:shadow-md transition-all duration-200 cursor-pointer shrink-0"
-                  title={isDark ? "Switch to Light Mode" : "Switch to Dark Mode"}
+                  className="w-9 h-9 flex items-center justify-center rounded-lg bg-[#fdfbf7] dark:bg-[#19191b] text-[#7b7266] dark:text-[#8a847a] border border-[#1f1b16]/[0.08] dark:border-[#efe9de]/[0.08] hover:text-[#1f1b16] dark:hover:text-[#efe9de] transition-colors duration-150 cursor-pointer shadow-none"
+                  title={isDark ? "Switch to light mode" : "Switch to dark mode"}
+                  aria-label={isDark ? "Switch to light mode" : "Switch to dark mode"}
                 >
                   {isDark ? (
-                    <svg className="w-5 h-5 text-amber-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364-6.364l-.707.707M6.343 17.657l-.707.707m12.728 0l-.707-.707M6.343 6.364l-.707-.707M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                    </svg>
+                    <FontAwesomeIcon icon={faSun} className="text-sm" />
                   ) : (
-                    <svg className="w-5 h-5 text-slate-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
-                    </svg>
+                    <FontAwesomeIcon icon={faMoon} className="text-sm" />
                   )}
                 </button>
               </div>

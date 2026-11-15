@@ -1,35 +1,26 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import axios from "axios";
-
-const API = import.meta.env.VITE_API_BASE_URL || "http://localhost:8080/api/v1";
-const authHeader = () => ({
-  headers: { Authorization: `Bearer ${localStorage.getItem("token")}` }
-});
+import apiClient from "../api/apiClient";
 
 // --- BASE QUERY: Single call to GET /employer/all-applications ---
-// Accepts optional TanStack Query overrides (e.g. { select }) for derived hooks.
-// TanStack Query deduplicates by queryKey: same key = ONE network request,
-// even if multiple components call this simultaneously.
 function useAllEmployerApplications(options = {}) {
   return useQuery({
     queryKey: ["employer", "all-applications"],
     queryFn: async () => {
-      const res = await axios.get(`${API}/employer/all-applications`, authHeader());
+      const res = await apiClient.get("/employer/all-applications");
       return Array.isArray(res.data) ? res.data : [];
     },
     staleTime: 1000 * 60 * 1,
     retry: 1,
-    ...options,   // allows callers to pass select, enabled, etc.
+    ...options,
   });
 }
 
 // --- EMPLOYER STATS (derived from single /employer/all-applications call) ---
 export function useEmployerStats() {
-  // We still need job count from /employer/jobs for activeJobPosts
   const jobsQuery = useQuery({
     queryKey: ["employer", "jobs", "active"],
     queryFn: async () => {
-      const res = await axios.get(`${API}/employer/jobs`, authHeader());
+      const res = await apiClient.get("/employer/jobs");
       return res.data || [];
     },
     staleTime: 1000 * 60 * 2,
@@ -55,8 +46,7 @@ export function useEmployerStats() {
   };
 }
 
-// --- RECENT APPLICANTS — uses shared /employer/all-applications cache ---
-// `select` transforms the cached data without making a new API call.
+// --- RECENT APPLICANTS ---
 export function useRecentApplicants(limit = 5) {
   return useAllEmployerApplications({
     select: (apps) =>
@@ -66,14 +56,13 @@ export function useRecentApplicants(limit = 5) {
   });
 }
 
-// --- ACTIVE JOBS — GET /employer/jobs (unchanged) ---
+// --- ACTIVE JOBS ---
 export function useActiveJobs() {
   return useQuery({
     queryKey: ["employer", "jobs", "active"],
     queryFn: async () => {
-      const res = await axios.get(`${API}/employer/jobs`, authHeader());
+      const res = await apiClient.get("/employer/jobs");
       const jobs = res.data || [];
-      // OPEN jobs first
       return jobs.sort((a, b) => {
         if (a.status === "OPEN" && b.status !== "OPEN") return -1;
         if (b.status === "OPEN" && a.status !== "OPEN") return 1;
@@ -85,21 +74,19 @@ export function useActiveJobs() {
   });
 }
 
-// --- ALL APPLICANTS (dedicated page) — uses shared /employer/all-applications ---
+// --- ALL APPLICANTS ---
 export function useAllApplicants(page = 0, size = 10, filters = {}) {
   return useQuery({
     queryKey: ["employer", "applicants", "all", page, size, filters],
     queryFn: async () => {
-      const res = await axios.get(`${API}/employer/all-applications`, authHeader());
+      const res = await apiClient.get("/employer/all-applications");
       const allApps = Array.isArray(res.data) ? res.data : [];
 
-      // Apply filters client-side
       let filtered = allApps;
       if (filters.status) {
         filtered = filtered.filter((a) => a.status === filters.status);
       }
 
-      // Client-side pagination
       const start = page * size;
       return {
         content: filtered.slice(start, start + size),
@@ -118,7 +105,7 @@ export function useEmployerJobs(page = 0, size = 10) {
   return useQuery({
     queryKey: ["employer", "jobs", "list", page],
     queryFn: async () => {
-      const res = await axios.get(`${API}/employer/jobs?page=${page}&size=${size}`, authHeader());
+      const res = await apiClient.get(`/employer/jobs?page=${page}&size=${size}`);
       return res.data;
     },
     staleTime: 1000 * 60 * 2,
@@ -127,12 +114,12 @@ export function useEmployerJobs(page = 0, size = 10) {
   });
 }
 
-// --- SINGLE JOB DETAIL (employer view) ---
+// --- SINGLE JOB DETAIL ---
 export function useEmployerJob(jobId) {
   return useQuery({
     queryKey: ["employer", "jobs", "detail", jobId],
     queryFn: async () => {
-      const res = await axios.get(`${API}/jobs/${jobId}`, authHeader());
+      const res = await apiClient.get(`/jobs/${jobId}`);
       return res.data;
     },
     enabled: !!jobId,
@@ -141,12 +128,12 @@ export function useEmployerJob(jobId) {
   });
 }
 
-// --- EMPLOYER PROFILE (uses real API: GET /api/v1/employer/me) ---
+// --- EMPLOYER PROFILE ---
 export function useEmployerProfile() {
   return useQuery({
     queryKey: ["employer", "profile"],
     queryFn: async () => {
-      const res = await axios.get(`${API}/employer/me`, authHeader());
+      const res = await apiClient.get("/employer/me");
       return res.data;
     },
     staleTime: 1000 * 60 * 5,
@@ -154,12 +141,12 @@ export function useEmployerProfile() {
   });
 }
 
-// --- USER INFO (GET /api/v1/users/me) for employer's personal details ---
+// --- USER INFO ---
 export function useUserMe() {
   return useQuery({
     queryKey: ["user", "me"],
     queryFn: async () => {
-      const res = await axios.get(`${API}/users/me`, authHeader());
+      const res = await apiClient.get("/users/me");
       return res.data;
     },
     staleTime: 1000 * 60 * 5,
@@ -167,13 +154,12 @@ export function useUserMe() {
   });
 }
 
-// --- UPDATE USER PERSONAL INFO (PUT /api/v1/users/me) ---
-// Accepts User fields: fullName, email, phone
+// --- UPDATE USER PERSONAL INFO ---
 export function useUpdateUserMe() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async (userData) => {
-      const res = await axios.put(`${API}/users/me`, userData, authHeader());
+      const res = await apiClient.put("/users/me", userData);
       return res.data;
     },
     onSuccess: () => {
@@ -182,29 +168,23 @@ export function useUpdateUserMe() {
   });
 }
 
-// --- UPDATE PASSWORD (PUT /api/v1/users/password) ---
-// Accepts: { oldPassword, newPassword }
+// --- UPDATE PASSWORD ---
 export function useUpdatePassword() {
   return useMutation({
     mutationFn: async ({ oldPassword, newPassword }) => {
-      const res = await axios.put(
-        `${API}/users/password`,
-        { oldPassword, newPassword },
-        authHeader()
-      );
+      const res = await apiClient.put("/users/password", { oldPassword, newPassword });
       return res.data;
     },
   });
 }
 
-// --- UPDATE EMPLOYER PROFILE (PUT /api/v1/employer/me) ---
+// --- UPDATE EMPLOYER PROFILE ---
 export function useUpdateEmployerProfile() {
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: async (profileData) => {
-      // EmployerRequestDto: { companyName, companySize, description }
-      const res = await axios.put(`${API}/employer/me`, profileData, authHeader());
+      const res = await apiClient.put("/employer/me", profileData);
       return res.data;
     },
     onSuccess: () => {
@@ -213,21 +193,20 @@ export function useUpdateEmployerProfile() {
   });
 }
 
-// --- COMPANY PROFILE (legacy - kept for backward compat) ---
+// --- COMPANY PROFILE ALIAS ---
 export function useCompanyProfile() {
   return useEmployerProfile();
 }
 
-// --- INTERVIEWS — uses shared /employer/all-applications ---
+// --- INTERVIEWS ---
 export function useInterviews(page = 0, size = 10) {
   return useQuery({
     queryKey: ["employer", "interviews", page],
     queryFn: async () => {
-      const res = await axios.get(`${API}/employer/all-applications`, authHeader());
+      const res = await apiClient.get("/employer/all-applications");
       const allApps = Array.isArray(res.data) ? res.data : [];
       const interviewApps = allApps.filter((a) => a.status === "INTERVIEW");
 
-      // Client-side pagination
       const start = page * size;
       return {
         content: interviewApps.slice(start, start + size),
@@ -241,21 +220,17 @@ export function useInterviews(page = 0, size = 10) {
   });
 }
 
-// --- UPDATE COMPANY PROFILE (legacy alias) ---
+// --- UPDATE COMPANY PROFILE ALIAS ---
 export function useUpdateCompanyProfile() {
   return useUpdateEmployerProfile();
 }
 
-// --- UPDATE APPLICATION STATUS (PATCH /api/v1/applications/{id}/status?status=...) ---
+// --- UPDATE APPLICATION STATUS ---
 export function useUpdateApplicationStatus() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async ({ id, status }) => {
-      const res = await axios.patch(
-        `${API}/applications/${id}/status?status=${status}`,
-        {},
-        authHeader()
-      );
+      const res = await apiClient.patch(`/applications/${id}/status?status=${status}`);
       return res.data;
     },
     onSuccess: () => {
@@ -264,16 +239,12 @@ export function useUpdateApplicationStatus() {
   });
 }
 
-// --- UPDATE JOB STATUS (PATCH /api/v1/jobs/{id}/status?status=...) ---
+// --- UPDATE JOB STATUS ---
 export function useUpdateJobStatus() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async ({ id, status }) => {
-      const res = await axios.patch(
-        `${API}/jobs/${id}/status?status=${status}`,
-        {},
-        authHeader()
-      );
+      const res = await apiClient.patch(`/jobs/${id}/status?status=${status}`);
       return res.data;
     },
     onSuccess: () => {
@@ -283,12 +254,12 @@ export function useUpdateJobStatus() {
   });
 }
 
-// --- DELETE JOB (DELETE /api/v1/jobs/{id}) ---
+// --- DELETE JOB ---
 export function useDeleteJob() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async (id) => {
-      const res = await axios.delete(`${API}/jobs/${id}`, authHeader());
+      const res = await apiClient.delete(`/jobs/${id}`);
       return res.data;
     },
     onSuccess: () => {

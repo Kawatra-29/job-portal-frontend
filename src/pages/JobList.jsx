@@ -1,21 +1,21 @@
-import { useState } from "react";
+import { useState, useContext } from "react";
 import { useQuery } from "@tanstack/react-query";
-import axios from "axios";
+import apiClient from "../api/apiClient";
 import JobCard from "../components/JobCard";
 import JobDetailModal from "../components/JobDetailModal";
 import { Helmet } from "react-helmet-async";
-
-const BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:8080/api/v1";
+import { AuthContext } from "../context/AuthContext";
 
 const fetchJobs = async ({ page, size, title, location }) => {
-  let url = `${BASE_URL}/jobs?page=${page}&size=${size}`;
+  let url = `/jobs?page=${page}&size=${size}`;
   if (title) url += `&title=${encodeURIComponent(title)}`;
   if (location) url += `&location=${encodeURIComponent(location)}`;
-  const res = await axios.get(url);
+  const res = await apiClient.get(url);
   return res.data;
 };
 
 export default function JobList() {
+  const { auth } = useContext(AuthContext);
   const [page, setPage] = useState(0);
   const size = 10;
 
@@ -34,33 +34,46 @@ export default function JobList() {
     placeholderData: (prevData) => prevData,
   });
 
-  const token = localStorage.getItem("token");
-  const role = localStorage.getItem("role");
-
   const { data: myApps } = useQuery({
     queryKey: ["applications", "my"],
     queryFn: async () => {
-      const res = await axios.get(`${BASE_URL}/applications/my`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      const res = await apiClient.get("/applications/my");
       return Array.isArray(res.data) ? res.data : [];
     },
-    enabled: !!token && role === "JOBSEEKER",
+    enabled: auth.isAuthenticated && auth.role === "JOBSEEKER",
     staleTime: 0,
     refetchOnWindowFocus: true,
   });
-
 
   const appliedJobIds = new Set(
     Array.isArray(myApps) ? myApps.map(app => app?.job?.id).filter(Boolean) : []
   );
 
-  const allJobs = data?.content || [];
-  const totalJobs = data?.totalElements || 0;
-  const totalPages = data?.totalPages || 0;
+  // Handle standard Array, Spring Page {content: []}, and polymorphic Array wrapper
+  const rawList = Array.isArray(data) && data.length === 2 && data[0] === "java.util.ArrayList" 
+    ? data[1] 
+    : (Array.isArray(data) ? data : (data?.content || []));
+
+  // Normalize fields
+  const allJobs = rawList.map((j) => ({
+    ...j,
+    id: Array.isArray(j.id) ? j.id[1] : j.id,
+    jobType: Array.isArray(j.jobType) ? j.jobType[1] : j.jobType,
+    workMode: Array.isArray(j.workMode) ? j.workMode[1] : j.workMode,
+    status: Array.isArray(j.status) ? j.status[1] : j.status,
+    experienceLevel: Array.isArray(j.experienceLevel) ? j.experienceLevel[1] : j.experienceLevel,
+    salaryMin: Array.isArray(j.salaryMin) ? j.salaryMin[1] : j.salaryMin,
+    salaryMax: Array.isArray(j.salaryMax) ? j.salaryMax[1] : j.salaryMax,
+    deadline: Array.isArray(j.deadline) ? j.deadline[1] : j.deadline,
+    company: j.companyName || j.company || "Company",
+    companyName: j.companyName || j.company || "Company",
+  }));
+
+  const totalJobs = data?.totalElements != null ? data.totalElements : allJobs.length;
+  const totalPages = data?.totalPages != null ? data.totalPages : Math.ceil(totalJobs / size) || 1;
 
   // Filter out applied jobs for jobseekers
-  const isJobSeeker = !!token && role === "JOBSEEKER";
+  const isJobSeeker = auth.isAuthenticated && auth.role === "JOBSEEKER";
   const jobs = isJobSeeker
     ? allJobs.filter((job) => !appliedJobIds.has(job.id))
     : allJobs;
@@ -99,12 +112,8 @@ export default function JobList() {
           <p className="text-slate-500 dark:text-slate-400 text-sm mb-6">
             {isLoading
               ? "Loading opportunities..."
-              : jobs.length > 0
-              ? isJobSeeker && appliedJobIds.size > 0
-                ? `${jobs.length} new jobs available · ${appliedJobIds.size} already applied`
-                : `${totalJobs} jobs available`
-              : isJobSeeker && appliedJobIds.size > 0
-              ? `You've applied to all ${appliedJobIds.size} jobs on this page`
+              : totalJobs > 0
+              ? `${totalJobs} jobs available`
               : "Explore all open positions"}
           </p>
  

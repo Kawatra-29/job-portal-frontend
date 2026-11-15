@@ -7,6 +7,7 @@ import {
   useUpdatePassword,
 } from "../queries/employerQueries";
 import { SidebarLayout } from "../components/SidebarLayout";
+import { Helmet } from "react-helmet-async";
 
 const navItems = [
   { icon: "🏠", label: "Dashboard", path: "/dashboard/employer" },
@@ -235,12 +236,16 @@ export default function EmployerProfile() {
     );
   }
 
-  const displayName = userInfo?.fname || localStorage.getItem("name") || "Employer";
+  const displayName = userInfo?.fname || "Employer";
   const initials = displayName.split(" ").map((w) => w[0]).join("").toUpperCase();
   const isVerified = profile?.isVerified;
 
   return (
     <SidebarLayout navItems={navItems} title="My Profile" subtitle="Employer Panel 🏢">
+      <Helmet>
+        <title>Employer Profile | Stride</title>
+        <meta name="description" content="Manage your employer company profile, personal details, and account settings on Stride." />
+      </Helmet>
       <div className="max-w-4xl mx-auto space-y-5">
 
         {/* Toast */}

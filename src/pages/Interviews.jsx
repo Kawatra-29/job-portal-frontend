@@ -4,6 +4,7 @@ import {
   useUpdateApplicationStatus,
 } from "../queries/employerQueries";
 import { SidebarLayout } from "../components/SidebarLayout";
+import { Helmet } from "react-helmet-async";
 
 const navItems = [
   { icon: "🏠", label: "Dashboard", path: "/dashboard/employer" },
@@ -38,6 +39,10 @@ export default function Interviews() {
 
   return (
     <SidebarLayout navItems={navItems} title="Interviews Scheduled" subtitle="Employer Panel 📅">
+      <Helmet>
+        <title>Scheduled Interviews | Stride Employer</title>
+        <meta name="description" content="Manage scheduled interviews and track candidate evaluations on Stride." />
+      </Helmet>
       <div className="max-w-5xl mx-auto space-y-6">
         
         {/* Helper Banner */}

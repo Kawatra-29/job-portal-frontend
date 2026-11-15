@@ -7,7 +7,7 @@ const Navbar = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const { auth, logout } = useContext(AuthContext);
-  const { token, role } = auth;
+  const { isAuthenticated, role } = auth;
   const { isDark, toggleTheme } = useContext(ThemeContext);
   const isAuthPage = location.pathname === "/auth";
 
@@ -18,7 +18,7 @@ const Navbar = () => {
   ];
 
   const handleLogout = () => {
-    logout();          // clears AuthContext state + localStorage
+    logout();
     navigate("/auth");
   };
 
@@ -28,30 +28,35 @@ const Navbar = () => {
   };
 
   return (
-    <nav className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 sticky top-0 z-50 font-['DM_Sans'] transition-colors duration-200">
+    <nav className="bg-[#fdfbf7]/90 dark:bg-[#0f0f10]/90 backdrop-blur-md border-b border-[#1f1b16]/[0.08] dark:border-[#efe9de]/[0.08] sticky top-0 z-50 font-['DM_Sans']">
+      <div className="max-w-7xl mx-auto px-6 h-14 flex items-center justify-between">
 
-      <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
-        {/* Logo */}
-        <Link to="/" className="flex items-center gap-3 no-underline group">
-          <div className="w-10 h-10 bg-linear-to-br from-indigo-500 via-purple-500 to-pink-500 rounded-xl flex items-center justify-center shadow-lg shadow-indigo-500/30 group-hover:shadow-indigo-500/50 group-hover:scale-105 transition-all duration-300">
-            <span className="text-white text-lg font-bold font-['Syne']">S</span>
+        {/* Logo — wordmark only, flat mark */}
+        <Link to="/" className="flex items-center gap-2.5 no-underline">
+          <div className="w-7 h-7 bg-[#1a1714] dark:bg-[#efe9de] rounded-lg flex items-center justify-center shrink-0">
+            <span className="text-[#efe9de] dark:text-[#1a1714] text-sm font-semibold font-['DM_Sans']">S</span>
           </div>
-          <span className="font-['Syne'] font-extrabold text-xl text-slate-900 dark:text-white tracking-tight">Stride</span>
+          <span className="font-['DM_Sans'] font-semibold text-[1.0625rem] text-[#1f1b16] dark:text-[#efe9de] tracking-tight">Stride</span>
         </Link>
 
         {/* Nav Links */}
-        <div className="flex gap-1 items-center">
+        <div className="flex gap-0.5 items-center">
           {navLinks.map(({ to, label }) => {
             const active = location.pathname === to;
             return (
-              <Link key={to} to={to} className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 no-underline relative ${
-                active
-                  ? "text-white bg-linear-to-r from-indigo-500 to-purple-500 shadow-md shadow-indigo-500/30"
-                  : "text-slate-600 hover:text-slate-900 hover:bg-slate-100 dark:text-slate-400 hover:dark:text-white hover:dark:bg-slate-800"
-              }`}>
+              <Link
+                key={to}
+                to={to}
+                className={`px-3.5 py-2 text-sm font-normal no-underline relative transition-colors duration-150 ${
+                  active
+                    ? "text-[#1f1b16] dark:text-[#efe9de] font-medium"
+                    : "text-[#7b7266] dark:text-[#8a847a] hover:text-[#1f1b16] dark:hover:text-[#efe9de]"
+                }`}
+              >
                 {label}
+                {/* Signature: thin left-border style as bottom line on active */}
                 {active && (
-                  <span className="absolute -bottom-px left-1/2 -translate-x-1/2 w-1 h-1 bg-purple-400 rounded-full" />
+                  <span className="absolute bottom-0 left-3.5 right-3.5 h-[2px] bg-[#1f1b16] dark:bg-[#efe9de] rounded-full" />
                 )}
               </Link>
             );
@@ -59,38 +64,51 @@ const Navbar = () => {
         </div>
 
         {/* Auth Buttons */}
-        <div className="flex gap-3 items-center">
-          {token ? (
+        <div className="flex gap-2 items-center">
+          {isAuthenticated ? (
             <>
-              <button onClick={handleDashboard} className="px-5 py-2.5 rounded-lg text-sm font-medium text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-600 bg-transparent cursor-pointer font-['DM_Sans'] transition-all duration-200 hover:text-slate-900 dark:hover:text-white hover:border-indigo-400 dark:hover:border-indigo-400 hover:bg-indigo-500/5 dark:hover:bg-indigo-500/10">
+              <button
+                onClick={handleDashboard}
+                className="px-4 py-2 rounded-lg text-sm font-medium text-[#5e554a] dark:text-[#aaa398] border border-[#1f1b16]/[0.12] dark:border-[#efe9de]/[0.12] bg-transparent cursor-pointer transition-colors duration-150 hover:text-[#1f1b16] dark:hover:text-[#efe9de] hover:border-[#1f1b16]/25 dark:hover:border-[#efe9de]/25"
+              >
                 Dashboard
               </button>
-              <button onClick={handleLogout} className="px-5 py-2.5 rounded-lg text-sm font-semibold text-white bg-linear-to-r from-rose-500 to-pink-600 border-none shadow-lg shadow-rose-500/20 cursor-pointer font-['DM_Sans'] transition-all duration-200 hover:shadow-rose-500/40 hover:-translate-y-0.5 active:translate-y-0">
-                Logout
+              <button
+                onClick={handleLogout}
+                className="px-4 py-2 rounded-lg text-sm font-medium text-[#dc2626] dark:text-[#e5484d] border border-[#dc2626]/20 dark:border-[#e5484d]/20 bg-transparent cursor-pointer transition-colors duration-150 hover:bg-[#dc2626]/5 dark:hover:bg-[#e5484d]/10 hover:border-[#dc2626]/30"
+              >
+                Sign out
               </button>
             </>
           ) : (
             <>
-              <Link to="/auth" className={`px-5 py-2.5 rounded-lg text-sm font-medium text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-600 bg-transparent no-underline transition-all duration-200 hover:text-slate-900 dark:hover:text-white hover:border-indigo-400 dark:hover:border-indigo-400 hover:bg-indigo-500/5 dark:hover:bg-indigo-500/10 ${isAuthPage ? 'invisible pointer-events-none' : ''}`}>
-                Login
+              <Link
+                to="/auth"
+                className={`px-4 py-2 text-sm font-normal text-[#5e554a] dark:text-[#aaa398] no-underline transition-colors duration-150 hover:text-[#1f1b16] dark:hover:text-[#efe9de] ${isAuthPage ? "invisible pointer-events-none" : ""}`}
+              >
+                Sign in
               </Link>
-              <Link to="/auth?mode=register" className={`px-5 py-2.5 rounded-lg text-sm font-semibold text-white bg-linear-to-r from-indigo-500 to-purple-500 shadow-lg shadow-indigo-500/30 no-underline transition-all duration-200 hover:shadow-indigo-500/50 hover:-translate-y-0.5 hover:shadow-xl active:translate-y-0 ${isAuthPage ? 'invisible pointer-events-none' : ''}`}>
-                Register
+              <Link
+                to="/auth?mode=register"
+                className={`px-4 py-2 rounded-lg text-sm font-medium text-[#efe9de] bg-[#1a1714] dark:bg-[#efe9de] dark:text-[#1a1714] no-underline transition-colors duration-150 hover:bg-[#2c2520] dark:hover:bg-white ${isAuthPage ? "invisible pointer-events-none" : ""}`}
+              >
+                Get started
               </Link>
             </>
           )}
           <button
             onClick={toggleTheme}
-            className="w-10 h-10 flex items-center justify-center rounded-lg text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition-all duration-200 border border-slate-200 dark:border-slate-700 bg-transparent cursor-pointer"
-            title={isDark ? "Switch to Light Mode" : "Switch to Dark Mode"}
+            className="w-9 h-9 flex items-center justify-center rounded-lg text-[#7b7266] dark:text-[#8a847a] hover:text-[#1f1b16] dark:hover:text-[#efe9de] hover:bg-[#efe9df] dark:hover:bg-[#232325] transition-colors duration-150 bg-transparent cursor-pointer border-none"
+            title={isDark ? "Switch to light mode" : "Switch to dark mode"}
+            aria-label={isDark ? "Switch to light mode" : "Switch to dark mode"}
           >
             {isDark ? (
-              <svg className="w-5 h-5 text-amber-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364-6.364l-.707.707M6.343 17.657l-.707.707m12.728 0l-.707-.707M6.343 6.364l-.707-.707M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364-6.364l-.707.707M6.343 17.657l-.707.707m12.728 0l-.707-.707M6.343 6.364l-.707-.707M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
               </svg>
             ) : (
-              <svg className="w-5 h-5 text-slate-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
               </svg>
             )}
           </button>

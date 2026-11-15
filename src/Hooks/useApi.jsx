@@ -1,9 +1,7 @@
 import { useState, useEffect, useCallback, useContext } from "react";
-import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import { AuthContext } from "../context/AuthContext";
-
-const BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:8080/api/v1";
+import apiClient from "../api/apiClient";
 
 export default function useApi(initialUrl = "", initialMethod = "GET") {
   const [data, setData] = useState(null);
@@ -15,22 +13,13 @@ export default function useApi(initialUrl = "", initialMethod = "GET") {
   const request = useCallback(async (url, method = "GET", body = null, headers = {}, options = {}) => {
     setLoading(true);
     setError(null);
-    const token = localStorage.getItem("token");
-    
-    const finalUrl = url.startsWith("http")
-      ? url
-      : `${BASE_URL}${url.startsWith("/") ? "" : "/"}${url}`;
 
     try {
-      const res = await axios({
-        url: finalUrl,
+      const res = await apiClient({
+        url,
         method,
         data: body,
-        headers: {
-          ...(token ? { Authorization: `Bearer ${token}` } : {}),
-          "Content-Type": "application/json",
-          ...headers,
-        },
+        headers,
       });
 
       setData(res.data);
@@ -71,6 +60,7 @@ export default function useApi(initialUrl = "", initialMethod = "GET") {
   const get = useCallback((url, headers = {}, options = {}) => request(url, "GET", null, headers, options), [request]);
   const post = useCallback((url, body, headers = {}, options = {}) => request(url, "POST", body, headers, options), [request]);
   const put = useCallback((url, body, headers = {}, options = {}) => request(url, "PUT", body, headers, options), [request]);
+  const patch = useCallback((url, body, headers = {}, options = {}) => request(url, "PATCH", body, headers, options), [request]);
   const del = useCallback((url, headers = {}, options = {}) => request(url, "DELETE", null, headers, options), [request]);
 
   return {
@@ -80,6 +70,7 @@ export default function useApi(initialUrl = "", initialMethod = "GET") {
     get,
     post,
     put,
+    patch,
     del,
   };
 }

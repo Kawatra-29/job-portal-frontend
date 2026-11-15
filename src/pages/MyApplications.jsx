@@ -1,4 +1,8 @@
 import { useState, useMemo } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import axios from "axios";
+
+const BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:8080/api/v1";
 
 const STATUS_STAGES = {
   APPLIED: 1,
@@ -17,10 +21,25 @@ const statusStyles = {
   default: { color: "text-slate-600 dark:text-slate-400 border-slate-200 dark:border-slate-800/40 bg-slate-50/50 dark:bg-slate-800/20", bg: "bg-slate-500" }
 };
 
-export default function MyApplications({ applications, loading, handleWithdraw, onViewDetails }) {
+export default function MyApplications({ applications: propApplications, loading: propLoading, handleWithdraw, onViewDetails }) {
+  const queryClient = useQueryClient();
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("ALL");
   const [sortBy, setSortBy] = useState("NEWEST");
+
+  // Self-fetching fallback for standalone route /my-applications
+  const { data: fetchedApps, isLoading: fetchedLoading } = useQuery({
+    queryKey: ["applications", "my"],
+    queryFn: async () => {
+      const res = await axios.get(`${BASE_URL}/applications/my`, { withCredentials: true });
+      return Array.isArray(res.data) ? res.data : [];
+    },
+    enabled: propApplications === undefined,
+    staleTime: 1000 * 60,
+  });
+
+  const applications = propApplications !== undefined ? propApplications : (fetchedApps || []);
+  const loading = propLoading !== undefined ? propLoading : fetchedLoading;
 
   // Calculate statistics based on raw applications
   const stats = useMemo(() => {

@@ -7,6 +7,7 @@ import UserProfile from "../pages/UserProfile";
 import JobList from "../pages/JobList";
 import MyApplications from "../pages/MyApplications";
 import JobDetailModal from "./JobDetailModal";
+import ConfirmModal from "./ConfirmModal";
 import { ThemeContext } from "../context/ThemeContext.jsx";
 import { AuthContext } from "../context/AuthContext.jsx";
 
@@ -30,7 +31,6 @@ export default function JobSeekerDashboard() {
   const [showApplications, setShowApplications] = useState(false);
   const [selectedJob, setSelectedJob] = useState(null);
   const [isMobileOpen, setIsMobileOpen] = useState(false); // Controls mobile drawer state
-  const token = localStorage.getItem("token");
   const { isDark, toggleTheme } = useContext(ThemeContext);
   const { logout } = useContext(AuthContext);
 
@@ -41,12 +41,12 @@ export default function JobSeekerDashboard() {
     queryKey: ["applications", "my"],
     queryFn: async () => {
       const res = await axios.get(`${BASE_URL}/applications/my`, {
-        headers: { Authorization: `Bearer ${token}` },
+        withCredentials: true,
       });
       // API returns array directly
       return Array.isArray(res.data) ? res.data : [];
     },
-    enabled: !!token,
+    enabled: true,
     staleTime: 0,              // Always consider stale — refetch on every mount
     refetchOnMount: "always",  // Force refetch whenever dashboard renders
     refetchOnWindowFocus: true,
@@ -55,15 +55,24 @@ export default function JobSeekerDashboard() {
   const { del: deleteApp } = useApi();
 
   const user = profile?.user;
-  const name = user?.fname || localStorage.getItem("name") || "Job Seeker";
+  const name = user?.fname || "Job Seeker";
 
-  const handleWithdraw = async (appId) => {
-    if (window.confirm("Are you sure you want to withdraw this application?")) {
-      const res = await deleteApp(`/applications/${appId}`);
+  const [withdrawAppId, setWithdrawAppId] = useState(null);
+  const [withdrawing, setWithdrawing] = useState(false);
+
+  const handleWithdraw = (appId) => setWithdrawAppId(appId);
+
+  const confirmWithdraw = async () => {
+    if (!withdrawAppId) return;
+    setWithdrawing(true);
+    try {
+      const res = await deleteApp(`/applications/${withdrawAppId}`);
       if (res !== null) {
-        // Invalidate cache so both dashboard + JobList reflect updated state
         queryClient.invalidateQueries({ queryKey: ["applications", "my"] });
       }
+    } finally {
+      setWithdrawing(false);
+      setWithdrawAppId(null);
     }
   };
 
@@ -325,7 +334,7 @@ export default function JobSeekerDashboard() {
                         </span>
                         {app.status !== "HIRED" && app.status !== "REJECTED" && (
                           <button
-                            onClick={() => handleWithdraw(app.id)}
+                            onClick={() => setWithdrawAppId(app.id)}
                             className="text-xs text-red-500 hover:text-red-700 bg-transparent border-none cursor-pointer"
                           >
                             Withdraw
@@ -357,6 +366,18 @@ export default function JobSeekerDashboard() {
           onClose={() => setSelectedJob(null)}
         />
       )}
+
+      {/* Withdraw Confirmation Modal */}
+      <ConfirmModal
+        isOpen={!!withdrawAppId}
+        onClose={() => setWithdrawAppId(null)}
+        onConfirm={confirmWithdraw}
+        loading={withdrawing}
+        title="Withdraw Application?"
+        description="Are you sure you want to withdraw this job application? This action cannot be undone."
+        confirmText="Withdraw Application"
+        variant="danger"
+      />
     </div>
   );
 }

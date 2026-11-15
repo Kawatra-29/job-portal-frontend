@@ -3,6 +3,8 @@ import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import useApi from "../Hooks/useApi";
 import { ThemeContext } from "../context/ThemeContext.jsx";
+import { AuthContext } from "../context/AuthContext";
+import { Helmet } from "react-helmet-async";
 
 const skillLevels = ["BEGINNER", "INTERMEDIATE", "ADVANCED", "EXPERT"];
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:8080/api/v1";
@@ -10,6 +12,7 @@ const BACKEND_BASE_URL = API_BASE_URL.replace("/api/v1", "");
 
 export default function EditProfile() {
   const navigate = useNavigate();
+  const { logout } = useContext(AuthContext);
   const { get, put: putSeeker, loading, error } = useApi();
   const { put: putUser } = useApi();
   const { isDark, toggleTheme } = useContext(ThemeContext);
@@ -94,18 +97,12 @@ export default function EditProfile() {
     setResumeSuccess(false);
 
     try {
-      const token = localStorage.getItem("token");
-      if (!token) {
-        navigate("/auth");
-        return;
-      }
-
       const data = new FormData();
       data.append("file", resumeFile);
 
       const res = await axios.post(`${API_BASE_URL}/jobseekers/me/resume`, data, {
+        withCredentials: true,
         headers: {
-          Authorization: `Bearer ${token}`,
           "Content-Type": "multipart/form-data",
         },
       });
@@ -117,7 +114,7 @@ export default function EditProfile() {
     } catch (err) {
       console.error(err);
       if (err.response?.status === 401) {
-        localStorage.clear();
+        logout();
         navigate("/auth");
         return;
       }
@@ -211,6 +208,10 @@ export default function EditProfile() {
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 font-['DM_Sans'] p-6 transition-colors duration-200">
+      <Helmet>
+        <title>Edit Profile | Stride Candidate</title>
+        <meta name="description" content="Update your personal details, skills, summary, and upload your resume on Stride." />
+      </Helmet>
 
       <div className="max-w-3xl mx-auto">
         {/* Header */}
@@ -226,6 +227,7 @@ export default function EditProfile() {
             onClick={toggleTheme}
             className="w-10 h-10 flex items-center justify-center rounded-xl bg-white dark:bg-slate-800 text-slate-800 dark:text-white border border-slate-200 dark:border-slate-700 shadow-sm hover:shadow-md transition-all duration-200 cursor-pointer"
             title={isDark ? "Switch to Light Mode" : "Switch to Dark Mode"}
+            aria-label={isDark ? "Switch to Light Mode" : "Switch to Dark Mode"}
           >
             {isDark ? (
               <svg className="w-5 h-5 text-amber-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">

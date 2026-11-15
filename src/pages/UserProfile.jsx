@@ -3,6 +3,8 @@ import { useNavigate } from "react-router-dom";
 import useApi from "../Hooks/useApi";
 import { ThemeContext } from "../context/ThemeContext.jsx";
 import { AuthContext } from "../context/AuthContext";
+import { Helmet } from "react-helmet-async";
+import ConfirmModal from "../components/ConfirmModal";
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:8080/api/v1";
 const BACKEND_BASE_URL = API_BASE_URL.replace("/api/v1", "");
@@ -33,14 +35,11 @@ export default function UserProfile() {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState(null);
+  const [withdrawAppId, setWithdrawAppId] = useState(null);
+  const [withdrawing, setWithdrawing] = useState(false);
 
   useEffect(() => {
     const fetchUserData = async () => {
-      const token = localStorage.getItem("token");
-      if (!token) {
-        navigate("/auth");
-        return;
-      }
       const result = await get("/jobseekers/me");
       if (result) {
         setUserData(result);
@@ -51,18 +50,20 @@ export default function UserProfile() {
       }
     };
     fetchUserData();
-  }, [get, navigate]);
+  }, [get]);
 
-  const handleWithdraw = async (appId) => {
-    if (window.confirm("Are you sure you want to withdraw this application?")) {
-      const res = await del(`/applications/${appId}`);
-      if (res !== null) {
-        const appsResult = await get("/applications/my");
-        if (appsResult) {
-          setApplications(appsResult);
-        }
+  const handleConfirmWithdraw = async () => {
+    if (!withdrawAppId) return;
+    setWithdrawing(true);
+    const res = await del(`/applications/${withdrawAppId}`);
+    if (res !== null) {
+      const appsResult = await get("/applications/my");
+      if (appsResult) {
+        setApplications(appsResult);
       }
     }
+    setWithdrawing(false);
+    setWithdrawAppId(null);
   };
 
   const handleLogout = () => {
@@ -123,6 +124,10 @@ export default function UserProfile() {
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 font-['DM_Sans'] transition-colors duration-200">
+      <Helmet>
+        <title>My Candidate Profile | Stride</title>
+        <meta name="description" content="View and manage your candidate profile, resume, and application history on Stride." />
+      </Helmet>
 
       {/* Hero Banner */}
       <div className="bg-linear-to-br from-slate-900 via-slate-800 to-blue-800 px-6 pt-12 pb-20 relative">
@@ -273,7 +278,7 @@ export default function UserProfile() {
                       </span>
                       {app.status !== "HIRED" && app.status !== "REJECTED" && (
                         <button
-                          onClick={() => handleWithdraw(app.id)}
+                          onClick={() => setWithdrawAppId(app.id)}
                           className="text-xs font-semibold text-red-500 hover:text-red-700 bg-transparent border-none cursor-pointer hover:underline"
                         >
                           Withdraw
@@ -305,6 +310,19 @@ export default function UserProfile() {
           </button>
         </div>
       </div>
+
+      {/* Confirm Withdraw Application Modal */}
+      <ConfirmModal
+        isOpen={!!withdrawAppId}
+        onClose={() => setWithdrawAppId(null)}
+        onConfirm={handleConfirmWithdraw}
+        title="Withdraw Application?"
+        description="Are you sure you want to withdraw this job application? This action cannot be undone."
+        confirmText="Withdraw Application"
+        cancelText="Cancel"
+        variant="danger"
+        loading={withdrawing}
+      />
 
       {/* Delete Account Modal */}
       {showDeleteModal && (

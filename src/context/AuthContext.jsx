@@ -1,63 +1,86 @@
 /* eslint-disable react-refresh/only-export-components */
-import { createContext, useState } from 'react';
+import { createContext, useState, useEffect, useCallback } from 'react';
+import apiClient from '../api/apiClient';
 
 export const AuthContext = createContext();
 
-function isTokenExpired(token) {
-    if (!token) return true;
-    try {
-        const base64Url = token.split('.')[1];
-        const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
-        const jsonPayload = decodeURIComponent(
-            window.atob(base64)
-                .split('')
-                .map((c) => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
-                .join('')
-        );
-        const { exp } = JSON.parse(jsonPayload);
-        if (exp && Date.now() >= exp * 1000) {
-            return true;
-        }
-        return false;
-    } catch {
-        return true;
-    }
-}
-
 export const AuthProvider = ({ children }) => {
-    const [auth, setAuth] = useState(() => {
-        const token = localStorage.getItem('token');
-        if (token && isTokenExpired(token)) {
-            localStorage.removeItem('token');
-            localStorage.removeItem('role');
-            return { token: null, role: null, isAuthenticated: false };
-        }
-        return {
-            token: localStorage.getItem('token'),
-            role: localStorage.getItem('role'),
-            isAuthenticated: !!localStorage.getItem('token')
-        };
+    const [auth, setAuth] = useState({
+        user: null,
+        role: null,
+        isAuthenticated: false,
+        loading: true
     });
 
-    const login = (token, role) => {
-        localStorage.setItem('token', token);
-        localStorage.setItem('role', role);
+    const logout = useCallback(async () => {
+        try {
+            await apiClient.post("/auth/logout", {});
+        } catch {
+            // Ignore logout API error if network fails
+        } finally {
+            localStorage.removeItem("token");
+            setAuth({
+                user: null,
+                role: null,
+                isAuthenticated: false,
+                loading: false
+            });
+        }
+    }, []);
+
+    useEffect(() => {
+        let active = true;
+        const checkAuthStatus = async () => {
+            try {
+                const res = await apiClient.get("/users/me");
+                if (active && res.data) {
+                    const user = res.data;
+                    setAuth({
+                        user,
+                        role: user.role,
+                        isAuthenticated: true,
+                        loading: false
+                    });
+                }
+            } catch {
+                if (active) {
+                    setAuth({
+                        user: null,
+                        role: null,
+                        isAuthenticated: false,
+                        loading: false
+                    });
+                }
+            }
+        };
+
+        checkAuthStatus();
+
+        const handleUnauthorized = () => {
+            logout();
+        };
+        window.addEventListener("unauthorized", handleUnauthorized);
+
+        return () => {
+            active = false;
+            window.removeEventListener("unauthorized", handleUnauthorized);
+        };
+    }, [logout]);
+
+    const login = (roleParam, tokenParam, userParam) => {
+        let role = typeof roleParam === 'string' ? roleParam : roleParam?.role;
+        let token = tokenParam || (typeof roleParam === 'object' ? roleParam?.token : null);
+        let user = typeof roleParam === 'object' && !tokenParam ? roleParam : userParam || null;
+
+        if (token) {
+            localStorage.setItem("token", token);
+        }
 
         setAuth({
-            token,
+            user,
             role,
-            isAuthenticated: true
-        });
-    };
-
-    const logout = () => {
-        localStorage.removeItem('token');
-        localStorage.removeItem('role');
-
-        setAuth({
-            token: null,
-            role: null,
-            isAuthenticated: false
+            isAuthenticated: true,
+            loading: false
         });
     };
 

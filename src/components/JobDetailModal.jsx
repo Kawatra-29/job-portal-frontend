@@ -1,9 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { useJob } from "../queries/jobQueries";
 import { useQueryClient } from "@tanstack/react-query";
-import axios from "axios";
-
-const BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:8080/api/v1";
+import apiClient from "../api/apiClient";
 
 // ─── Toast Component ───────────────────────────────────────────────────────────
 function Toast({ message, type, onClose }) {
@@ -121,13 +119,8 @@ export default function JobDetailModal({ job: cardJob, isApplied: initialApplied
   const handleApply = useCallback(async () => {
     if (!job?.id || applied || applying) return;
     setApplying(true);
-    const token = localStorage.getItem("token");
     try {
-      await axios.post(
-        `${BASE_URL}/applications/${job.id}/apply`,
-        null,
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
+      await apiClient.post(`/applications/${job.id}/apply`);
       setApplied(true);
       setToast({ message: "Application submitted successfully! 🎉", type: "success" });
       // Invalidate cache — job will disappear from browse list
@@ -194,7 +187,7 @@ export default function JobDetailModal({ job: cardJob, isApplied: initialApplied
             <h2 className="font-['Syne'] text-2xl font-extrabold text-slate-900 dark:text-white leading-tight truncate">
               {job?.title || "—"}
             </h2>
-            <p className="text-blue-600 dark:text-blue-400 font-semibold text-sm mt-1">{job?.company || "—"}</p>
+            <p className="text-blue-600 dark:text-blue-400 font-semibold text-sm mt-1">{job?.companyName || job?.company || "—"}</p>
           </div>
 
           <button

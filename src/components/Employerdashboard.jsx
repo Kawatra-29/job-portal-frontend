@@ -1,4 +1,5 @@
 import { useNavigate, Link } from "react-router-dom";
+import { useState } from "react";
 import {
   useEmployerStats,
   useRecentApplicants,
@@ -7,6 +8,7 @@ import {
   useUpdateJobStatus,
   useDeleteJob
 } from "../queries/employerQueries";
+import ConfirmModal from "./ConfirmModal";
 import { SidebarLayout } from "./SidebarLayout";
 
 const navItems = [
@@ -77,9 +79,8 @@ const statusBadge = {
   FILLED: "bg-blue-50 text-blue-600",
 };
 
-function JobRow({ job }) {
+function JobRow({ job, onDeleteJob }) {
   const { mutate: updateJobStatus } = useUpdateJobStatus();
-  const { mutate: deleteJob } = useDeleteJob();
 
   const deadlineStr = job.deadline
     ? new Date(job.deadline).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })
@@ -95,9 +96,7 @@ function JobRow({ job }) {
 
   const handleDelete = (e) => {
     e.stopPropagation();
-    if (window.confirm(`Are you sure you want to delete the job post "${job.title}"?`)) {
-      deleteJob(job.id);
-    }
+    onDeleteJob(job);
   };
 
   return (
@@ -175,10 +174,12 @@ function StatCard({ stat, isLoading }) {
 
 export default function EmployerDashboard() {
   const navigate = useNavigate();
+  const [deleteTarget, setDeleteTarget] = useState(null);
 
   const { data: stats, isLoading: statsLoading } = useEmployerStats();
   const { data: recentApplicants, isLoading: applicantsLoading } = useRecentApplicants(5);
   const { data: activeJobs, isLoading: jobsLoading } = useActiveJobs();
+  const { mutate: deleteJob } = useDeleteJob();
 
   const statItems = stats ? [
     { icon: "📢", label: "Active Job Posts", value: String(stats.activeJobPosts || 0), color: "blue" },
@@ -247,7 +248,13 @@ export default function EmployerDashboard() {
                 ))}
               </div>
             ) : activeJobs?.length > 0 ? (
-              activeJobs.map((job) => <JobRow key={job.id || job.title} job={job} />)
+              activeJobs.map((job) => (
+                <JobRow
+                  key={job.id || job.title}
+                  job={job}
+                  onDeleteJob={(j) => setDeleteTarget(j)}
+                />
+              ))
             ) : (
               <div className="text-center py-8 text-slate-400">
                 <p className="text-4xl mb-2">📋</p>
@@ -263,6 +270,22 @@ export default function EmployerDashboard() {
           </Link>
         </div>
       </div>
+
+      {/* Delete Job Confirmation Modal */}
+      <ConfirmModal
+        isOpen={!!deleteTarget}
+        onClose={() => setDeleteTarget(null)}
+        onConfirm={() => {
+          if (deleteTarget) {
+            deleteJob(deleteTarget.id);
+            setDeleteTarget(null);
+          }
+        }}
+        title="Delete Job Post?"
+        description={`Are you sure you want to delete "${deleteTarget?.title || 'this job'}"? This action cannot be undone and will remove all associated applications.`}
+        confirmText="Delete Job"
+        variant="danger"
+      />
     </SidebarLayout>
   );
 }

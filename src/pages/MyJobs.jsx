@@ -6,6 +6,8 @@ import {
   useDeleteJob,
 } from "../queries/employerQueries";
 import { SidebarLayout } from "../components/SidebarLayout";
+import ConfirmModal from "../components/ConfirmModal";
+import { Helmet } from "react-helmet-async";
 
 const navItems = [
   { icon: "🏠", label: "Dashboard", path: "/dashboard/employer" },
@@ -48,14 +50,22 @@ export default function MyJobs() {
     );
   };
 
+  const [deleteTarget, setDeleteTarget] = useState(null);
+
   const handleDelete = (jobId, title) => {
-    if (window.confirm(`Are you sure you want to delete the job post "${title}"?`)) {
-      deleteJob(jobId, {
-        onSuccess: () => {
-          refetch();
-        },
-      });
-    }
+    setDeleteTarget({ id: jobId, title });
+  };
+
+  const confirmDelete = () => {
+    if (!deleteTarget) return;
+    deleteJob(deleteTarget.id, {
+      onSuccess: () => {
+        refetch();
+      },
+      onSettled: () => {
+        setDeleteTarget(null);
+      }
+    });
   };
 
   return (
@@ -72,6 +82,10 @@ export default function MyJobs() {
         </button>
       }
     >
+      <Helmet>
+        <title>My Job Postings | Stride Employer</title>
+        <meta name="description" content="View, edit, pause, and delete your published job postings on Stride." />
+      </Helmet>
       <div className="max-w-5xl mx-auto space-y-6">
         
         {/* Main list */}
@@ -216,6 +230,16 @@ export default function MyJobs() {
           </>
         )}
       </div>
+
+      <ConfirmModal
+        isOpen={!!deleteTarget}
+        onClose={() => setDeleteTarget(null)}
+        onConfirm={confirmDelete}
+        title="Delete Job Post?"
+        description={`Are you sure you want to delete "${deleteTarget?.title || 'this job'}"? This action cannot be undone.`}
+        confirmText="Delete Job Post"
+        variant="danger"
+      />
     </SidebarLayout>
   );
 }
