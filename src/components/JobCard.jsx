@@ -84,8 +84,8 @@ const JobCard = memo(function JobCard({ job, isApplied, onViewDetails }) {
     }
   };
 
-  const min = Array.isArray(job.salaryMin) ? job.salaryMin[1] : job.salaryMin;
-  const max = Array.isArray(job.salaryMax) ? job.salaryMax[1] : job.salaryMax;
+  const min = Array.isArray(job.salaryMin) ? job.salaryMin[0] : job.salaryMin;
+  const max = Array.isArray(job.salaryMax) ? job.salaryMax[0] : job.salaryMax;
   
   let salaryDisplay = "Compensation Undisclosed";
   if (min && max) {

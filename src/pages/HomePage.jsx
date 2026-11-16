@@ -54,24 +54,19 @@ export default function HomePage() {
         />
       </Helmet>
 
-      <section className="relative overflow-hidden bg-linear-to-b from-blue-900 via-slate-900 to-slate-900 text-white pt-20 pb-28 px-4 sm:px-6 lg:px-8">
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-7xl h-96 bg-blue-500/10 blur-3xl pointer-events-none rounded-full" />
-        
+      <section className="relative overflow-hidden bg-white dark:bg-slate-900 text-slate-900 dark:text-white pt-24 pb-32 px-4 sm:px-6 lg:px-8">
         <div className="relative max-w-5xl mx-auto text-center space-y-6">
-          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-blue-500/10 border border-blue-400/20 text-blue-300 text-xs font-semibold uppercase tracking-wider backdrop-blur-md">
-            <FontAwesomeIcon icon={faShieldHalved} className="text-blue-400" />
-            <span>Verified Employer Network & Instant Applications</span>
+          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-800 text-slate-500 dark:text-slate-400 text-xs font-medium backdrop-blur-md">
+            <FontAwesomeIcon icon={faShieldHalved} className="text-slate-500 dark:text-slate-400" />
+            <span>Verified employers</span>
           </div>
 
-          <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight leading-[1.15]">
-            Step Into Your Next Career <br className="hidden sm:inline" />
-            <span className="bg-linear-to-r from-blue-400 via-indigo-300 to-cyan-300 bg-clip-text text-transparent">
-              With Confidence & Clarity
-            </span>
+          <h1 className="text-4xl sm:text-5xl lg:text-6xl font-semibold tracking-tight leading-[1.15]">
+            Step into your next career
           </h1>
 
-          <p className="text-base sm:text-lg text-slate-300 max-w-2xl mx-auto leading-relaxed font-normal">
-            Discover verified jobs across top tech, startups, and enterprise firms. Apply directly with your candidate profile and track interview stages in real-time.
+          <p className="text-base sm:text-lg text-slate-600 dark:text-slate-400 max-w-2xl mx-auto leading-relaxed">
+            Discover verified jobs across top tech companies, startups, and enterprises. Apply directly with your candidate profile and track your applications in one place.
           </p>
 
           <div className="pt-4">

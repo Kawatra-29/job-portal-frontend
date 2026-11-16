@@ -13,8 +13,7 @@ const BACKEND_BASE_URL = API_BASE_URL.replace("/api/v1", "");
 export default function EditProfile() {
   const navigate = useNavigate();
   const { logout } = useContext(AuthContext);
-  const { get, put: putSeeker, loading, error } = useApi();
-  const { put: putUser } = useApi();
+  const { get, put: putUser, put: putSeeker, loading, error } = useApi();
   const { isDark, toggleTheme } = useContext(ThemeContext);
   const [formData, setFormData] = useState({
     fullName: "",

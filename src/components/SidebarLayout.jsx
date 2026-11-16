@@ -12,6 +12,11 @@ import {
   faSun,
   faMoon,
   faChevronRight,
+  faBuilding,
+  faBriefcase,
+  faClipboardList,
+  faCalendar,
+  faUser,
 } from "@fortawesome/free-solid-svg-icons";
 
 export function SidebarLayout({
@@ -72,14 +77,14 @@ export function SidebarLayout({
         {/* Brand Header */}
         <div className="h-16 px-6 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
           <Link to="/" className="flex items-center gap-2.5 no-underline">
-            <div className="w-8 h-8 rounded-xl bg-linear-to-br from-blue-600 via-indigo-600 to-violet-700 flex items-center justify-center text-white font-bold text-sm shadow-md shadow-blue-500/20">
+            <div className="w-8 h-8 rounded-lg bg-slate-900 dark:bg-white flex items-center justify-center text-white dark:text-slate-900 font-bold text-sm">
               S
             </div>
             <div className="flex flex-col">
-              <span className="font-bold text-lg tracking-tight text-slate-900 dark:text-white leading-none">
+              <span className="font-semibold text-base text-slate-900 dark:text-white leading-none">
                 STRIDE
               </span>
-              <span className="text-[10px] uppercase font-bold tracking-wider text-slate-400">
+              <span className="text-[10px] font-medium text-slate-500 dark:text-slate-400">
                 Workspace
               </span>
             </div>
@@ -94,15 +99,15 @@ export function SidebarLayout({
         </div>
 
         {/* User Monogram Profile Badge */}
-        <div className="p-4 mx-3 my-3 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200/80 dark:border-slate-800 flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-linear-to-tr from-blue-600 to-indigo-600 text-white font-bold text-xs flex items-center justify-center shrink-0">
+        <div className="p-4 mx-3 my-3 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200/80 dark:border-slate-800 flex items-center gap-3">
+          <div className="w-10 h-10 rounded-lg bg-slate-900 dark:bg-white flex items-center justify-center text-white dark:text-slate-900 font-bold text-xs shrink-0">
             {initials}
           </div>
           <div className="min-w-0 flex-1">
-            <p className="text-xs font-bold text-slate-900 dark:text-white truncate m-0">
+            <p className="text-xs font-medium text-slate-900 dark:text-white truncate m-0">
               {name}
             </p>
-            <span className="inline-block text-[10px] font-semibold text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/60 px-1.5 py-0.5 rounded-md mt-0.5 capitalize">
+            <span className="inline-block text-[10px] font-medium text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded-md mt-0.5">
               {role.toLowerCase()}
             </span>
           </div>
@@ -123,7 +128,7 @@ export function SidebarLayout({
                 }`}
               >
                 <div className="flex items-center gap-3">
-                  <span className="text-sm w-4 text-center">{item.icon}</span>
+                  <FontAwesomeIcon icon={item.icon} className="text-sm w-4" />
                   <span>{item.label}</span>
                 </div>
                 {isActive && <FontAwesomeIcon icon={faChevronRight} className="text-[10px] opacity-75" />}

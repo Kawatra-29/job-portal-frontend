@@ -87,8 +87,8 @@ export default function JobDetailModal({
 
   if (!job) return null;
 
-  const min = Array.isArray(job.salaryMin) ? job.salaryMin[1] : job.salaryMin;
-  const max = Array.isArray(job.salaryMax) ? job.salaryMax[1] : job.salaryMax;
+  const min = Array.isArray(job.salaryMin) ? job.salaryMin[0] : job.salaryMin;
+  const max = Array.isArray(job.salaryMax) ? job.salaryMax[0] : job.salaryMax;
   let salaryDisplay = "Undisclosed";
   if (min && max) {
     salaryDisplay = `₹${(Number(min) / 100000).toFixed(1)} Lakh – ₹${(Number(max) / 100000).toFixed(1)} Lakh PA`;
@@ -96,8 +96,8 @@ export default function JobDetailModal({
     salaryDisplay = `₹${(Number(min) / 100000).toFixed(1)} Lakh+ PA`;
   }
 
-  const rawJobType = Array.isArray(job.jobType) ? job.jobType[1] : job.jobType;
-  const rawWorkMode = Array.isArray(job.workMode) ? job.workMode[1] : job.workMode;
+  const rawJobType = Array.isArray(job.jobType) ? job.jobType[0] : job.jobType;
+  const rawWorkMode = Array.isArray(job.workMode) ? job.workMode[0] : job.workMode;
   const companyName = job.companyName || job.company || "Enterprise Employer";
   const deadlineStr = job.deadline ? new Date(job.deadline).toLocaleDateString("en-IN", { day: "numeric", month: "long", year: "numeric" }) : null;
 

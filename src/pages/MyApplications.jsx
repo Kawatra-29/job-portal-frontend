@@ -111,6 +111,7 @@ export default function MyApplications({
     try {
       if (propHandleWithdraw) {
         await propHandleWithdraw(withdrawTargetId);
+        queryClient.invalidateQueries({ queryKey: ["applications", "my"] });
       } else {
         await apiClient.delete(`/applications/${withdrawTargetId}`);
         queryClient.invalidateQueries({ queryKey: ["applications", "my"] });
@@ -284,13 +285,13 @@ export default function MyApplications({
       <ConfirmModal
         isOpen={Boolean(withdrawTargetId)}
         title="Withdraw Application"
-        message="Are you sure you want to withdraw this job application? This action cannot be undone."
+        description="Are you sure you want to withdraw this job application? This action cannot be undone."
         confirmText={withdrawing ? "Withdrawing..." : "Confirm Withdrawal"}
         cancelText="Keep Application"
+        variant="danger"
+        loading={withdrawing}
         onConfirm={confirmWithdraw}
-        onCancel={() => setWithdrawTargetId(null)}
-        isLoading={withdrawing}
-        isDanger={true}
+        onClose={() => setWithdrawTargetId(null)}
       />
 
       {selectedJob && (

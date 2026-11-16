@@ -3,6 +3,16 @@ import useApi from "../Hooks/useApi";
 import { useForm } from "react-hook-form";
 import { SidebarLayout } from "../components/SidebarLayout";
 import { Helmet } from "react-helmet-async";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import {
+  faHome,
+  faBullhorn,
+  faClipboardList,
+  faUsers,
+  faCalendar,
+  faUser,
+} from "@fortawesome/free-solid-svg-icons";
+import { useState } from "react";
 
 const JOB_TYPES = ["FULL_TIME", "PART_TIME", "CONTRACT", "FREELANCE", "INTERNSHIP", "TEMPORARY"];
 const WORK_MODES = ["ONSITE", "REMOTE", "HYBRID"];
@@ -21,21 +31,28 @@ export default function PostJob() {
   const navigate = useNavigate();
   const { post, loading } = useApi();
 
-  const onSubmit = async (data) => {
-    const response = await post("/jobs", data);
+  const [submitError, setSubmitError] = useState(null);
 
-    if (response) {
-      navigate("/dashboard/employer");
+  const onSubmit = async (data) => {
+    setSubmitError(null);
+    try {
+      const response = await post("/jobs", data);
+
+      if (response) {
+        navigate("/dashboard/employer");
+      }
+    } catch (err) {
+      setSubmitError(err.response?.data?.message || err.message || "Failed to post job. Please try again.");
     }
   };
 
   const navItems = [
-    { icon: "🏠", label: "Dashboard", path: "/dashboard/employer" },
-    { icon: "📢", label: "Post a Job", path: "/post-job", active: true },
-    { icon: "📋", label: "My Job Posts", path: "/my-jobs" },
-    { icon: "👥", label: "All Applicants", path: "/all-applicants" },
-    { icon: "📅", label: "Interviews", path: "/interviews" },
-    { icon: "👤", label: "My Profile", path: "/employer/profile" },
+    { icon: faHome, label: "Dashboard", path: "/dashboard/employer" },
+    { icon: faBullhorn, label: "Post a job", path: "/post-job", active: true },
+    { icon: faClipboardList, label: "My job posts", path: "/my-jobs" },
+    { icon: faUsers, label: "All applicants", path: "/all-applicants" },
+    { icon: faCalendar, label: "Interviews", path: "/interviews" },
+    { icon: faUser, label: "My profile", path: "/employer/profile" },
   ];
 
   return (
@@ -51,6 +68,11 @@ export default function PostJob() {
       <div className="max-w-3xl mx-auto">
         <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 transition-colors duration-200 rounded-2xl p-6 shadow-sm">
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
+            {submitError && (
+              <div className="p-3 bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-800 rounded-lg text-xs text-red-600 dark:text-red-400 mb-4">
+                {submitError}
+              </div>
+            )}
             {/* Title */}
             <div>
               <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1.5">

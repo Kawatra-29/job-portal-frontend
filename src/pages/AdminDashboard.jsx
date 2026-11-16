@@ -6,6 +6,8 @@ import ConfirmModal from "../components/ConfirmModal";
 import { Helmet } from "react-helmet-async";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
+  faHome,
+  faBuilding,
   faShieldHalved,
   faTrashCan,
   faChevronLeft,
@@ -22,9 +24,9 @@ export default function AdminDashboard() {
   const [processing, setProcessing] = useState(false);
 
   const navItems = [
-    { icon: "🛡️", label: "User Management", path: "/dashboard/admin", active: true },
-    { icon: "🔍", label: "Jobs Catalog", path: "/jobs" },
-    { icon: "🏢", label: "Companies Directory", path: "/companies" },
+    { icon: faShieldHalved, label: "User management", path: "/dashboard/admin", active: true },
+    { icon: faHome, label: "Jobs catalog", path: "/jobs" },
+    { icon: faBuilding, label: "Companies directory", path: "/companies" },
   ];
 
   // Fetch paginated registered users

@@ -6,16 +6,25 @@ import {
   useUpdateUserMe,
   useUpdatePassword,
 } from "../queries/employerQueries";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import {
+  faHome,
+  faBullhorn,
+  faClipboardList,
+  faUsers,
+  faCalendar,
+  faUser,
+} from "@fortawesome/free-solid-svg-icons";
 import { SidebarLayout } from "../components/SidebarLayout";
 import { Helmet } from "react-helmet-async";
 
 const navItems = [
-  { icon: "🏠", label: "Dashboard", path: "/dashboard/employer" },
-  { icon: "📢", label: "Post a Job", path: "/post-job" },
-  { icon: "📋", label: "My Job Posts", path: "/my-jobs" },
-  { icon: "👥", label: "All Applicants", path: "/all-applicants" },
-  { icon: "📅", label: "Interviews", path: "/interviews" },
-  { icon: "👤", label: "My Profile", path: "/employer/profile", active: true },
+  { icon: faHome, label: "Dashboard", path: "/dashboard/employer" },
+  { icon: faBullhorn, label: "Post a job", path: "/post-job" },
+  { icon: faClipboardList, label: "My job posts", path: "/my-jobs" },
+  { icon: faUsers, label: "All applicants", path: "/all-applicants" },
+  { icon: faCalendar, label: "Interviews", path: "/interviews" },
+  { icon: faUser, label: "My profile", path: "/employer/profile", active: true },
 ];
 
 const companySizeLabels = {

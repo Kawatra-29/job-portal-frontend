@@ -3,6 +3,15 @@ import {
   useAllApplicants,
   useUpdateApplicationStatus,
 } from "../queries/employerQueries";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import {
+  faHome,
+  faBullhorn,
+  faClipboardList,
+  faUsers,
+  faCalendar,
+  faUser,
+} from "@fortawesome/free-solid-svg-icons";
 import { SidebarLayout } from "../components/SidebarLayout";
 import { Helmet } from "react-helmet-async";
 
@@ -10,12 +19,12 @@ const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:8080
 const BACKEND_BASE_URL = API_BASE_URL.replace("/api/v1", "");
 
 const navItems = [
-  { icon: "🏠", label: "Dashboard", path: "/dashboard/employer" },
-  { icon: "📢", label: "Post a Job", path: "/post-job" },
-  { icon: "📋", label: "My Job Posts", path: "/my-jobs" },
-  { icon: "👥", label: "All Applicants", path: "/all-applicants", active: true },
-  { icon: "📅", label: "Interviews", path: "/interviews" },
-  { icon: "👤", label: "My Profile", path: "/employer/profile" },
+  { icon: faHome, label: "Dashboard", path: "/dashboard/employer" },
+  { icon: faBullhorn, label: "Post a job", path: "/post-job" },
+  { icon: faClipboardList, label: "My job posts", path: "/my-jobs" },
+  { icon: faUsers, label: "All applicants", path: "/all-applicants", active: true },
+  { icon: faCalendar, label: "Interviews", path: "/interviews" },
+  { icon: faUser, label: "My profile", path: "/employer/profile" },
 ];
 
 const statusBadge = {

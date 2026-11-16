@@ -7,11 +7,16 @@ import MyApplications from "../pages/MyApplications";
 import { Helmet } from "react-helmet-async";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
-  faFilePdf,
+  faHome,
+  faClipboardList,
+  faUser,
   faMagnifyingGlass,
+  faFilePdf,
   faCheck,
   faCloudArrowUp,
   faTrashCan,
+  faStar,
+  faCalendar,
 } from "@fortawesome/free-solid-svg-icons";
 
 export default function JobSeekerDashboard() {
@@ -52,27 +57,10 @@ export default function JobSeekerDashboard() {
   });
 
   const navItems = [
-    {
-      icon: "📊",
-      label: "Dashboard Overview",
-      path: "/dashboard/jobseeker",
-      active: true,
-    },
-    {
-      icon: "📋",
-      label: "My Applications",
-      path: "/my-applications",
-    },
-    {
-      icon: "👤",
-      label: "Profile & Resume",
-      path: "/me",
-    },
-    {
-      icon: "🔍",
-      label: "Explore Jobs",
-      path: "/jobs",
-    },
+    { icon: faHome, label: "Dashboard overview", path: "/dashboard/jobseeker", active: true },
+    { icon: faClipboardList, label: "My applications", path: "/my-applications" },
+    { icon: faUser, label: "Profile & resume", path: "/me" },
+    { icon: faMagnifyingGlass, label: "Explore jobs", path: "/jobs" },
   ];
 
   const handleResumeUpload = async (e) => {
@@ -157,8 +145,8 @@ export default function JobSeekerDashboard() {
           <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 shadow-xs">
             <div className="flex items-center justify-between mb-2">
               <span className="text-xs font-bold uppercase tracking-wider text-slate-400">Total Applied</span>
-              <div className="w-8 h-8 rounded-lg bg-blue-50 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400 flex items-center justify-center text-xs">
-                📋
+              <div className="w-8 h-8 rounded-lg bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-xs">
+                <FontAwesomeIcon icon={faClipboardList} className="w-3 h-3 text-slate-600 dark:text-slate-400" />
               </div>
             </div>
             <div className="text-2xl font-bold text-slate-900 dark:text-white tabular">
@@ -170,8 +158,8 @@ export default function JobSeekerDashboard() {
           <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 shadow-xs">
             <div className="flex items-center justify-between mb-2">
               <span className="text-xs font-bold uppercase tracking-wider text-slate-400">Shortlisted</span>
-              <div className="w-8 h-8 rounded-lg bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 flex items-center justify-center text-xs">
-                ⭐
+              <div className="w-8 h-8 rounded-lg bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-xs">
+                <FontAwesomeIcon icon={faStar} className="w-3 h-3 text-slate-600 dark:text-slate-400" />
               </div>
             </div>
             <div className="text-2xl font-bold text-slate-900 dark:text-white tabular">
@@ -183,8 +171,8 @@ export default function JobSeekerDashboard() {
           <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 shadow-xs">
             <div className="flex items-center justify-between mb-2">
               <span className="text-xs font-bold uppercase tracking-wider text-slate-400">Interviews</span>
-              <div className="w-8 h-8 rounded-lg bg-purple-50 dark:bg-purple-950/40 text-purple-600 dark:text-purple-400 flex items-center justify-center text-xs">
-                📅
+              <div className="w-8 h-8 rounded-lg bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-xs">
+                <FontAwesomeIcon icon={faCalendar} className="w-3 h-3 text-slate-600 dark:text-slate-400" />
               </div>
             </div>
             <div className="text-2xl font-bold text-slate-900 dark:text-white tabular">
@@ -332,7 +320,7 @@ export default function JobSeekerDashboard() {
         {/* Embedded Applications Component */}
         <div>
           <MyApplications
-            applications={appList}
+            applications={applications}
             loading={appsLoading}
             handleWithdraw={async (id) => {
               await apiClient.delete(`/applications/${id}`);

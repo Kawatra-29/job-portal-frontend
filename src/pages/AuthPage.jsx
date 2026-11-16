@@ -114,6 +114,7 @@ export default function AuthPage() {
       if (response?.token || response?.authStatus === "LOGIN_SUCCESS") {
         const role = response.role || selectedRole;
         login(role, response.token);
+        reset();
         if (role === "EMPLOYER") {
           navigate("/dashboard/employer");
         } else if (role === "ADMIN") {
@@ -173,6 +174,7 @@ export default function AuthPage() {
         setOtpSuccess("Email verified successfully! Logging you in...");
         setTimeout(() => {
           login(response.role || selectedRole, response.token);
+          reset();
           if (response.role === "EMPLOYER") navigate("/dashboard/employer");
           else navigate("/dashboard/jobseeker");
         }, 1200);
